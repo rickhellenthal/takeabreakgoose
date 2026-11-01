@@ -2,10 +2,12 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Unsaved changes" Icon="goose.ico"
-        SizeToContent="WidthAndHeight" ResizeMode="NoResize" ShowInTaskbar="False"
+        Width="440" SizeToContent="Height" ResizeMode="NoResize" ShowInTaskbar="False" UseLayoutRounding="True"
         WindowStartupLocation="CenterOwner" Background="#FAF7F2"
         FontFamily="Segoe UI" FontSize="13" Foreground="#222222">
-    <StackPanel Margin="22,18,22,18" MaxWidth="400">
+    <!-- A fixed width, pixel snapping and a redraw once shown (code-behind): without them, sizing to the
+         content can leave black strips at the edges on some display scales. -->
+    <StackPanel Margin="22,18,22,18">
         <TextBlock Text="Save your changes?" FontSize="16" FontWeight="SemiBold" />
         <TextBlock Text="You changed some settings but didn't save them yet." TextWrapping="Wrap"
                    Foreground="#7A7A7A" Margin="0,4,0,18" />

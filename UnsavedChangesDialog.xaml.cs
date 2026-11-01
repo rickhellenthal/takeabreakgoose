@@ -22,6 +22,12 @@ public partial class UnsavedChangesDialog : Window
         return dialog._choice;
     }
 
+    protected override void OnContentRendered(System.EventArgs e)
+    {
+        base.OnContentRendered(e);
+        InvalidateVisual(); // avoids a black strip where the frame came out bigger than the content
+    }
+
     private void Choose(UnsavedChangesChoice choice)
     {
         _choice = choice;

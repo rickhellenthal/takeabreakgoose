@@ -23,6 +23,12 @@ public partial class ConfirmDialog : Window
         return dialog._confirmed;
     }
 
+    protected override void OnContentRendered(System.EventArgs e)
+    {
+        base.OnContentRendered(e);
+        InvalidateVisual(); // avoids a black strip where the frame came out bigger than the content
+    }
+
     private void Confirm_Click(object sender, RoutedEventArgs e)
     {
         _confirmed = true;
