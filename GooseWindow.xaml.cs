@@ -27,13 +27,12 @@ public enum GooseOutcome { Dismissed, Snoozed, TimedOut }
 /// A transparent, always-on-top window that walks a goose in from a screen edge,
 /// shows a break reminder, then walks back out. If the user needs to finish up first,
 /// the goose waits peeking around the screen edge until it's clicked. If the user takes
-/// the break, the goose naps on the taskbar until the break is over.
+/// the break, the goose naps on the taskbar until the break is over and the user is back,
+/// then asks whether they're ready to focus again.
 /// </summary>
 public partial class GooseWindow : Window
 {
-    private enum Phase { WalkingIn, Talking, ToEdge, Peeking, Returning, Sleeping, WakingUp, WalkingOut }
-
-    private static readonly TimeSpan WakeUpPause = TimeSpan.FromSeconds(5);
+    private enum Phase { WalkingIn, Talking, ToEdge, Peeking, Returning, Sleeping, BreakOver, WalkingOut }
 
     private const double WalkSpeed = 150;   // DIPs per second
     private const double StepRate = 12;     // leg swing speed, radians per second
@@ -50,12 +49,19 @@ public partial class GooseWindow : Window
     private double _targetLeft;
     private double _stepPhase;
     private readonly TimeSpan? _breakLength;
+    private readonly int _snoozeMinutes;
     private DateTime _breakStart;
     private DateTime _breakEnd;
-    private DateTime _leaveAt;
+    private bool _askingIfReady;
 
     /// <summary>Raised as soon as the user answers (or the goose gives up waiting).</summary>
     public event Action<GooseOutcome>? Answered;
+
+    /// <summary>Raised when the user asks for a few more minutes of break, with the new end time.</summary>
+    public event Action<DateTime>? BreakExtended;
+
+    /// <summary>Raised when the user says they're back from the break and ready to focus.</summary>
+    public event Action? ReadyToFocus;
 
     /// <summary>Raised once the goose has left the screen.</summary>
     public event Action? Finished;
@@ -64,6 +70,7 @@ public partial class GooseWindow : Window
     public GooseWindow(GooseVisit visit, int staySeconds, int snoozeMinutes, TimeSpan? breakLength)
     {
         _breakLength = breakLength;
+        _snoozeMinutes = snoozeMinutes;
         InitializeComponent();
 
         TitleText.Text = visit.Title;
@@ -159,17 +166,12 @@ public partial class GooseWindow : Window
 
             case Phase.Sleeping:
                 UpdateBreakProgress();
-                if (DateTime.Now >= _breakEnd) WakeUp();
+                if (DateTime.Now >= _breakEnd) BreakIsOver();
                 break;
 
-            case Phase.WakingUp:
-                Figure.HeadAngle = Math.Sin(now.TotalSeconds * 2.5) * 4;
-                if (DateTime.Now >= _leaveAt)
-                {
-                    BreakCard.Visibility = Visibility.Collapsed;
-                    Figure.HeadAngle = 0;
-                    _phase = Phase.WalkingOut;
-                }
+            case Phase.BreakOver:
+                // Keep napping until the computer is used again after the break ended.
+                if (UserActivity.IdleTime() < DateTime.Now - _breakEnd) AskIfReady();
                 break;
 
             case Phase.WalkingOut:
@@ -234,7 +236,8 @@ public partial class GooseWindow : Window
         return inStrip && cursor.Y >= figureTop && cursor.Y <= Top + Height;
     }
 
-    private void StartTalking()
+    /// <param name="giveUpAfterWaiting">Whether the goose leaves on its own if nobody answers.</param>
+    private void StartTalking(bool giveUpAfterWaiting = true)
     {
         _phase = Phase.Talking;
         Figure.Facing = InwardDirection;
@@ -246,7 +249,7 @@ public partial class GooseWindow : Window
         BubbleScale.BeginAnimation(ScaleTransform.ScaleXProperty, pop);
         BubbleScale.BeginAnimation(ScaleTransform.ScaleYProperty, pop);
 
-        if (!_stayUntilDismissed) _stayTimer.Start();
+        if (giveUpAfterWaiting && !_stayUntilDismissed) _stayTimer.Start();
     }
 
     private void StopTalking()
@@ -268,7 +271,7 @@ public partial class GooseWindow : Window
             _phase = Phase.WalkingOut;
     }
 
-    private void StartSleeping(TimeSpan length)
+    private void StartSleeping(TimeSpan length, string title = "Enjoy your break")
     {
         _phase = Phase.Sleeping;
         _breakStart = DateTime.Now;
@@ -276,7 +279,7 @@ public partial class GooseWindow : Window
         Figure.Sleeping = true;
         Figure.ToolTip = $"Napping until {_breakEnd:HH:mm}. Enjoy your break!";
 
-        BreakTitle.Text = "Enjoy your break";
+        BreakTitle.Text = title;
         UpdateBreakProgress();
         BreakCard.Visibility = Visibility.Visible;
         var pop = new DoubleAnimation(0.5, 1, TimeSpan.FromMilliseconds(300))
@@ -300,15 +303,49 @@ public partial class GooseWindow : Window
             : $"{left:m\\:ss} left";
     }
 
-    private void WakeUp()
+    /// <summary>The break time is up; the goose keeps napping until the user is back.</summary>
+    private void BreakIsOver()
     {
-        _phase = Phase.WakingUp;
-        _leaveAt = DateTime.Now + WakeUpPause;
+        _phase = Phase.BreakOver;
+        Figure.ToolTip = "Break's over. I'll wake up when you're back.";
+        BreakRing.Data = RingArc(1, center: 18, radius: 16);
+        BreakTitle.Text = "Break's over";
+        BreakTimeText.Text = "Waiting for you to come back";
+    }
+
+    /// <summary>The user is back: wake up and ask whether they're ready to focus again.</summary>
+    private void AskIfReady()
+    {
         Figure.Sleeping = false;
         Figure.ToolTip = null;
-        BreakRing.Data = RingArc(1, center: 18, radius: 16);
-        BreakTitle.Text = "Break's over, welcome back!";
-        BreakTimeText.Text = "Off you go, refreshed and ready";
+        BreakCard.Visibility = Visibility.Collapsed;
+
+        _askingIfReady = true;
+        TitleText.Text = "Welcome back!";
+        MessageText.Text = "Break's over. Ready to focus again?";
+        HintText.Visibility = Visibility.Collapsed;
+        FinishUpButton.Visibility = Visibility.Collapsed;
+        DismissButton.Content = "Ready to focus";
+        SnoozeButton.Content = $"{_snoozeMinutes} more minutes";
+        SnoozeButton.Visibility = Visibility.Visible;
+        // No time limit: the next focus stretch only starts once the user says so.
+        StartTalking(giveUpAfterWaiting: false);
+    }
+
+    private void ConfirmReady()
+    {
+        StopTalking();
+        _askingIfReady = false;
+        ReadyToFocus?.Invoke();
+        _phase = Phase.WalkingOut;
+    }
+
+    private void NapLonger()
+    {
+        StopTalking();
+        _askingIfReady = false;
+        StartSleeping(TimeSpan.FromMinutes(_snoozeMinutes), "A little longer, then");
+        BreakExtended?.Invoke(_breakEnd);
     }
 
     /// <summary>A circular arc starting at 12 o'clock, going clockwise for the given fraction of a circle.</summary>
@@ -335,9 +372,17 @@ public partial class GooseWindow : Window
         _phase = Phase.ToEdge;
     }
 
-    private void Dismiss_Click(object sender, RoutedEventArgs e) => Leave(GooseOutcome.Dismissed);
+    private void Dismiss_Click(object sender, RoutedEventArgs e)
+    {
+        if (_askingIfReady) ConfirmReady();
+        else Leave(GooseOutcome.Dismissed);
+    }
 
-    private void Snooze_Click(object sender, RoutedEventArgs e) => Leave(GooseOutcome.Snoozed);
+    private void Snooze_Click(object sender, RoutedEventArgs e)
+    {
+        if (_askingIfReady) NapLonger();
+        else Leave(GooseOutcome.Snoozed);
+    }
 
     private void Figure_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -350,7 +395,7 @@ public partial class GooseWindow : Window
             return;
         }
         // Poking the goose makes it flap its head indignantly, unless it's napping.
-        if (_phase != Phase.Sleeping) Figure.Flap();
+        if (_phase is not (Phase.Sleeping or Phase.BreakOver)) Figure.Flap();
     }
 
     private const int GWL_EXSTYLE = -20;

@@ -149,6 +149,11 @@ public partial class MainWindow : Window
                 CountdownText.Text = "Paused";
                 CountdownCaption.Text = "No reminders until you resume.";
             }
+            else if (scheduler.AwaitingReturn && !(scheduler.BreakEndsAt > now))
+            {
+                CountdownText.Text = "Welcome back";
+                CountdownCaption.Text = "Your break is over. Tell the goose when you're ready to focus again.";
+            }
             else if (scheduler.IsAway)
             {
                 CountdownText.Text = "Away";

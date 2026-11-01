@@ -110,6 +110,8 @@ public partial class App : Application, IGooseHost
             naps ? TimeSpan.FromMinutes(Settings.BreakMinutes) : null);
         _goose.Answered += outcome =>
             Scheduler.GooseAnswered(outcome, startsBreak: naps && outcome == GooseOutcome.Dismissed);
+        _goose.BreakExtended += Scheduler.ExtendBreak;
+        _goose.ReadyToFocus += Scheduler.ReadyToFocus;
         _goose.Finished += () =>
         {
             _goose = null;

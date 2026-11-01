@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Windows.Threading;
 
 namespace TakeABreakGoose;
@@ -22,6 +21,12 @@ public sealed class BreakScheduler
     public bool GooseVisiting { get; private set; }
     public DateTime? NextBreakAt { get; private set; }
     public DateTime? BreakEndsAt { get; private set; }
+
+    /// <summary>
+    /// A break was taken and the user hasn't said they're ready to focus again yet.
+    /// No reminders are counted down until they do.
+    /// </summary>
+    public bool AwaitingReturn { get; private set; }
 
     /// <summary>Raised every second and whenever the state changes, so UIs can refresh countdowns.</summary>
     public event Action? StateChanged;
@@ -98,20 +103,38 @@ public sealed class BreakScheduler
     {
         GooseVisiting = false;
         var now = DateTime.Now;
-        BreakEndsAt = startsBreak ? now.AddMinutes(_settings.BreakMinutes) : null;
-        if (outcome == GooseOutcome.Snoozed)
+        BreakEndsAt = null;
+        if (startsBreak)
+        {
+            // The next reminder only starts counting once the user says they're ready to focus again.
+            BreakEndsAt = now.AddMinutes(_settings.BreakMinutes);
+            AwaitingReturn = true;
+            SetNext(null);
+        }
+        else if (outcome == GooseOutcome.Snoozed)
         {
             SetNext(now.AddMinutes(_settings.SnoozeMinutes));
         }
-        else if (CurrentInterval is int interval)
-        {
-            // The next reminder starts counting once the break is over.
-            SetNext((BreakEndsAt ?? now).AddMinutes(interval));
-        }
         else
         {
-            SetNext(null);
+            SetNext(CurrentInterval is int interval ? now.AddMinutes(interval) : null);
         }
+        StateChanged?.Invoke();
+    }
+
+    /// <summary>The user asked for a few more minutes of break.</summary>
+    public void ExtendBreak(DateTime endsAt)
+    {
+        BreakEndsAt = endsAt;
+        StateChanged?.Invoke();
+    }
+
+    /// <summary>The user is back from their break and ready to focus: start counting towards the next one.</summary>
+    public void ReadyToFocus()
+    {
+        AwaitingReturn = false;
+        BreakEndsAt = null;
+        SetNext(CurrentInterval is int interval ? DateTime.Now.AddMinutes(interval) : null);
         StateChanged?.Invoke();
     }
 
@@ -120,6 +143,12 @@ public sealed class BreakScheduler
     {
         if (GooseVisiting) return "The goose is here!";
         if (IsPaused) return "Reminders paused";
+        if (AwaitingReturn)
+        {
+            return BreakEndsAt is DateTime end && end > DateTime.Now
+                ? $"On a break until {end:HH:mm}"
+                : "Break's over, waiting for you";
+        }
         if (IsAway) return "Away from the keyboard";
         if (BreakEndsAt is DateTime breakEnd) return $"On a break until {breakEnd:HH:mm}";
         if (NextBreakAt is DateTime next)
@@ -143,11 +172,12 @@ public sealed class BreakScheduler
             return;
         }
 
-        if (BreakEndsAt is DateTime breakEnd && now >= breakEnd) BreakEndsAt = null;
+        if (!AwaitingReturn && BreakEndsAt is DateTime breakEnd && now >= breakEnd) BreakEndsAt = null;
 
-        if (_settings.AwayMinutes > 0 && !GooseVisiting && !IsPaused)
+        // While waiting for the user to come back from a break, the goose handles that itself.
+        if (_settings.AwayMinutes > 0 && !GooseVisiting && !IsPaused && !AwaitingReturn)
         {
-            bool away = IdleTime() >= TimeSpan.FromMinutes(_settings.AwayMinutes);
+            bool away = UserActivity.IdleTime() >= TimeSpan.FromMinutes(_settings.AwayMinutes);
             if (IsAway && !away)
             {
                 // Welcome back: the time away counted as a break, so start a fresh interval.
@@ -162,7 +192,7 @@ public sealed class BreakScheduler
             IsAway = false;
         }
 
-        if (!IsAway && !IsPaused && !GooseVisiting && NextBreakAt is DateTime next && now >= next)
+        if (!IsAway && !IsPaused && !GooseVisiting && !AwaitingReturn && NextBreakAt is DateTime next && now >= next)
         {
             NextBreakAt = null;
             BreakDue?.Invoke();
@@ -173,7 +203,7 @@ public sealed class BreakScheduler
 
     private void Reschedule()
     {
-        BreakEndsAt = null;
+        if (!AwaitingReturn) BreakEndsAt = null;
         SetNext(GooseVisiting || CurrentInterval is not int interval ? null : DateTime.Now.AddMinutes(interval));
         StateChanged?.Invoke();
     }
@@ -191,20 +221,4 @@ public sealed class BreakScheduler
         }
     }
 
-    private static TimeSpan IdleTime()
-    {
-        var info = new LASTINPUTINFO { cbSize = (uint)Marshal.SizeOf<LASTINPUTINFO>() };
-        if (!GetLastInputInfo(ref info)) return TimeSpan.Zero;
-        return TimeSpan.FromMilliseconds(unchecked((uint)Environment.TickCount - info.dwTime));
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct LASTINPUTINFO
-    {
-        public uint cbSize;
-        public uint dwTime;
-    }
-
-    [DllImport("user32.dll")]
-    private static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
 }
