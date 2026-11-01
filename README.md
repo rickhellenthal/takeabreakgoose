@@ -5,7 +5,7 @@
 <h1 align="center">Take a Break Goose</h1>
 
 <p align="center">
-  A friendly goose for Windows 11 that waddles onto your screen to remind you to take a break,<br>
+  A friendly goose for Windows that waddles onto your screen to remind you to take a break,<br>
   so hyperfocus doesn't burn you out.
 </p>
 
