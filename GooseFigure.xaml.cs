@@ -23,6 +23,16 @@ public static class GooseOutfits
         _ => outfit.ToString(),
     };
 
+    /// <summary>What the goose says when it comes over just to show off this outfit.</summary>
+    public static string ShowOffLine(GooseOutfit outfit) => outfit switch
+    {
+        GooseOutfit.Raincoat => "Just showing off my raincoat! Rain or shine, I'll keep reminding you to take breaks.",
+        GooseOutfit.Bonnet => "How do you like my Sunday bonnet? Very fancy, I know.",
+        GooseOutfit.Bandana => "Check out my polka dot bandana! Ready for a little adventure.",
+        GooseOutfit.PartyHat => "Party hat on! Every break deserves a small celebration.",
+        _ => "What do you think of my outfit?",
+    };
+
     public static string Description(GooseOutfit outfit) => outfit switch
     {
         GooseOutfit.Raincoat => "For honking you outside, whatever the weather.",

@@ -46,7 +46,7 @@ Open the goose with **Ctrl+Alt+G**, the Start menu, or by clicking its icon in t
 
 When a session ends, the goose drops by to tell you you're done for now. Outside a focus session it stays quiet.
 
-The **Wardrobe** tab shows the goose's outfits. It picks one at random for each visit, or you can send a goose over in the outfit of your choice.
+The **Wardrobe** tab shows the goose's outfits. It picks one at random for each visit, or you can send a goose over to show off the outfit of your choice. That's just for fun, so it doesn't affect your session's timer.
 
 ## Settings
 

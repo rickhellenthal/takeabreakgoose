@@ -14,7 +14,13 @@ public interface IGooseHost
     GooseSettings Settings { get; }
     BreakScheduler Scheduler { get; }
     void StartSession(SessionPlan plan);
-    void SummonBreakGoose(GooseOutfit? outfit = null);
+    void SummonBreakGoose();
+
+    /// <summary>
+    /// Sends the goose over just to show off an outfit; it doesn't touch the session's timer.
+    /// Returns false if a goose is already on screen.
+    /// </summary>
+    bool ShowOffOutfit(GooseOutfit outfit);
 
     /// <summary>Applies and saves new settings; returns an error message, or null on success.</summary>
     string? ApplySettings(GooseSettings settings, bool startWithWindows);
@@ -77,7 +83,11 @@ public partial class MainWindow : Window
                 HorizontalAlignment = HorizontalAlignment.Left,
                 Margin = new Thickness(0, 10, 0, 0),
             };
-            sendButton.Click += (_, _) => _host.SummonBreakGoose(outfit);
+            sendButton.Click += (_, _) =>
+            {
+                bool sent = _host.ShowOffOutfit(outfit);
+                WardrobeBusyText.Visibility = Show(!sent);
+            };
 
             var stage = new Border
             {

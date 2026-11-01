@@ -298,7 +298,12 @@
                 <!-- Wardrobe page: cards are filled in from code, one per outfit -->
                 <StackPanel x:Name="WardrobePage" Visibility="Collapsed">
                     <TextBlock Style="{StaticResource Hint}" FontSize="13" Margin="2,0,2,12"
-                               Text="The goose picks one of these outfits every time it visits. Send one over to see it in action." />
+                               Text="The goose picks one of these outfits every time it visits. Send one over to see it in action. It's just showing off, so your focus session timer isn't affected." />
+                    <Border x:Name="WardrobeBusyText" Visibility="Collapsed" Background="#FDEBD8" CornerRadius="8"
+                            Padding="12,8" Margin="0,0,0,12">
+                        <TextBlock TextWrapping="Wrap" Foreground="#8A4A10" FontSize="12"
+                                   Text="The goose is already on your screen. Try again once it has left." />
+                    </Border>
                     <UniformGrid x:Name="WardrobeGrid" Columns="2" />
                 </StackPanel>
 

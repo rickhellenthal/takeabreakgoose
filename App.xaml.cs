@@ -11,6 +11,7 @@ public partial class App : Application, IGooseHost
     private HotkeyManager? _hotkey;
     private GooseWindow? _goose;
     private GooseVisit? _pendingVisit;
+    private bool _gooseJustVisiting;
     private MainWindow? _mainWindow;
 
     public GooseSettings Settings { get; private set; } = new();
@@ -92,33 +93,47 @@ public partial class App : Application, IGooseHost
         Scheduler.StartSession(plan.IntervalMinutes, plan.EndsAt(DateTime.Now));
     }
 
-    public void SummonBreakGoose(GooseOutfit? outfit = null)
+    public void SummonBreakGoose()
     {
         string message = Settings.Messages[Random.Shared.Next(Settings.Messages.Count)];
         string? hint = Settings.BreakMinutes > 0
             ? $"Take {Settings.BreakMinutes} minutes. I'll start counting again after that."
             : null;
         SummonGoose(new GooseVisit("HONK!", message, hint, "Okay, break time!",
-            AllowSnooze: true, AllowFinishUp: true, StartsBreak: true, outfit));
+            AllowSnooze: true, AllowFinishUp: true, StartsBreak: true));
+    }
+
+    public bool ShowOffOutfit(GooseOutfit outfit)
+    {
+        if (_goose != null) return false;
+        SummonGoose(new GooseVisit("Ta-da!", GooseOutfits.ShowOffLine(outfit), null, "Looking good!",
+            AllowSnooze: false, AllowFinishUp: false, StartsBreak: false, outfit, JustVisiting: true));
+        return true;
     }
 
     private void SummonGoose(GooseVisit visit)
     {
         if (_goose != null)
         {
-            // Only one goose at a time. A message that isn't about a break (like "session complete")
-            // shouldn't get lost, though, so it comes as soon as the current goose has left.
-            if (!visit.StartsBreak) _pendingVisit ??= visit;
+            // Only one goose at a time. A reminder shouldn't get lost behind a goose that's just
+            // showing off, and "session complete" shouldn't get lost behind anything, so those come
+            // as soon as the current goose has left.
+            if (_gooseJustVisiting || !visit.StartsBreak) _pendingVisit ??= visit;
             return;
         }
 
         bool naps = visit.StartsBreak && Settings.BreakMinutes > 0;
+        _gooseJustVisiting = visit.JustVisiting;
         _goose = new GooseWindow(visit, Settings.StaySeconds, Settings.SnoozeMinutes,
             naps ? TimeSpan.FromMinutes(Settings.BreakMinutes) : null);
-        _goose.Answered += outcome =>
-            Scheduler.GooseAnswered(outcome, startsBreak: naps && outcome == GooseOutcome.Dismissed);
-        _goose.BreakExtended += Scheduler.ExtendBreak;
-        _goose.ReadyToFocus += Scheduler.ReadyToFocus;
+        if (!visit.JustVisiting)
+        {
+            _goose.Answered += outcome =>
+                Scheduler.GooseAnswered(outcome, startsBreak: naps && outcome == GooseOutcome.Dismissed);
+            _goose.BreakExtended += Scheduler.ExtendBreak;
+            _goose.ReadyToFocus += Scheduler.ReadyToFocus;
+            Scheduler.GooseArrived();
+        }
         _goose.Finished += () =>
         {
             _goose = null;
@@ -128,7 +143,6 @@ public partial class App : Application, IGooseHost
                 SummonGoose(pending);
             }
         };
-        Scheduler.GooseArrived();
         _goose.Show();
     }
 
