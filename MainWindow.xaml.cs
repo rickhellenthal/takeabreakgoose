@@ -22,6 +22,9 @@ public interface IGooseHost
     /// </summary>
     bool ShowOffOutfit(GooseOutfit outfit);
 
+    /// <summary>Whether a goose is on screen right now (walking, talking, peeking or napping).</summary>
+    bool GooseOnScreen { get; }
+
     /// <summary>Applies and saves new settings; returns an error message, or null on success.</summary>
     string? ApplySettings(GooseSettings settings, bool startWithWindows);
 }
@@ -206,6 +209,9 @@ public partial class MainWindow : Window
         {
             UpdateEndPreview(); // "in 2 h 14 min" moves along with the clock
         }
+
+        // The "goose is already on your screen" note only makes sense while it still is.
+        if (!_host.GooseOnScreen) WardrobeBusyText.Visibility = Visibility.Collapsed;
 
         AutoStartNote.Visibility = Show(session == null);
         AutoStartNote.Text = settings.AutoStartSession

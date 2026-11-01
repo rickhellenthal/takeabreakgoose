@@ -103,6 +103,8 @@ public partial class App : Application, IGooseHost
             AllowSnooze: true, AllowFinishUp: true, StartsBreak: true));
     }
 
+    public bool GooseOnScreen => _goose != null;
+
     public bool ShowOffOutfit(GooseOutfit outfit)
     {
         if (_goose != null) return false;
