@@ -136,6 +136,31 @@
             </Grid>
         </StackPanel>
 
+        <!-- Break progress, shown while the goose naps -->
+        <Border x:Name="BreakCard" Grid.Row="0" VerticalAlignment="Bottom" HorizontalAlignment="Center"
+                Visibility="Collapsed" Margin="0,0,0,-6" Background="{StaticResource BubbleFill}"
+                BorderBrush="{StaticResource BubbleEdge}" BorderThickness="1.5" CornerRadius="14"
+                Padding="10,8,16,8" RenderTransformOrigin="0.5,1">
+            <Border.RenderTransform>
+                <ScaleTransform x:Name="BreakCardScale" />
+            </Border.RenderTransform>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="14" ShadowDepth="2" Direction="270" Opacity="0.22" Color="#4A3B22" />
+            </Border.Effect>
+            <StackPanel Orientation="Horizontal">
+                <Grid Width="36" Height="36" VerticalAlignment="Center">
+                    <Ellipse Stroke="#EDE4D3" StrokeThickness="4" Margin="2" />
+                    <Path x:Name="BreakRing" Stroke="{StaticResource Accent}" StrokeThickness="4"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                </Grid>
+                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                    <TextBlock x:Name="BreakTitle" Text="Napping during your break" FontSize="13" FontWeight="SemiBold"
+                               Foreground="#2B2B2B" />
+                    <TextBlock x:Name="BreakTimeText" FontSize="12" Foreground="#8A8172" Margin="0,1,0,0" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
         <local:GooseFigure x:Name="Figure" Grid.Row="1" HorizontalAlignment="Center" Cursor="Hand"
                            MouseLeftButtonDown="Figure_MouseLeftButtonDown" />
     </Grid>

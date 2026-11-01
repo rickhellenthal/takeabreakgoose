@@ -10,6 +10,7 @@ public partial class App : Application, IGooseHost
     private TrayIcon? _tray;
     private HotkeyManager? _hotkey;
     private GooseWindow? _goose;
+    private GooseVisit? _pendingVisit;
     private MainWindow? _mainWindow;
 
     public GooseSettings Settings { get; private set; } = new();
@@ -37,7 +38,7 @@ public partial class App : Application, IGooseHost
         Scheduler.SessionCompleted += () => SummonGoose(new GooseVisit(
             "Session complete!",
             "Your focus session is done. Great job! Time to wrap up and give your brain some rest.",
-            null, "Thanks, goose!", AllowSnooze: false, AllowFinishUp: false));
+            null, "Thanks, goose!", AllowSnooze: false, AllowFinishUp: false, StartsBreak: false));
         Scheduler.StateChanged += UpdateTray;
 
         _tray = new TrayIcon();
@@ -91,17 +92,32 @@ public partial class App : Application, IGooseHost
             ? $"Take {Settings.BreakMinutes} minutes. I'll start counting again after that."
             : null;
         SummonGoose(new GooseVisit("HONK!", message, hint, "Okay, break time!",
-            AllowSnooze: true, AllowFinishUp: true, outfit));
+            AllowSnooze: true, AllowFinishUp: true, StartsBreak: true, outfit));
     }
 
     private void SummonGoose(GooseVisit visit)
     {
-        if (_goose != null) return;
-        _goose = new GooseWindow(visit, Settings.StaySeconds, Settings.SnoozeMinutes);
-        _goose.Finished += outcome =>
+        if (_goose != null)
+        {
+            // Only one goose at a time. A message that isn't about a break (like "session complete")
+            // shouldn't get lost, though, so it comes as soon as the current goose has left.
+            if (!visit.StartsBreak) _pendingVisit ??= visit;
+            return;
+        }
+
+        bool naps = visit.StartsBreak && Settings.BreakMinutes > 0;
+        _goose = new GooseWindow(visit, Settings.StaySeconds, Settings.SnoozeMinutes,
+            naps ? TimeSpan.FromMinutes(Settings.BreakMinutes) : null);
+        _goose.Answered += outcome =>
+            Scheduler.GooseAnswered(outcome, startsBreak: naps && outcome == GooseOutcome.Dismissed);
+        _goose.Finished += () =>
         {
             _goose = null;
-            Scheduler.GooseLeft(outcome);
+            if (_pendingVisit is { } pending)
+            {
+                _pendingVisit = null;
+                SummonGoose(pending);
+            }
         };
         Scheduler.GooseArrived();
         _goose.Show();

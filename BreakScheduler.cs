@@ -89,11 +89,16 @@ public sealed class BreakScheduler
         StateChanged?.Invoke();
     }
 
-    public void GooseLeft(GooseOutcome outcome)
+    /// <summary>
+    /// Called as soon as the user answers the goose (it may stay on screen for a while after,
+    /// e.g. to nap during the break).
+    /// </summary>
+    /// <param name="startsBreak">Whether this answer starts a break of the configured length.</param>
+    public void GooseAnswered(GooseOutcome outcome, bool startsBreak)
     {
         GooseVisiting = false;
         var now = DateTime.Now;
-        BreakEndsAt = null;
+        BreakEndsAt = startsBreak ? now.AddMinutes(_settings.BreakMinutes) : null;
         if (outcome == GooseOutcome.Snoozed)
         {
             SetNext(now.AddMinutes(_settings.SnoozeMinutes));
@@ -101,15 +106,7 @@ public sealed class BreakScheduler
         else if (CurrentInterval is int interval)
         {
             // The next reminder starts counting once the break is over.
-            if (outcome == GooseOutcome.Dismissed && _settings.BreakMinutes > 0)
-            {
-                BreakEndsAt = now.AddMinutes(_settings.BreakMinutes);
-                SetNext(BreakEndsAt.Value.AddMinutes(interval));
-            }
-            else
-            {
-                SetNext(now.AddMinutes(interval));
-            }
+            SetNext((BreakEndsAt ?? now).AddMinutes(interval));
         }
         else
         {

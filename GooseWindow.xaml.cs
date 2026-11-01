@@ -18,6 +18,7 @@ public sealed record GooseVisit(
     string DismissText,
     bool AllowSnooze,
     bool AllowFinishUp,
+    bool StartsBreak,
     GooseOutfit? Outfit = null);
 
 public enum GooseOutcome { Dismissed, Snoozed, TimedOut }
@@ -25,11 +26,14 @@ public enum GooseOutcome { Dismissed, Snoozed, TimedOut }
 /// <summary>
 /// A transparent, always-on-top window that walks a goose in from a screen edge,
 /// shows a break reminder, then walks back out. If the user needs to finish up first,
-/// the goose waits peeking around the screen edge until it's clicked.
+/// the goose waits peeking around the screen edge until it's clicked. If the user takes
+/// the break, the goose naps on the taskbar until the break is over.
 /// </summary>
 public partial class GooseWindow : Window
 {
-    private enum Phase { WalkingIn, Talking, ToEdge, Peeking, Returning, WalkingOut }
+    private enum Phase { WalkingIn, Talking, ToEdge, Peeking, Returning, Sleeping, WakingUp, WalkingOut }
+
+    private static readonly TimeSpan WakeUpPause = TimeSpan.FromSeconds(5);
 
     private const double WalkSpeed = 150;   // DIPs per second
     private const double StepRate = 12;     // leg swing speed, radians per second
@@ -45,13 +49,21 @@ public partial class GooseWindow : Window
     private Phase _phase = Phase.WalkingIn;
     private double _targetLeft;
     private double _stepPhase;
-    private GooseOutcome _outcome = GooseOutcome.TimedOut;
+    private readonly TimeSpan? _breakLength;
+    private DateTime _breakStart;
+    private DateTime _breakEnd;
+    private DateTime _leaveAt;
 
-    /// <summary>Raised once the goose has left the screen, with how the user answered it.</summary>
-    public event Action<GooseOutcome>? Finished;
+    /// <summary>Raised as soon as the user answers (or the goose gives up waiting).</summary>
+    public event Action<GooseOutcome>? Answered;
 
-    public GooseWindow(GooseVisit visit, int staySeconds, int snoozeMinutes)
+    /// <summary>Raised once the goose has left the screen.</summary>
+    public event Action? Finished;
+
+    /// <param name="breakLength">If set, the goose naps for this long when the user takes the break.</param>
+    public GooseWindow(GooseVisit visit, int staySeconds, int snoozeMinutes, TimeSpan? breakLength)
     {
+        _breakLength = breakLength;
         InitializeComponent();
 
         TitleText.Text = visit.Title;
@@ -91,7 +103,7 @@ public partial class GooseWindow : Window
         {
             CompositionTarget.Rendering -= OnRendering;
             _stayTimer.Stop();
-            Finished?.Invoke(_outcome);
+            Finished?.Invoke();
         };
     }
 
@@ -143,6 +155,21 @@ public partial class GooseWindow : Window
                 double peekLeft = PeekLeft(IsCursorNearPeek() ? PeekHoverVisible : PeekVisible);
                 Left += (peekLeft - Left) * Math.Min(1, dt * 10);
                 Figure.HeadAngle = Math.Sin(now.TotalSeconds * 1.6) * 6;
+                break;
+
+            case Phase.Sleeping:
+                UpdateBreakProgress();
+                if (DateTime.Now >= _breakEnd) WakeUp();
+                break;
+
+            case Phase.WakingUp:
+                Figure.HeadAngle = Math.Sin(now.TotalSeconds * 2.5) * 4;
+                if (DateTime.Now >= _leaveAt)
+                {
+                    BreakCard.Visibility = Visibility.Collapsed;
+                    Figure.HeadAngle = 0;
+                    _phase = Phase.WalkingOut;
+                }
                 break;
 
             case Phase.WalkingOut:
@@ -232,9 +259,71 @@ public partial class GooseWindow : Window
     private void Leave(GooseOutcome outcome)
     {
         if (_phase != Phase.Talking) return;
-        _outcome = outcome;
         StopTalking();
-        _phase = Phase.WalkingOut;
+        Answered?.Invoke(outcome);
+
+        if (outcome == GooseOutcome.Dismissed && _breakLength is { } length && length > TimeSpan.Zero)
+            StartSleeping(length);
+        else
+            _phase = Phase.WalkingOut;
+    }
+
+    private void StartSleeping(TimeSpan length)
+    {
+        _phase = Phase.Sleeping;
+        _breakStart = DateTime.Now;
+        _breakEnd = _breakStart + length;
+        Figure.Sleeping = true;
+        Figure.ToolTip = $"Napping until {_breakEnd:HH:mm}. Enjoy your break!";
+
+        BreakTitle.Text = "Enjoy your break";
+        UpdateBreakProgress();
+        BreakCard.Visibility = Visibility.Visible;
+        var pop = new DoubleAnimation(0.5, 1, TimeSpan.FromMilliseconds(300))
+        {
+            EasingFunction = new BackEase { Amplitude = 0.4, EasingMode = EasingMode.EaseOut },
+        };
+        BreakCardScale.BeginAnimation(ScaleTransform.ScaleXProperty, pop);
+        BreakCardScale.BeginAnimation(ScaleTransform.ScaleYProperty, pop);
+    }
+
+    private void UpdateBreakProgress()
+    {
+        var total = _breakEnd - _breakStart;
+        var left = _breakEnd - DateTime.Now;
+        if (left < TimeSpan.Zero) left = TimeSpan.Zero;
+        double progress = total > TimeSpan.Zero ? 1 - left / total : 1;
+
+        BreakRing.Data = RingArc(progress, center: 18, radius: 16);
+        BreakTimeText.Text = left.TotalHours >= 1
+            ? $"{(int)left.TotalHours}:{left:mm\\:ss} left"
+            : $"{left:m\\:ss} left";
+    }
+
+    private void WakeUp()
+    {
+        _phase = Phase.WakingUp;
+        _leaveAt = DateTime.Now + WakeUpPause;
+        Figure.Sleeping = false;
+        Figure.ToolTip = null;
+        BreakRing.Data = RingArc(1, center: 18, radius: 16);
+        BreakTitle.Text = "Break's over, welcome back!";
+        BreakTimeText.Text = "Off you go, refreshed and ready";
+    }
+
+    /// <summary>A circular arc starting at 12 o'clock, going clockwise for the given fraction of a circle.</summary>
+    private static Geometry RingArc(double fraction, double center, double radius)
+    {
+        fraction = Math.Clamp(fraction, 0, 1);
+        if (fraction >= 0.9999) return new EllipseGeometry(new Point(center, center), radius, radius);
+        if (fraction <= 0.0001) return Geometry.Empty;
+
+        double angle = fraction * 2 * Math.PI;
+        var start = new Point(center, center - radius);
+        var end = new Point(center + radius * Math.Sin(angle), center - radius * Math.Cos(angle));
+        var figure = new PathFigure { StartPoint = start, IsClosed = false };
+        figure.Segments.Add(new ArcSegment(end, new Size(radius, radius), 0, fraction > 0.5, SweepDirection.Clockwise, true));
+        return new PathGeometry(new[] { figure });
     }
 
     private void FinishUp_Click(object sender, RoutedEventArgs e)
@@ -260,8 +349,8 @@ public partial class GooseWindow : Window
             _phase = Phase.Returning;
             return;
         }
-        // Poking the goose makes it flap its head indignantly.
-        Figure.Flap();
+        // Poking the goose makes it flap its head indignantly, unless it's napping.
+        if (_phase != Phase.Sleeping) Figure.Flap();
     }
 
     private const int GWL_EXSTYLE = -20;

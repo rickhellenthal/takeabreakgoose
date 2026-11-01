@@ -12,6 +12,7 @@
         <SolidColorBrush x:Key="Ink" Color="#33393A" />
     </UserControl.Resources>
 
+    <Grid>
     <!-- The goose, drawn facing right. Flip mirrors it to face left. -->
     <Canvas RenderTransformOrigin="0.5,0.5" Background="Transparent">
         <Canvas.RenderTransform>
@@ -23,7 +24,7 @@
             <Ellipse x:Name="Shadow" Canvas.Left="30" Canvas.Top="149" Width="66" Height="8" Fill="#22000000" />
 
             <!-- Back leg -->
-            <Canvas>
+            <Canvas x:Name="BackLeg">
                 <Canvas.RenderTransform>
                     <RotateTransform x:Name="LegBackRotate" CenterX="60" CenterY="128" />
                 </Canvas.RenderTransform>
@@ -34,7 +35,7 @@
             </Canvas>
 
             <!-- Front leg -->
-            <Canvas>
+            <Canvas x:Name="FrontLeg">
                 <Canvas.RenderTransform>
                     <RotateTransform x:Name="LegFrontRotate" CenterX="76" CenterY="128" />
                 </Canvas.RenderTransform>
@@ -96,7 +97,9 @@
                     <Ellipse Canvas.Left="63" Canvas.Top="4" Width="28" Height="24" Fill="{StaticResource Feathers}" />
                     <Path Fill="{StaticResource Coral}"
                           Data="M 86,11 C 95,9 104,11 109,16 C 104,21 95,22 87,22 Z" />
-                    <Ellipse Canvas.Left="79" Canvas.Top="11" Width="4" Height="4" Fill="{StaticResource Ink}" />
+                    <Ellipse x:Name="OpenEye" Canvas.Left="79" Canvas.Top="11" Width="4" Height="4" Fill="{StaticResource Ink}" />
+                    <Path x:Name="ClosedEye" Visibility="Collapsed" Stroke="{StaticResource Ink}" StrokeThickness="1.4"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M 78,13 Q 81,16 84,13" />
 
                     <!-- Outfit: raincoat hood -->
                     <Canvas x:Name="RaincoatHood" Visibility="Collapsed">
@@ -135,4 +138,18 @@
             </Canvas>
         </Canvas>
     </Canvas>
+
+    <!-- Snoring z's. Not mirrored with the goose, so the letters stay readable. -->
+    <Canvas x:Name="Snore" Visibility="Collapsed" IsHitTestVisible="False">
+        <TextBlock x:Name="Z1" Text="z" FontSize="13" FontWeight="Bold" Foreground="{StaticResource Slate}" Opacity="0">
+            <TextBlock.RenderTransform><TranslateTransform /></TextBlock.RenderTransform>
+        </TextBlock>
+        <TextBlock x:Name="Z2" Text="z" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Slate}" Opacity="0">
+            <TextBlock.RenderTransform><TranslateTransform /></TextBlock.RenderTransform>
+        </TextBlock>
+        <TextBlock x:Name="Z3" Text="Z" FontSize="19" FontWeight="Bold" Foreground="{StaticResource Slate}" Opacity="0">
+            <TextBlock.RenderTransform><TranslateTransform /></TextBlock.RenderTransform>
+        </TextBlock>
+    </Canvas>
+    </Grid>
 </UserControl>

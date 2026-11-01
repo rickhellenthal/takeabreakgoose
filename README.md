@@ -38,6 +38,8 @@ The goose comes in from the left or right edge, stops on that same side of the s
 
 When it asks you to take a break, you can also choose **Let me finish up**. The goose then walks back to the edge and peeks around it while you save your work. It leans out further when your mouse comes near. Click it when you're ready, and it comes back with the snooze and break options.
 
+When you take the break, the goose sits down and naps on the taskbar until the break is over. A small card above it shows a ring that fills up as the break goes on, and how much time is left. When the break ends, the goose wakes up, welcomes you back and walks off.
+
 Settings are saved to `%APPDATA%\TakeABreakGoose\settings.json`.
 
 ## Build & run
