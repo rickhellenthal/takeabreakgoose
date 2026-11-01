@@ -11,6 +11,7 @@ public sealed class TrayIcon : IDisposable
     private readonly Forms.NotifyIcon _icon;
     private readonly Drawing.Icon _gooseIcon;
     private readonly Forms.ToolStripMenuItem _openItem;
+    private readonly Forms.ToolStripMenuItem _breakNowItem;
     private readonly Forms.ToolStripMenuItem _pauseItem;
     private readonly Forms.ToolStripMenuItem _stopSessionItem;
 
@@ -28,7 +29,8 @@ public sealed class TrayIcon : IDisposable
         _openItem = new Forms.ToolStripMenuItem("Open Take a Break Goose", null, (_, _) => OpenRequested?.Invoke());
         _openItem.Font = new Drawing.Font(_openItem.Font, Drawing.FontStyle.Bold);
         menu.Items.Add(_openItem);
-        menu.Items.Add("Take a break now", null, (_, _) => SummonRequested?.Invoke());
+        _breakNowItem = new Forms.ToolStripMenuItem("Take a break now", null, (_, _) => SummonRequested?.Invoke());
+        menu.Items.Add(_breakNowItem);
         _pauseItem = new Forms.ToolStripMenuItem("Pause reminders", null, (_, _) => PauseToggled?.Invoke());
         menu.Items.Add(_pauseItem);
         _stopSessionItem = new Forms.ToolStripMenuItem("Stop focus session", null, (_, _) => StopSessionRequested?.Invoke());
@@ -55,7 +57,8 @@ public sealed class TrayIcon : IDisposable
         if (text.Length > 63) text = text[..63]; // NotifyIcon.Text is limited to 63 chars
         if (_icon.Text != text) _icon.Text = text;
         _pauseItem.Text = paused ? "Resume reminders" : "Pause reminders";
-        _stopSessionItem.Visible = sessionRunning;
+        // Breaks, pausing and stopping only mean something during a focus session.
+        _breakNowItem.Visible = _pauseItem.Visible = _stopSessionItem.Visible = sessionRunning;
         _openItem.ShortcutKeyDisplayString = hotkeyText;
     }
 

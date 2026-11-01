@@ -452,7 +452,6 @@ public partial class MainWindow : Window
         RefreshStatus();
     }
 
-    private void Summon_Click(object sender, RoutedEventArgs e) => _host.SummonBreakGoose();
 
     private void ShowSettingsStatus(string message, bool error)
     {
