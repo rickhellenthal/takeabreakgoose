@@ -34,7 +34,7 @@ public partial class GooseWindow : Window
     private const double WalkSpeed = 150;   // DIPs per second
     private const double StepRate = 12;     // leg swing speed, radians per second
     private const double PeekVisible = 40;  // how much of the goose shows while peeking
-    private const double PeekHoverVisible = 95;
+    private const double PeekHoverVisible = 58;
 
     private readonly Rect _area = SystemParameters.WorkArea;
     private readonly Stopwatch _clock = new();
