@@ -13,7 +13,7 @@ public interface IGooseHost
 {
     GooseSettings Settings { get; }
     BreakScheduler Scheduler { get; }
-    void StartSession(int intervalMinutes, int? lengthMinutes);
+    void StartSession(SessionPlan plan);
     void SummonBreakGoose(GooseOutfit? outfit = null);
 
     /// <summary>Applies and saves new settings; returns an error message, or null on success.</summary>
@@ -113,11 +113,20 @@ public partial class MainWindow : Window
 
     // ---- Focus session ----
 
+    private RadioButton[] IntervalPresets => new[] { Interval15, Interval30, Interval45, Interval60 };
+
     private void LoadSessionForm(GooseSettings settings)
     {
-        SessionIntervalBox.Text = settings.LastSessionIntervalMinutes.ToString();
-        SessionEndCheck.IsChecked = settings.LastSessionHasEnd;
+        int interval = settings.LastSessionIntervalMinutes;
+        var preset = IntervalPresets.FirstOrDefault(r => (string)r.Tag == interval.ToString());
+        (preset ?? IntervalCustom).IsChecked = true;
+        SessionIntervalBox.Text = interval.ToString();
+
         SetLengthBoxes(settings.LastSessionLengthMinutes);
+        SessionEndTimeBox.Text = settings.LastSessionEndTime.ToString(@"hh\:mm");
+        (settings.LastSessionEndMode == SessionEndMode.At ? EndAtRadio : EndAfterRadio).IsChecked = true;
+        EndOptionsToggle.IsChecked = settings.LastSessionEndMode != SessionEndMode.None;
+        UpdateEndOptions();
     }
 
     private void SetLengthBoxes(int minutes)
@@ -176,9 +185,13 @@ public partial class MainWindow : Window
             }
 
             SessionEndText.Text = session.EndsAt is DateTime end
-                ? $"Started at {session.StartedAt:HH:mm} · ends at {end:HH:mm} ({FormatCountdown(end - now)} left)"
+                ? $"Started at {session.StartedAt:HH:mm} · ends {DescribeEnd(end, now)} ({FormatCountdown(end - now)} left)"
                 : $"Started at {session.StartedAt:HH:mm} · no end time, stop it whenever you're done.";
             PauseButton.Content = scheduler.IsPaused ? "Resume" : "Pause";
+        }
+        else
+        {
+            UpdateEndPreview(); // "in 2 h 14 min" moves along with the clock
         }
 
         AlwaysOnNote.Text = settings.AlwaysOn
@@ -194,34 +207,131 @@ public partial class MainWindow : Window
             : time.ToString(@"m\:ss");
     }
 
-    private void IntervalPreset_Click(object sender, RoutedEventArgs e) =>
-        SessionIntervalBox.Text = (string)((Button)sender).Tag;
+    /// <summary>"at 17:00", or "tomorrow at 01:00" when it's past midnight.</summary>
+    private static string DescribeEnd(DateTime end, DateTime now) =>
+        end.Date > now.Date ? $"tomorrow at {end:HH:mm}" : $"at {end:HH:mm}";
+
+    /// <summary>"2 h 14 min", "2 h" or "14 min".</summary>
+    private static string DescribeDuration(TimeSpan time)
+    {
+        int minutes = (int)Math.Ceiling(Math.Max(0, time.TotalMinutes));
+        int hours = minutes / 60;
+        minutes %= 60;
+        if (hours == 0) return $"{minutes} min";
+        return minutes == 0 ? $"{hours} h" : $"{hours} h {minutes} min";
+    }
+
+    private void Interval_Checked(object sender, RoutedEventArgs e)
+    {
+        if (CustomIntervalPanel == null) return; // fires during InitializeComponent
+        bool custom = IntervalCustom.IsChecked == true;
+        CustomIntervalPanel.Visibility = Show(custom);
+        if (custom && IsLoaded) SessionIntervalBox.Focus();
+    }
+
+    private void EndOptionsToggle_Changed(object sender, RoutedEventArgs e) => UpdateEndOptions();
+
+    private void UpdateEndOptions()
+    {
+        bool open = EndOptionsToggle.IsChecked == true;
+        EndOptionsPanel.Visibility = Show(open);
+        EndOptionsToggle.Content = open ? "Remove end time" : "Set an end time ▾";
+        UpdateEndPreview();
+    }
+
+    private void EndAfterInput_GotFocus(object sender, RoutedEventArgs e) => EndAfterRadio.IsChecked = true;
+
+    private void EndAtInput_GotFocus(object sender, RoutedEventArgs e) => EndAtRadio.IsChecked = true;
+
+    private void EndOption_Changed(object sender, RoutedEventArgs e) => UpdateEndPreview();
 
     private void LengthPreset_Click(object sender, RoutedEventArgs e)
     {
-        SessionEndCheck.IsChecked = true;
+        EndAfterRadio.IsChecked = true;
         SetLengthBoxes(int.Parse((string)((Button)sender).Tag));
+    }
+
+    /// <summary>The end-time choice as typed so far, or an explanation of what's wrong with it.</summary>
+    private (SessionEndMode Mode, int LengthMinutes, TimeSpan EndTime, string? Error) ReadEndChoice()
+    {
+        var settings = _host.Settings;
+        int length = settings.LastSessionLengthMinutes;
+        TimeSpan endTime = settings.LastSessionEndTime;
+        if (EndOptionsToggle.IsChecked != true) return (SessionEndMode.None, length, endTime, null);
+
+        if (EndAtRadio.IsChecked == true)
+        {
+            if (!TryParseTimeOfDay(SessionEndTimeBox.Text, out endTime))
+                return (SessionEndMode.At, length, settings.LastSessionEndTime, "Enter the end time like 17:00.");
+            return (SessionEndMode.At, length, endTime, null);
+        }
+
+        if (!int.TryParse(SessionHoursBox.Text.Trim(), out int hours) || hours is < 0 or > 24
+            || !int.TryParse(SessionMinutesBox.Text.Trim(), out int minutes) || minutes is < 0 or > 59)
+        {
+            return (SessionEndMode.After, length, endTime, "Enter how long the session lasts, like 2 h 0 min.");
+        }
+        length = hours * 60 + minutes;
+        if (length == 0) return (SessionEndMode.After, length, endTime, "The session needs to last at least a minute.");
+        return (SessionEndMode.After, length, endTime, null);
+    }
+
+    /// <summary>Accepts 17:00, 17.00, 1700, 9:30 or just 17.</summary>
+    private static bool TryParseTimeOfDay(string text, out TimeSpan time)
+    {
+        time = default;
+        string t = text.Trim().Replace('.', ':');
+        int hours, minutes = 0;
+        if (t.Contains(':'))
+        {
+            var parts = t.Split(':');
+            if (parts.Length != 2 || !int.TryParse(parts[0], out hours) || !int.TryParse(parts[1], out minutes)) return false;
+        }
+        else if (t.Length is 3 or 4 && int.TryParse(t, out int hhmm))
+        {
+            hours = hhmm / 100;
+            minutes = hhmm % 100;
+        }
+        else if (!int.TryParse(t, out hours))
+        {
+            return false;
+        }
+        if (hours is < 0 or > 23 || minutes is < 0 or > 59) return false;
+        time = new TimeSpan(hours, minutes, 0);
+        return true;
+    }
+
+    private void UpdateEndPreview()
+    {
+        if (EndPreview == null || EndOptionsToggle.IsChecked != true) return;
+        var (mode, length, endTime, error) = ReadEndChoice();
+        if (error != null)
+        {
+            EndPreview.Text = error;
+            return;
+        }
+        var now = DateTime.Now;
+        var end = new SessionPlan(1, mode, length, endTime).EndsAt(now)!.Value;
+        EndPreview.Text = $"The session ends {DescribeEnd(end, now)}, in {DescribeDuration(end - now)}.";
     }
 
     private void StartSession_Click(object sender, RoutedEventArgs e)
     {
         SessionError.Visibility = Visibility.Collapsed;
-        if (!TryParse(SessionIntervalBox.Text, 1, 600, "The break interval", out int interval, ShowSessionError)) return;
 
-        int? length = null;
-        if (SessionEndCheck.IsChecked == true)
+        int interval;
+        var preset = IntervalPresets.FirstOrDefault(r => r.IsChecked == true);
+        if (preset != null) interval = int.Parse((string)preset.Tag);
+        else if (!TryParse(SessionIntervalBox.Text, 1, 600, "The break interval", out interval, ShowSessionError)) return;
+
+        var (mode, length, endTime, error) = ReadEndChoice();
+        if (error != null)
         {
-            if (!TryParse(SessionHoursBox.Text, 0, 24, "Hours", out int hours, ShowSessionError)) return;
-            if (!TryParse(SessionMinutesBox.Text, 0, 59, "Minutes", out int minutes, ShowSessionError)) return;
-            length = hours * 60 + minutes;
-            if (length == 0)
-            {
-                ShowSessionError("The session needs to last at least a minute.");
-                return;
-            }
+            ShowSessionError(error);
+            return;
         }
 
-        _host.StartSession(interval, length);
+        _host.StartSession(new SessionPlan(interval, mode, length, endTime));
     }
 
     private void StopSession_Click(object sender, RoutedEventArgs e) => _host.Scheduler.StopSession();

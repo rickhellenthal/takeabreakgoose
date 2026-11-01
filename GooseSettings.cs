@@ -28,8 +28,9 @@ public sealed class GooseSettings
 
     // The last session the user started, used to pre-fill the start form.
     public int LastSessionIntervalMinutes { get; set; } = 45;
-    public bool LastSessionHasEnd { get; set; }
+    public SessionEndMode LastSessionEndMode { get; set; } = SessionEndMode.None;
     public int LastSessionLengthMinutes { get; set; } = 120;
+    public TimeSpan LastSessionEndTime { get; set; } = new(17, 0, 0);
 
     public ModifierKeys HotkeyModifiers { get; set; } = ModifierKeys.Control | ModifierKeys.Alt;
 
@@ -79,6 +80,8 @@ public sealed class GooseSettings
         AwayMinutes = Math.Clamp(AwayMinutes, 0, 120);
         LastSessionIntervalMinutes = Math.Clamp(LastSessionIntervalMinutes, 1, 24 * 60);
         LastSessionLengthMinutes = Math.Clamp(LastSessionLengthMinutes, 1, 24 * 60);
+        if (LastSessionEndTime < TimeSpan.Zero || LastSessionEndTime >= TimeSpan.FromDays(1))
+            LastSessionEndTime = new TimeSpan(17, 0, 0);
         Messages = (Messages ?? new List<string>())
             .Select(m => m?.Trim() ?? "")
             .Where(m => m.Length > 0)

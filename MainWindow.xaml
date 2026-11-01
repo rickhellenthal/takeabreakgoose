@@ -108,6 +108,57 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- A selectable option, e.g. the break interval. The selected one is tinted orange. -->
+        <Style x:Key="ChoiceChip" TargetType="RadioButton">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="#3A3A3A" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="MinWidth" Value="74" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Chip" Background="White" BorderBrush="#D6CFC4" BorderThickness="1.5"
+                                CornerRadius="10" Padding="12,9">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chip" Property="Background" Value="#F7F2EA" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Chip" Property="Background" Value="#FDEBD8" />
+                                <Setter TargetName="Chip" Property="BorderBrush" Value="{StaticResource Accent}" />
+                                <Setter Property="Foreground" Value="#B85F12" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- A quiet text link that toggles something open. -->
+        <Style x:Key="LinkToggle" TargetType="ToggleButton">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="#5E7773" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="Transparent" Padding="4,6">
+                            <TextBlock x:Name="Label"
+                                       Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Label" Property="TextDecorations" Value="Underline" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid Margin="20,18,20,16">
@@ -163,38 +214,81 @@
                             <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,0"
                                        Text="The goose reminds you to take breaks while you work, and lets you know when the session is over." />
 
-                            <TextBlock Text="Remind me to take a break every" Margin="0,16,0,6" />
+                            <TextBlock Text="Remind me to take a break every" Margin="0,16,0,8" />
                             <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="Interval15" Content="15 min" Tag="15" GroupName="Interval"
+                                             Style="{StaticResource ChoiceChip}" Checked="Interval_Checked" />
+                                <RadioButton x:Name="Interval30" Content="30 min" Tag="30" GroupName="Interval"
+                                             Style="{StaticResource ChoiceChip}" Checked="Interval_Checked" />
+                                <RadioButton x:Name="Interval45" Content="45 min" Tag="45" GroupName="Interval"
+                                             Style="{StaticResource ChoiceChip}" Checked="Interval_Checked" />
+                                <RadioButton x:Name="Interval60" Content="60 min" Tag="60" GroupName="Interval"
+                                             Style="{StaticResource ChoiceChip}" Checked="Interval_Checked" />
+                                <RadioButton x:Name="IntervalCustom" Content="Custom" GroupName="Interval"
+                                             Style="{StaticResource ChoiceChip}" Checked="Interval_Checked" />
+                            </StackPanel>
+                            <StackPanel x:Name="CustomIntervalPanel" Orientation="Horizontal" Margin="0,10,0,0"
+                                        Visibility="Collapsed">
+                                <TextBlock Text="Every" Style="{StaticResource Label}" Margin="0,0,8,0" />
                                 <TextBox x:Name="SessionIntervalBox" Width="56" />
-                                <TextBlock Text="minutes" Style="{StaticResource Label}" Margin="8,0,16,0" />
-                                <Button Content="15" Tag="15" Style="{StaticResource ChipButton}" Click="IntervalPreset_Click" />
-                                <Button Content="30" Tag="30" Style="{StaticResource ChipButton}" Click="IntervalPreset_Click" />
-                                <Button Content="45" Tag="45" Style="{StaticResource ChipButton}" Click="IntervalPreset_Click" />
-                                <Button Content="60" Tag="60" Style="{StaticResource ChipButton}" Click="IntervalPreset_Click" />
+                                <TextBlock Text="minutes" Style="{StaticResource Label}" Margin="8,0,0,0" />
                             </StackPanel>
-
-                            <CheckBox x:Name="SessionEndCheck" Content="End the session after" Margin="0,16,0,6" />
-                            <StackPanel Orientation="Horizontal">
-                                <TextBox x:Name="SessionHoursBox" Width="40"
-                                         IsEnabled="{Binding IsChecked, ElementName=SessionEndCheck}" />
-                                <TextBlock Text="h" Style="{StaticResource Label}" Margin="6,0,8,0" />
-                                <TextBox x:Name="SessionMinutesBox" Width="40"
-                                         IsEnabled="{Binding IsChecked, ElementName=SessionEndCheck}" />
-                                <TextBlock Text="min" Style="{StaticResource Label}" Margin="6,0,16,0" />
-                                <Button Content="1h" Tag="60" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
-                                <Button Content="2h" Tag="120" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
-                                <Button Content="3h" Tag="180" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
-                                <Button Content="4h" Tag="240" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
-                            </StackPanel>
-                            <TextBlock Style="{StaticResource Hint}" Margin="0,6,0,0"
-                                       Text="Leave unchecked to keep the session going until you stop it." />
 
                             <TextBlock x:Name="SessionError" Foreground="#C62828" TextWrapping="Wrap"
                                        Margin="0,12,0,0" Visibility="Collapsed" />
 
-                            <Button Content="Start session" Style="{StaticResource PrimaryButton}"
-                                    HorizontalAlignment="Left" Margin="0,16,0,0" Padding="22,8"
-                                    Click="StartSession_Click" />
+                            <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                                <Button Content="Start session" Style="{StaticResource PrimaryButton}"
+                                        Padding="22,8" Click="StartSession_Click" />
+                                <ToggleButton x:Name="EndOptionsToggle" Style="{StaticResource LinkToggle}"
+                                              Margin="14,0,0,0" VerticalAlignment="Center"
+                                              Checked="EndOptionsToggle_Changed" Unchecked="EndOptionsToggle_Changed" />
+                            </StackPanel>
+
+                            <!-- Optional: when the session ends. Tucked away so a quick start stays quick. -->
+                            <Border x:Name="EndOptionsPanel" Background="#FAF7F2" CornerRadius="8" Padding="14,12"
+                                    Margin="0,12,0,0" Visibility="Collapsed">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <RadioButton x:Name="EndAfterRadio" Grid.Row="0" Content="End after" GroupName="EndMode"
+                                                 VerticalContentAlignment="Center" Margin="0,0,14,8"
+                                                 Checked="EndOption_Changed" />
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,8">
+                                        <TextBox x:Name="SessionHoursBox" Width="40" GotFocus="EndAfterInput_GotFocus"
+                                                 TextChanged="EndOption_Changed" />
+                                        <TextBlock Text="h" Style="{StaticResource Label}" Margin="6,0,8,0" />
+                                        <TextBox x:Name="SessionMinutesBox" Width="40" GotFocus="EndAfterInput_GotFocus"
+                                                 TextChanged="EndOption_Changed" />
+                                        <TextBlock Text="min" Style="{StaticResource Label}" Margin="6,0,14,0" />
+                                        <Button Content="1h" Tag="60" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
+                                        <Button Content="2h" Tag="120" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
+                                        <Button Content="3h" Tag="180" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
+                                        <Button Content="4h" Tag="240" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
+                                    </StackPanel>
+
+                                    <RadioButton x:Name="EndAtRadio" Grid.Row="1" Content="End at" GroupName="EndMode"
+                                                 VerticalContentAlignment="Center" Margin="0,0,14,0"
+                                                 Checked="EndOption_Changed" />
+                                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+                                        <TextBox x:Name="SessionEndTimeBox" Width="64" GotFocus="EndAtInput_GotFocus"
+                                                 TextChanged="EndOption_Changed" ToolTip="A time like 17:00" />
+                                        <TextBlock Text="your computer's local time" Style="{StaticResource Hint}"
+                                                   VerticalAlignment="Center" Margin="10,0,0,0" />
+                                    </StackPanel>
+
+                                    <TextBlock x:Name="EndPreview" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,12,0,0"
+                                               FontSize="12" Foreground="#5E7773" TextWrapping="Wrap" />
+                                </Grid>
+                            </Border>
                         </StackPanel>
                     </Border>
 

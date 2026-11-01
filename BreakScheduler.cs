@@ -45,10 +45,9 @@ public sealed class BreakScheduler
     public int? CurrentInterval =>
         Session?.IntervalMinutes ?? (_settings.AlwaysOn ? _settings.AlwaysOnIntervalMinutes : null);
 
-    public void StartSession(int intervalMinutes, int? lengthMinutes)
+    public void StartSession(int intervalMinutes, DateTime? endsAt)
     {
-        var now = DateTime.Now;
-        Session = new WorkSession(intervalMinutes, now, lengthMinutes > 0 ? now.AddMinutes(lengthMinutes.Value) : null);
+        Session = new WorkSession(intervalMinutes, DateTime.Now, endsAt);
         IsPaused = false;
         Reschedule();
     }

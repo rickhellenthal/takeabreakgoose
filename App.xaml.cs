@@ -75,14 +75,15 @@ public partial class App : Application, IGooseHost
         base.OnExit(e);
     }
 
-    public void StartSession(int intervalMinutes, int? lengthMinutes)
+    public void StartSession(SessionPlan plan)
     {
-        Settings.LastSessionIntervalMinutes = intervalMinutes;
-        Settings.LastSessionHasEnd = lengthMinutes != null;
-        if (lengthMinutes != null) Settings.LastSessionLengthMinutes = lengthMinutes.Value;
+        Settings.LastSessionIntervalMinutes = plan.IntervalMinutes;
+        Settings.LastSessionEndMode = plan.EndMode;
+        Settings.LastSessionLengthMinutes = plan.LengthMinutes;
+        Settings.LastSessionEndTime = plan.EndTime;
         TrySave();
 
-        Scheduler.StartSession(intervalMinutes, lengthMinutes);
+        Scheduler.StartSession(plan.IntervalMinutes, plan.EndsAt(DateTime.Now));
     }
 
     public void SummonBreakGoose(GooseOutfit? outfit = null)

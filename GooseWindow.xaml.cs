@@ -34,6 +34,18 @@ public partial class GooseWindow : Window
 {
     private enum Phase { WalkingIn, Talking, ToEdge, Peeking, Returning, Sleeping, BreakOver, WalkingOut }
 
+    /// <summary>What the speech bubble is asking, which decides what its two buttons do.</summary>
+    private enum Question { TakeABreak, ReadyToFocus, EndBreakEarly }
+
+    private static readonly string[] EndBreakEarlyLines =
+    {
+        "Cutting your break short? Bold move. Your future self will remember this.",
+        "Back already? The break isn't over yet, but who am I to judge. (I'm judging.)",
+        "Honk. Some of us take our breaks very seriously.",
+        "Fine, fine. But don't come crying to me when your focus runs out.",
+        "You woke me up for this? Your brain was enjoying that.",
+    };
+
     private const double WalkSpeed = 150;   // DIPs per second
     private const double StepRate = 12;     // leg swing speed, radians per second
     private const double PeekVisible = 40;  // how much of the goose shows while peeking
@@ -52,7 +64,7 @@ public partial class GooseWindow : Window
     private readonly int _snoozeMinutes;
     private DateTime _breakStart;
     private DateTime _breakEnd;
-    private bool _askingIfReady;
+    private Question _question = Question.TakeABreak;
 
     /// <summary>Raised as soon as the user answers (or the goose gives up waiting).</summary>
     public event Action<GooseOutcome>? Answered;
@@ -146,6 +158,8 @@ public partial class GooseWindow : Window
             case Phase.Talking:
                 // Idle: a gentle head bob while waiting for an answer.
                 Figure.HeadAngle = Math.Sin(now.TotalSeconds * 2.5) * 4;
+                // If the break runs out while the goose asks about ending it early, the question changes.
+                if (_question == Question.EndBreakEarly && DateTime.Now >= _breakEnd) AskIfReady();
                 break;
 
             case Phase.ToEdge:
@@ -277,7 +291,7 @@ public partial class GooseWindow : Window
         _breakStart = DateTime.Now;
         _breakEnd = _breakStart + length;
         Figure.Sleeping = true;
-        Figure.ToolTip = $"Napping until {_breakEnd:HH:mm}. Enjoy your break!";
+        Figure.ToolTip = NapToolTip;
 
         BreakTitle.Text = title;
         UpdateBreakProgress();
@@ -298,10 +312,16 @@ public partial class GooseWindow : Window
         double progress = total > TimeSpan.Zero ? 1 - left / total : 1;
 
         BreakRing.Data = RingArc(progress, center: 18, radius: 16);
-        BreakTimeText.Text = left.TotalHours >= 1
-            ? $"{(int)left.TotalHours}:{left:mm\\:ss} left"
-            : $"{left:m\\:ss} left";
+        BreakTimeText.Text = $"{FormatTimeLeft(left)} left";
     }
+
+    private static string FormatTimeLeft(TimeSpan left)
+    {
+        if (left < TimeSpan.Zero) left = TimeSpan.Zero;
+        return left.TotalHours >= 1 ? $"{(int)left.TotalHours}:{left:mm\\:ss}" : $"{left:m\\:ss}";
+    }
+
+    private string NapToolTip => $"Napping until {_breakEnd:HH:mm}. Click me if you need to end your break early.";
 
     /// <summary>The break time is up; the goose keeps napping until the user is back.</summary>
     private void BreakIsOver()
@@ -320,22 +340,44 @@ public partial class GooseWindow : Window
         Figure.ToolTip = null;
         BreakCard.Visibility = Visibility.Collapsed;
 
-        _askingIfReady = true;
-        TitleText.Text = "Welcome back!";
-        MessageText.Text = "Break's over. Ready to focus again?";
-        HintText.Visibility = Visibility.Collapsed;
-        FinishUpButton.Visibility = Visibility.Collapsed;
-        DismissButton.Content = "Ready to focus";
-        SnoozeButton.Content = $"{_snoozeMinutes} more minutes";
-        SnoozeButton.Visibility = Visibility.Visible;
         // No time limit: the next focus stretch only starts once the user says so.
+        Ask(Question.ReadyToFocus, "Welcome back!", "Break's over. Ready to focus again?", hint: null,
+            primary: "Ready to focus", secondary: $"{_snoozeMinutes} more minutes");
+    }
+
+    /// <summary>The goose was clicked mid-nap: wake up (a bit grumpy) and check before ending the break.</summary>
+    private void AskToEndBreakEarly()
+    {
+        Figure.Sleeping = false;
+        Figure.ToolTip = null;
+        BreakCard.Visibility = Visibility.Collapsed;
+
+        var left = _breakEnd - DateTime.Now;
+        string message = EndBreakEarlyLines[Random.Shared.Next(EndBreakEarlyLines.Length)];
+        // Resting is the highlighted choice, on purpose.
+        Ask(Question.EndBreakEarly, "Hey! I was napping…", message,
+            hint: $"There's still {FormatTimeLeft(left)} of your break left.",
+            primary: "Keep resting", secondary: "End my break");
+    }
+
+    private void Ask(Question question, string title, string message, string? hint, string primary, string secondary)
+    {
+        _question = question;
+        TitleText.Text = title;
+        MessageText.Text = message;
+        HintText.Text = hint ?? "";
+        HintText.Visibility = hint == null ? Visibility.Collapsed : Visibility.Visible;
+        FinishUpButton.Visibility = Visibility.Collapsed;
+        DismissButton.Content = primary;
+        SnoozeButton.Content = secondary;
+        SnoozeButton.Visibility = Visibility.Visible;
         StartTalking(giveUpAfterWaiting: false);
     }
 
+    /// <summary>The user is back (or cut the break short) and ready to focus: off the goose goes.</summary>
     private void ConfirmReady()
     {
         StopTalking();
-        _askingIfReady = false;
         ReadyToFocus?.Invoke();
         _phase = Phase.WalkingOut;
     }
@@ -343,9 +385,19 @@ public partial class GooseWindow : Window
     private void NapLonger()
     {
         StopTalking();
-        _askingIfReady = false;
         StartSleeping(TimeSpan.FromMinutes(_snoozeMinutes), "A little longer, then");
         BreakExtended?.Invoke(_breakEnd);
+    }
+
+    /// <summary>Back to sleep for the rest of the break that was interrupted.</summary>
+    private void ResumeNap()
+    {
+        StopTalking();
+        _phase = Phase.Sleeping;
+        Figure.Sleeping = true;
+        Figure.ToolTip = NapToolTip;
+        UpdateBreakProgress();
+        BreakCard.Visibility = Visibility.Visible;
     }
 
     /// <summary>A circular arc starting at 12 o'clock, going clockwise for the given fraction of a circle.</summary>
@@ -372,16 +424,26 @@ public partial class GooseWindow : Window
         _phase = Phase.ToEdge;
     }
 
+    // The primary (orange) button.
     private void Dismiss_Click(object sender, RoutedEventArgs e)
     {
-        if (_askingIfReady) ConfirmReady();
-        else Leave(GooseOutcome.Dismissed);
+        switch (_question)
+        {
+            case Question.TakeABreak: Leave(GooseOutcome.Dismissed); break;
+            case Question.ReadyToFocus: ConfirmReady(); break;
+            case Question.EndBreakEarly: ResumeNap(); break;
+        }
     }
 
+    // The secondary (outlined) button.
     private void Snooze_Click(object sender, RoutedEventArgs e)
     {
-        if (_askingIfReady) NapLonger();
-        else Leave(GooseOutcome.Snoozed);
+        switch (_question)
+        {
+            case Question.TakeABreak: Leave(GooseOutcome.Snoozed); break;
+            case Question.ReadyToFocus: NapLonger(); break;
+            case Question.EndBreakEarly: ConfirmReady(); break;
+        }
     }
 
     private void Figure_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -394,8 +456,18 @@ public partial class GooseWindow : Window
             _phase = Phase.Returning;
             return;
         }
-        // Poking the goose makes it flap its head indignantly, unless it's napping.
-        if (_phase is not (Phase.Sleeping or Phase.BreakOver)) Figure.Flap();
+        if (_phase == Phase.Sleeping)
+        {
+            AskToEndBreakEarly();
+            return;
+        }
+        if (_phase == Phase.BreakOver)
+        {
+            AskIfReady();
+            return;
+        }
+        // Poking the goose makes it flap its head indignantly.
+        Figure.Flap();
     }
 
     private const int GWL_EXSTYLE = -20;
