@@ -184,9 +184,12 @@ public partial class MainWindow : Window
                 CountdownCaption.Text = "";
             }
 
+            string started = session.StartedAutomatically
+                ? $"Started automatically at {session.StartedAt:HH:mm}"
+                : $"Started at {session.StartedAt:HH:mm}";
             SessionEndText.Text = session.EndsAt is DateTime end
-                ? $"Started at {session.StartedAt:HH:mm} · ends {DescribeEnd(end, now)} ({FormatCountdown(end - now)} left)"
-                : $"Started at {session.StartedAt:HH:mm} · no end time, stop it whenever you're done.";
+                ? $"{started} · ends {DescribeEnd(end, now)} ({FormatCountdown(end - now)} left)"
+                : $"{started} · no end time, stop it whenever you're done.";
             PauseButton.Content = scheduler.IsPaused ? "Resume" : "Pause";
         }
         else
@@ -194,9 +197,10 @@ public partial class MainWindow : Window
             UpdateEndPreview(); // "in 2 h 14 min" moves along with the clock
         }
 
-        AlwaysOnNote.Text = settings.AlwaysOn
-            ? $"Always on: outside a focus session the goose still visits every {settings.AlwaysOnIntervalMinutes} min."
-            : "Outside a focus session the goose stays quiet. You can turn on always-on reminders in Settings.";
+        AutoStartNote.Visibility = Show(session == null);
+        AutoStartNote.Text = settings.AutoStartSession
+            ? $"When the app starts, it starts a focus session by itself (a break every {settings.AutoStartIntervalMinutes} min). You can change this in Settings."
+            : "Outside a focus session the goose stays quiet. Want it to start one by itself? You can turn that on in Settings.";
     }
 
     private static string FormatCountdown(TimeSpan time)
@@ -351,8 +355,8 @@ public partial class MainWindow : Window
 
     private void LoadSettingsForm(GooseSettings settings)
     {
-        AlwaysOnCheck.IsChecked = settings.AlwaysOn;
-        AlwaysOnIntervalBox.Text = settings.AlwaysOnIntervalMinutes.ToString();
+        AutoStartCheck.IsChecked = settings.AutoStartSession;
+        AutoStartIntervalBox.Text = settings.AutoStartIntervalMinutes.ToString();
         BreakBox.Text = settings.BreakMinutes.ToString();
         SnoozeBox.Text = settings.SnoozeMinutes.ToString();
         StayBox.Text = settings.StaySeconds.ToString();
@@ -398,7 +402,7 @@ public partial class MainWindow : Window
     private void SaveSettings_Click(object sender, RoutedEventArgs e)
     {
         Action<string> fail = message => ShowSettingsStatus(message, error: true);
-        if (!TryParse(AlwaysOnIntervalBox.Text, 1, 24 * 60, "The always-on interval", out int alwaysOnInterval, fail)) return;
+        if (!TryParse(AutoStartIntervalBox.Text, 1, 24 * 60, "The automatic session interval", out int autoStartInterval, fail)) return;
         if (!TryParse(BreakBox.Text, 0, 120, "Break length", out int breakMinutes, fail)) return;
         if (!TryParse(SnoozeBox.Text, 1, 24 * 60, "Snooze length", out int snooze, fail)) return;
         if (!TryParse(StayBox.Text, 0, 3600, "Waiting time", out int stay, fail)) return;
@@ -416,8 +420,8 @@ public partial class MainWindow : Window
         }
 
         var settings = _host.Settings.Clone();
-        settings.AlwaysOn = AlwaysOnCheck.IsChecked == true;
-        settings.AlwaysOnIntervalMinutes = alwaysOnInterval;
+        settings.AutoStartSession = AutoStartCheck.IsChecked == true;
+        settings.AutoStartIntervalMinutes = autoStartInterval;
         settings.BreakMinutes = breakMinutes;
         settings.SnoozeMinutes = snooze;
         settings.StaySeconds = stay;

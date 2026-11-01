@@ -10,10 +10,17 @@ namespace TakeABreakGoose;
 
 public sealed class GooseSettings
 {
-    /// <summary>Keep reminding even when no focus session is running.</summary>
-    public bool AlwaysOn { get; set; }
+    /// <summary>Start an open-ended focus session as soon as the app starts.</summary>
+    public bool AutoStartSession { get; set; }
 
-    public int AlwaysOnIntervalMinutes { get; set; } = 60;
+    public int AutoStartIntervalMinutes { get; set; } = 60;
+
+    // Replaced by AutoStartSession. Only read to carry over the choice from older versions.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? AlwaysOn { get; set; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? AlwaysOnIntervalMinutes { get; set; }
 
     /// <summary>How long a break lasts; the next reminder starts counting after it. 0 = count right away.</summary>
     public int BreakMinutes { get; set; } = 5;
@@ -73,7 +80,16 @@ public sealed class GooseSettings
     /// <summary>Clamps values loaded from disk so a hand-edited file can't break the app.</summary>
     public void Sanitize()
     {
-        AlwaysOnIntervalMinutes = Math.Clamp(AlwaysOnIntervalMinutes, 1, 24 * 60);
+        // "Always on" reminders from older versions become a session that starts automatically.
+        if (AlwaysOn == true)
+        {
+            AutoStartSession = true;
+            AutoStartIntervalMinutes = AlwaysOnIntervalMinutes ?? AutoStartIntervalMinutes;
+        }
+        AlwaysOn = null;
+        AlwaysOnIntervalMinutes = null;
+
+        AutoStartIntervalMinutes = Math.Clamp(AutoStartIntervalMinutes, 1, 24 * 60);
         BreakMinutes = Math.Clamp(BreakMinutes, 0, 120);
         StaySeconds = Math.Clamp(StaySeconds, 0, 3600);
         SnoozeMinutes = Math.Clamp(SnoozeMinutes, 1, 24 * 60);

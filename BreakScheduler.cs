@@ -3,11 +3,12 @@ using System.Windows.Threading;
 
 namespace TakeABreakGoose;
 
-public sealed record WorkSession(int IntervalMinutes, DateTime StartedAt, DateTime? EndsAt);
+/// <param name="StartedAutomatically">Started by the "start a focus session when the app starts" setting.</param>
+public sealed record WorkSession(int IntervalMinutes, DateTime StartedAt, DateTime? EndsAt, bool StartedAutomatically);
 
 /// <summary>
-/// Decides when the goose should show up. Reminders come from the running focus session,
-/// or, when no session is running and always-on is enabled, from the always-on interval.
+/// Decides when the goose should show up. Reminders only come during a focus session;
+/// outside one the goose stays quiet.
 /// </summary>
 public sealed class BreakScheduler
 {
@@ -42,12 +43,11 @@ public sealed class BreakScheduler
     }
 
     /// <summary>Minutes between reminders right now, or null when the goose should stay quiet.</summary>
-    public int? CurrentInterval =>
-        Session?.IntervalMinutes ?? (_settings.AlwaysOn ? _settings.AlwaysOnIntervalMinutes : null);
+    public int? CurrentInterval => Session?.IntervalMinutes;
 
-    public void StartSession(int intervalMinutes, DateTime? endsAt)
+    public void StartSession(int intervalMinutes, DateTime? endsAt, bool automatically = false)
     {
-        Session = new WorkSession(intervalMinutes, DateTime.Now, endsAt);
+        Session = new WorkSession(intervalMinutes, DateTime.Now, endsAt, automatically);
         IsPaused = false;
         Reschedule();
     }
@@ -79,11 +79,8 @@ public sealed class BreakScheduler
 
     public void ApplySettings(GooseSettings settings)
     {
-        bool alwaysOnChanged = settings.AlwaysOn != _settings.AlwaysOn
-                               || settings.AlwaysOnIntervalMinutes != _settings.AlwaysOnIntervalMinutes;
         _settings = settings;
-        if (Session == null && alwaysOnChanged) Reschedule();
-        else StateChanged?.Invoke();
+        StateChanged?.Invoke();
     }
 
     public void GooseArrived()
@@ -152,7 +149,7 @@ public sealed class BreakScheduler
         if (BreakEndsAt is DateTime breakEnd) return $"On a break until {breakEnd:HH:mm}";
         if (NextBreakAt is DateTime next)
         {
-            string mode = Session != null ? "Focus session" : _settings.AlwaysOn ? "Always on" : "Snoozed";
+            string mode = Session != null ? "Focus session" : "Snoozed";
             return $"{mode} · next break at {next:HH:mm}";
         }
         return "No focus session running";

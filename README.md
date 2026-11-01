@@ -28,12 +28,15 @@ Open the app with the global shortcut (default **Ctrl+Alt+G**), the desktop shor
 - Click **Send this goose** to have the goose come over in that outfit.
 
 **Settings**
-- **Always on:** the goose also visits outside focus sessions, at its own interval. This is off by default.
-- **Break length:** the next reminder starts counting after your break.
-- **Snooze length**, and how long the goose waits for an answer before it leaves.
-- **Away counts as a break:** if you don't touch the mouse or keyboard for a few minutes, that time counts as a break, and the countdown starts fresh when you come back.
-- **Start with Windows:** turn this on to launch the app when you sign in. It then starts quietly in the tray.
-- **Shortcut and messages:** change the global shortcut and the list of messages the goose picks from.
+- **General**
+  - **Start with Windows:** launch the app when you sign in. It then starts quietly in the tray.
+  - **Start a focus session when the app starts:** an open-ended session with a break interval of your choice, so the goose keeps an eye on you without you starting a session yourself. Together with *Start with Windows*, it watches from the moment you sign in. Outside a focus session the goose stays quiet. This is off by default.
+  - **Shortcut** to open the app window.
+- **Breaks**
+  - **Break length:** the next reminder starts counting after your break.
+  - **Snooze length**, and how long the goose waits for an answer before it leaves.
+  - **Away counts as a break:** if you don't touch the mouse or keyboard for a few minutes, that time counts as a break, and the countdown starts fresh when you come back.
+- **Messages:** the list of messages the goose picks from.
 
 The goose comes in from the left or right edge, stops on that same side of the screen, and leaves the way it came.
 

@@ -32,6 +32,7 @@ public partial class App : Application, IGooseHost
         }
 
         Settings = SettingsStore.Load();
+        TrySave(); // writes back settings carried over from older versions
 
         Scheduler = new BreakScheduler(Settings);
         Scheduler.BreakDue += () => SummonBreakGoose();
@@ -47,6 +48,9 @@ public partial class App : Application, IGooseHost
         _tray.PauseToggled += () => Scheduler.SetPaused(!Scheduler.IsPaused);
         _tray.StopSessionRequested += Scheduler.StopSession;
         _tray.QuitRequested += Shutdown;
+
+        if (Settings.AutoStartSession)
+            Scheduler.StartSession(Settings.AutoStartIntervalMinutes, endsAt: null, automatically: true);
         UpdateTray();
 
         _hotkey = new HotkeyManager();
@@ -58,7 +62,9 @@ public partial class App : Application, IGooseHost
         if (!hotkeyOk)
             _tray.ShowBalloon($"{Settings.HotkeyText} is already used by another program. Open the goose from this tray icon to pick another shortcut.");
         else if (Array.IndexOf(e.Args, Autostart.Argument) >= 0)
-            _tray.ShowBalloon($"The goose is here. Press {Settings.HotkeyText} to start a focus session.");
+            _tray.ShowBalloon(Settings.AutoStartSession
+                ? $"Focus session started. The goose will remind you to take a break every {Settings.AutoStartIntervalMinutes} min."
+                : $"The goose is here. Press {Settings.HotkeyText} to start a focus session.");
 
         if (Array.IndexOf(e.Args, "--summon") >= 0) SummonBreakGoose();
     }
@@ -148,8 +154,12 @@ public partial class App : Application, IGooseHost
             return $"{newSettings.HotkeyText} is already used by another program. Pick a different shortcut.";
         }
 
+        bool autoStartTurnedOn = newSettings.AutoStartSession && !Settings.AutoStartSession;
         Settings = newSettings;
         Scheduler.ApplySettings(Settings);
+        // Turning it on shouldn't mean waiting for the next restart to see it work.
+        if (autoStartTurnedOn && Scheduler.Session == null)
+            Scheduler.StartSession(Settings.AutoStartIntervalMinutes, endsAt: null, automatically: true);
 
         try
         {
