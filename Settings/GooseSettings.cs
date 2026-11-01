@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Windows.Input;
 
@@ -100,43 +98,5 @@ public sealed class GooseSettings
         if (Messages.Count == 0) Messages = DefaultMessages();
         if (HotkeyKey == Key.None) HotkeyKey = Key.G;
         if (HotkeyModifiers == ModifierKeys.None) HotkeyModifiers = ModifierKeys.Control | ModifierKeys.Alt;
-    }
-}
-
-public static class SettingsStore
-{
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true,
-        Converters = { new JsonStringEnumConverter() },
-    };
-
-    public static string FilePath { get; } = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "TakeABreakGoose",
-        "settings.json");
-
-    public static GooseSettings Load()
-    {
-        GooseSettings settings;
-        try
-        {
-            settings = File.Exists(FilePath)
-                ? JsonSerializer.Deserialize<GooseSettings>(File.ReadAllText(FilePath), JsonOptions) ?? new GooseSettings()
-                : new GooseSettings();
-        }
-        catch (Exception)
-        {
-            // A corrupt settings file shouldn't keep the goose from showing up.
-            settings = new GooseSettings();
-        }
-        settings.Sanitize();
-        return settings;
-    }
-
-    public static void Save(GooseSettings settings)
-    {
-        Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-        File.WriteAllText(FilePath, JsonSerializer.Serialize(settings, JsonOptions));
     }
 }

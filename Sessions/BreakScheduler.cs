@@ -3,18 +3,15 @@ using System.Windows.Threading;
 
 namespace TakeABreakGoose;
 
-/// <param name="BreakMinutes">How long each break lasts in this session.</param>
-/// <param name="StartedAutomatically">Started by the "start a focus session when the app starts" setting.</param>
-public sealed record WorkSession(
-    int IntervalMinutes, int BreakMinutes, DateTime StartedAt, DateTime? EndsAt, bool StartedAutomatically);
-
 /// <summary>
 /// Decides when the goose should show up. Reminders only come during a focus session;
 /// outside one the goose stays quiet.
 /// </summary>
 public sealed class BreakScheduler
 {
-    private readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromSeconds(1) };
+    private readonly Func<DateTime> _now;
+    private readonly Func<TimeSpan> _idleTime;
+    private readonly DispatcherTimer? _tick;
     private GooseSettings _settings;
 
     public WorkSession? Session { get; private set; }
@@ -51,11 +48,23 @@ public sealed class BreakScheduler
     /// <summary>A session reached its end time (and Do not disturb isn't keeping the goose away).</summary>
     public event Action<WorkSession>? SessionCompleted;
 
-    public BreakScheduler(GooseSettings settings)
+    /// <summary>Uses the real clock and the real mouse and keyboard, and checks every second.</summary>
+    public BreakScheduler(GooseSettings settings) : this(settings, () => DateTime.Now, UserActivity.IdleTime)
     {
-        _settings = settings;
+        _tick = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _tick.Tick += (_, _) => Tick();
         _tick.Start();
+    }
+
+    /// <summary>
+    /// For tests: the time and "time since the mouse or keyboard was last used" come from the test,
+    /// and nothing happens on its own. Call <see cref="Tick"/> to let a moment pass.
+    /// </summary>
+    internal BreakScheduler(GooseSettings settings, Func<DateTime> now, Func<TimeSpan> idleTime)
+    {
+        _settings = settings;
+        _now = now;
+        _idleTime = idleTime;
         Reschedule();
     }
 
@@ -67,7 +76,7 @@ public sealed class BreakScheduler
 
     public void StartSession(int intervalMinutes, int breakMinutes, DateTime? endsAt, bool automatically = false)
     {
-        Session = new WorkSession(intervalMinutes, breakMinutes, DateTime.Now, endsAt, automatically);
+        Session = new WorkSession(intervalMinutes, breakMinutes, _now(), endsAt, automatically);
         SignOffWaiting = null; // a new session; the goodbye for the old one isn't needed anymore
         Reschedule();
     }
@@ -136,7 +145,7 @@ public sealed class BreakScheduler
     public void GooseAnswered(GooseOutcome outcome, bool startsBreak)
     {
         GooseVisiting = false;
-        var now = DateTime.Now;
+        var now = _now();
         BreakEndsAt = null;
         if (startsBreak)
         {
@@ -181,7 +190,7 @@ public sealed class BreakScheduler
     {
         AwaitingReturn = false;
         BreakEndsAt = null;
-        SetNext(CurrentInterval is int interval ? DateTime.Now.AddMinutes(interval) : null);
+        SetNext(CurrentInterval is int interval ? _now().AddMinutes(interval) : null);
         StateChanged?.Invoke();
     }
 
@@ -198,7 +207,7 @@ public sealed class BreakScheduler
         }
         if (AwaitingReturn)
         {
-            return BreakEndsAt is DateTime end && end > DateTime.Now
+            return BreakEndsAt is DateTime end && end > _now()
                 ? $"On a break until {end:HH:mm}"
                 : "Break's over, waiting for you";
         }
@@ -212,9 +221,10 @@ public sealed class BreakScheduler
         return "No focus session running";
     }
 
-    private void Tick()
+    /// <summary>Checks the clock and the user's activity; runs every second.</summary>
+    internal void Tick()
     {
-        var now = DateTime.Now;
+        var now = _now();
 
         if (Session is { EndsAt: DateTime end } finished && now >= end && !GooseVisiting)
         {
@@ -235,7 +245,7 @@ public sealed class BreakScheduler
         int breakMinutes = CurrentBreakMinutes;
         if (Session != null && breakMinutes > 0 && !GooseVisiting && !AwaitingReturn)
         {
-            bool away = UserActivity.IdleTime() >= TimeSpan.FromMinutes(breakMinutes);
+            bool away = _idleTime() >= TimeSpan.FromMinutes(breakMinutes);
             if (IsAway && !away)
             {
                 // Welcome back: the time away counted as a break, so start a fresh interval.
@@ -264,7 +274,7 @@ public sealed class BreakScheduler
     {
         if (!AwaitingReturn) BreakEndsAt = null;
         BreakWaiting = false; // a fresh countdown replaces a break that was waiting
-        SetNext(GooseVisiting || CurrentInterval is not int interval ? null : DateTime.Now.AddMinutes(interval));
+        SetNext(GooseVisiting || CurrentInterval is not int interval ? null : _now().AddMinutes(interval));
         StateChanged?.Invoke();
     }
 

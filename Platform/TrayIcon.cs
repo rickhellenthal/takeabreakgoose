@@ -77,7 +77,7 @@ public sealed class TrayIcon : IDisposable
     private static Drawing.Icon LoadGooseIcon()
     {
         // goose.ico is also the exe's icon, so the tray and the shortcut always match.
-        var resource = Application.GetResourceStream(new Uri("pack://application:,,,/goose.ico"));
+        var resource = Application.GetResourceStream(new Uri("pack://application:,,,/Assets/goose.ico"));
         using var stream = resource.Stream;
         return new Drawing.Icon(stream, Forms.SystemInformation.SmallIconSize);
     }

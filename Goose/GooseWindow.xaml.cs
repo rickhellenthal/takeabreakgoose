@@ -9,21 +9,6 @@ using System.Windows.Media.Animation;
 
 namespace TakeABreakGoose;
 
-/// <summary>What the goose says during one visit. A null outfit means a random one.</summary>
-/// <param name="JustVisiting">Not a reminder (e.g. showing off an outfit), so it leaves the session's timer alone.</param>
-public sealed record GooseVisit(
-    string Title,
-    string Message,
-    string? Hint,
-    string DismissText,
-    bool AllowSnooze,
-    bool AllowFinishUp,
-    bool StartsBreak,
-    GooseOutfit? Outfit = null,
-    bool JustVisiting = false);
-
-public enum GooseOutcome { Dismissed, Snoozed }
-
 /// <summary>
 /// A transparent, always-on-top window that walks a goose in from a screen edge,
 /// shows a break reminder, then walks back out. If the user needs to finish up first,

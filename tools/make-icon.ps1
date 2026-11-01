@@ -1,7 +1,7 @@
 # Renders the app icon (goose.ico) from the vector drawing below, in all the sizes Windows uses.
-# Usage: powershell -File tools\make-icon.ps1 [-OutPath goose.ico] [-PngPath docs\icon.png] [-PreviewPath preview.png]
+# Usage: powershell -File tools\make-icon.ps1 [-OutPath Assets\goose.ico] [-PngPath docs\icon.png] [-PreviewPath preview.png]
 param(
-    [string]$OutPath = (Join-Path $PSScriptRoot '..\goose.ico'),
+    [string]$OutPath = (Join-Path $PSScriptRoot '..\Assets\goose.ico'),
     # A 256x256 PNG of the same icon, used by the README.
     [string]$PngPath = (Join-Path $PSScriptRoot '..\docs\icon.png'),
     [string]$PreviewPath

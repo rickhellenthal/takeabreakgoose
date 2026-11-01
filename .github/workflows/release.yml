@@ -26,6 +26,9 @@ jobs:
         shell: pwsh
         run: echo "version=$($env:TAG.TrimStart('v'))" >> $env:GITHUB_OUTPUT
 
+      - name: Run the tests
+        run: dotnet test tests/TakeABreakGoose.Tests -c Release
+
       # Self-contained, so friends don't need to install .NET first.
       - name: Publish the app
         shell: pwsh

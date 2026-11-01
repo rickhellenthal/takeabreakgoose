@@ -24,4 +24,29 @@ public sealed record SessionPlan(int IntervalMinutes, int BreakMinutes, SessionE
         var today = now.Date + timeOfDay;
         return today > now ? today : today.AddDays(1);
     }
+
+    /// <summary>Reads a time of day the way people type it: 17:00, 17.00, 1700, 9:30 or just 17.</summary>
+    public static bool TryParseTimeOfDay(string text, out TimeSpan time)
+    {
+        time = default;
+        string t = text.Trim().Replace('.', ':');
+        int hours, minutes = 0;
+        if (t.Contains(':'))
+        {
+            var parts = t.Split(':');
+            if (parts.Length != 2 || !int.TryParse(parts[0], out hours) || !int.TryParse(parts[1], out minutes)) return false;
+        }
+        else if (t.Length is 3 or 4 && int.TryParse(t, out int hhmm))
+        {
+            hours = hhmm / 100;
+            minutes = hhmm % 100;
+        }
+        else if (!int.TryParse(t, out hours))
+        {
+            return false;
+        }
+        if (hours is < 0 or > 23 || minutes is < 0 or > 59) return false;
+        time = new TimeSpan(hours, minutes, 0);
+        return true;
+    }
 }

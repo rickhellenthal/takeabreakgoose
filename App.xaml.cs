@@ -4,15 +4,16 @@ using System.Windows;
 
 namespace TakeABreakGoose;
 
+/// <summary>
+/// Starts the app and wires it together: settings, the scheduler, the goose, the tray icon,
+/// the global shortcut and the app window.
+/// </summary>
 public partial class App : Application, IGooseHost
 {
     private Mutex? _singleInstance;
     private TrayIcon? _tray;
     private HotkeyManager? _hotkey;
-    private GooseWindow? _goose;
-    private GooseVisit? _pendingVisit;
-    private bool _gooseJustVisiting;
-    private GooseVisit? _currentVisit;
+    private GooseCoordinator _goose = null!;
     private MainWindow? _mainWindow;
 
     public GooseSettings Settings { get; private set; } = new();
@@ -37,15 +38,14 @@ public partial class App : Application, IGooseHost
         TrySave(); // writes back settings carried over from older versions
 
         Scheduler = new BreakScheduler(Settings);
-        Scheduler.BreakDue += () => SummonBreakGoose();
-        Scheduler.SessionCompleted += SignOff;
         Scheduler.StateChanged += UpdateTray;
+        _goose = new GooseCoordinator(Scheduler, () => Settings);
 
         _tray = new TrayIcon();
         _tray.OpenRequested += ShowMainWindow;
-        _tray.SummonRequested += () => SummonBreakGoose();
-        _tray.StopSessionRequested += StopSession;
-        _tray.DoNotDisturbToggled += () => SetDoNotDisturb(!Scheduler.DoNotDisturb);
+        _tray.SummonRequested += _goose.SummonBreakGoose;
+        _tray.StopSessionRequested += _goose.StopSession;
+        _tray.DoNotDisturbToggled += () => _goose.SetDoNotDisturb(!Scheduler.DoNotDisturb);
         _tray.QuitRequested += Shutdown;
 
         if (Settings.AutoStartSession)
@@ -65,7 +65,7 @@ public partial class App : Application, IGooseHost
                 ? $"Focus session started. The goose will remind you to take a break every {Settings.AutoStartIntervalMinutes} min."
                 : $"The goose is here. Press {Settings.HotkeyText} to start a focus session.");
 
-        if (Array.IndexOf(e.Args, "--summon") >= 0) SummonBreakGoose();
+        if (Array.IndexOf(e.Args, "--summon") >= 0) _goose.SummonBreakGoose();
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -80,6 +80,8 @@ public partial class App : Application, IGooseHost
         base.OnExit(e);
     }
 
+    // ---- IGooseHost: what the app window can ask for ----
+
     public void StartSession(SessionPlan plan)
     {
         Settings.LastSessionIntervalMinutes = plan.IntervalMinutes;
@@ -91,131 +93,15 @@ public partial class App : Application, IGooseHost
         Scheduler.StartSession(plan.IntervalMinutes, plan.BreakMinutes, plan.EndsAt(DateTime.Now));
     }
 
-    /// <summary>The session reached its end time: the goose comes by, in its party hat, to say goodbye.</summary>
-    private void SignOff(WorkSession session)
-    {
-        var focused = DateTime.Now - session.StartedAt;
-        string duration = focused.TotalHours >= 1
-            ? $"{(int)focused.TotalHours} h {focused.Minutes} min"
-            : $"{Math.Max(1, (int)focused.TotalMinutes)} min";
-        SummonGoose(new GooseVisit(
-            "That's a wrap!",
-            $"That's it for this focus session: {duration} of focus since {session.StartedAt:HH:mm}. "
-            + "Time to wrap up and give your brain some rest.",
-            null, "Bye, goose!", AllowSnooze: false, AllowFinishUp: false, StartsBreak: false,
-            Outfit: GooseOutfit.PartyHat));
-    }
+    public void StopSession() => _goose.StopSession();
 
-    public void SummonBreakGoose()
-    {
-        string message = Settings.Messages[Random.Shared.Next(Settings.Messages.Count)];
-        int breakMinutes = Scheduler.CurrentBreakMinutes;
-        string? hint = breakMinutes > 0
-            ? $"Take {breakMinutes} minutes. I'll start counting again after that."
-            : null;
-        SummonGoose(new GooseVisit("HONK!", message, hint, "Okay, break time!",
-            AllowSnooze: true, AllowFinishUp: true, StartsBreak: true));
-    }
+    public void SummonBreakGoose() => _goose.SummonBreakGoose();
 
-    public bool GooseOnScreen => _goose != null;
+    public bool ShowOffOutfit(GooseOutfit outfit) => _goose.ShowOffOutfit(outfit);
 
-    public void StopSession()
-    {
-        Scheduler.StopSession();
-        // The session's goose (asking, peeking or napping) leaves with it; a wardrobe goose may stay.
-        if (_goose != null && !_gooseJustVisiting) _goose.WalkAway();
-        if (_pendingVisit?.StartsBreak == true) _pendingVisit = null;
-    }
+    public bool GooseOnScreen => _goose.GooseOnScreen;
 
-    public void SetDoNotDisturb(bool on)
-    {
-        if (on && Scheduler.Session == null) return;
-        if (on && _goose != null)
-        {
-            // Whatever the goose was doing, it disappears right away.
-            if (!_gooseJustVisiting && _currentVisit?.StartsBreak == true)
-            {
-                if (_goose.StillAskingForBreak) Scheduler.PostponeBreakForDoNotDisturb();
-                // Already on the break: a meeting means being back at work, so the next countdown starts.
-                else if (_goose.OnBreak) Scheduler.ReadyToFocus();
-            }
-            else if (!_gooseJustVisiting)
-            {
-                Scheduler.GooseAnswered(GooseOutcome.Dismissed, startsBreak: false);
-            }
-            // A reminder that was queued behind this goose waits too.
-            if (_pendingVisit?.StartsBreak == true) Scheduler.PostponeBreakForDoNotDisturb();
-            _pendingVisit = null;
-            _goose.LeaveNow();
-        }
-        Scheduler.SetDoNotDisturb(on);
-    }
-
-    public bool ShowOffOutfit(GooseOutfit outfit)
-    {
-        if (_goose != null) return false;
-        SummonGoose(new GooseVisit("Ta-da!", GooseOutfits.ShowOffLine(outfit), null, "Looking good!",
-            AllowSnooze: false, AllowFinishUp: false, StartsBreak: false, outfit, JustVisiting: true));
-        return true;
-    }
-
-    private TimeSpan BreakLength()
-    {
-#if DEBUG
-        // For testing breaks without waiting minutes: set TAKEABREAKGOOSE_BREAK_SECONDS (debug builds only).
-        if (int.TryParse(Environment.GetEnvironmentVariable("TAKEABREAKGOOSE_BREAK_SECONDS"), out int seconds))
-            return TimeSpan.FromSeconds(seconds);
-#endif
-        return TimeSpan.FromMinutes(Scheduler.CurrentBreakMinutes);
-    }
-
-    private void SummonGoose(GooseVisit visit)
-    {
-        if (_goose != null)
-        {
-            // Only one goose at a time. A reminder shouldn't get lost behind a goose that's just
-            // showing off, and "session complete" shouldn't get lost behind anything, so those come
-            // as soon as the current goose has left.
-            if (_gooseJustVisiting || !visit.StartsBreak) _pendingVisit ??= visit;
-            return;
-        }
-
-        bool naps = visit.StartsBreak && Scheduler.CurrentBreakMinutes > 0;
-        _gooseJustVisiting = visit.JustVisiting;
-        _currentVisit = visit;
-        _goose = new GooseWindow(visit, Settings.SnoozeMinutes, naps ? BreakLength() : null);
-        if (!visit.JustVisiting)
-        {
-            _goose.Answered += outcome =>
-                Scheduler.GooseAnswered(outcome, startsBreak: naps && outcome == GooseOutcome.Dismissed);
-            _goose.BreakExtended += Scheduler.ExtendBreak;
-            _goose.ReadyToFocus += Scheduler.ReadyToFocus;
-            _goose.TookBreakWhileAway += Scheduler.BreakTakenWhileAway;
-            Scheduler.GooseArrived();
-        }
-        _goose.Finished += () =>
-        {
-            _goose = null;
-            if (_pendingVisit is { } pending)
-            {
-                _pendingVisit = null;
-                SummonGoose(pending);
-            }
-        };
-        _goose.Show();
-    }
-
-    private void ShowMainWindow()
-    {
-        if (_mainWindow == null)
-        {
-            _mainWindow = new MainWindow(this);
-            _mainWindow.Closed += (_, _) => _mainWindow = null;
-            _mainWindow.Show();
-        }
-        if (_mainWindow.WindowState == WindowState.Minimized) _mainWindow.WindowState = WindowState.Normal;
-        _mainWindow.Activate();
-    }
+    public void SetDoNotDisturb(bool on) => _goose.SetDoNotDisturb(on);
 
     public string? ApplySettings(GooseSettings newSettings, bool startWithWindows)
     {
@@ -244,6 +130,20 @@ public partial class App : Application, IGooseHost
             return $"Settings were applied but could not be saved: {ex.Message}";
         }
         return null;
+    }
+
+    // ---- Helpers ----
+
+    private void ShowMainWindow()
+    {
+        if (_mainWindow == null)
+        {
+            _mainWindow = new MainWindow(this);
+            _mainWindow.Closed += (_, _) => _mainWindow = null;
+            _mainWindow.Show();
+        }
+        if (_mainWindow.WindowState == WindowState.Minimized) _mainWindow.WindowState = WindowState.Normal;
+        _mainWindow.Activate();
     }
 
     private void TrySave()
