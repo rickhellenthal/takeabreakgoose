@@ -113,6 +113,16 @@ public partial class App : Application, IGooseHost
         return true;
     }
 
+    private TimeSpan BreakLength()
+    {
+#if DEBUG
+        // For testing breaks without waiting minutes: set TAKEABREAKGOOSE_BREAK_SECONDS (debug builds only).
+        if (int.TryParse(Environment.GetEnvironmentVariable("TAKEABREAKGOOSE_BREAK_SECONDS"), out int seconds))
+            return TimeSpan.FromSeconds(seconds);
+#endif
+        return TimeSpan.FromMinutes(Settings.BreakMinutes);
+    }
+
     private void SummonGoose(GooseVisit visit)
     {
         if (_goose != null)
@@ -126,14 +136,14 @@ public partial class App : Application, IGooseHost
 
         bool naps = visit.StartsBreak && Settings.BreakMinutes > 0;
         _gooseJustVisiting = visit.JustVisiting;
-        _goose = new GooseWindow(visit, Settings.StaySeconds, Settings.SnoozeMinutes,
-            naps ? TimeSpan.FromMinutes(Settings.BreakMinutes) : null);
+        _goose = new GooseWindow(visit, Settings.SnoozeMinutes, naps ? BreakLength() : null);
         if (!visit.JustVisiting)
         {
             _goose.Answered += outcome =>
                 Scheduler.GooseAnswered(outcome, startsBreak: naps && outcome == GooseOutcome.Dismissed);
             _goose.BreakExtended += Scheduler.ExtendBreak;
             _goose.ReadyToFocus += Scheduler.ReadyToFocus;
+            _goose.TookBreakWhileAway += Scheduler.BreakTakenWhileAway;
             Scheduler.GooseArrived();
         }
         _goose.Finished += () =>

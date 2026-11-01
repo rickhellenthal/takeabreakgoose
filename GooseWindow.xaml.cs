@@ -6,7 +6,6 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Threading;
 
 namespace TakeABreakGoose;
 
@@ -23,7 +22,7 @@ public sealed record GooseVisit(
     GooseOutfit? Outfit = null,
     bool JustVisiting = false);
 
-public enum GooseOutcome { Dismissed, Snoozed, TimedOut }
+public enum GooseOutcome { Dismissed, Snoozed }
 
 /// <summary>
 /// A transparent, always-on-top window that walks a goose in from a screen edge,
@@ -55,8 +54,6 @@ public partial class GooseWindow : Window
 
     private readonly Rect _area = SystemParameters.WorkArea;
     private readonly Stopwatch _clock = new();
-    private readonly DispatcherTimer _stayTimer;
-    private readonly bool _stayUntilDismissed;
     private readonly bool _enteredFromLeft;
     private TimeSpan _lastFrame;
     private Phase _phase = Phase.WalkingIn;
@@ -67,8 +64,10 @@ public partial class GooseWindow : Window
     private DateTime _breakStart;
     private DateTime _breakEnd;
     private Question _question = Question.TakeABreak;
+    private bool _awayLongEnoughForABreak;
+    private DateTime _askedAt;
 
-    /// <summary>Raised as soon as the user answers (or the goose gives up waiting).</summary>
+    /// <summary>Raised as soon as the user answers the goose.</summary>
     public event Action<GooseOutcome>? Answered;
 
     /// <summary>Raised when the user asks for a few more minutes of break, with the new end time.</summary>
@@ -77,11 +76,17 @@ public partial class GooseWindow : Window
     /// <summary>Raised when the user says they're back from the break and ready to focus.</summary>
     public event Action? ReadyToFocus;
 
+    /// <summary>
+    /// Raised when the user was away for at least a break's length while the goose asked them to
+    /// take one, so that time counts as the break.
+    /// </summary>
+    public event Action? TookBreakWhileAway;
+
     /// <summary>Raised once the goose has left the screen.</summary>
     public event Action? Finished;
 
     /// <param name="breakLength">If set, the goose naps for this long when the user takes the break.</param>
-    public GooseWindow(GooseVisit visit, int staySeconds, int snoozeMinutes, TimeSpan? breakLength)
+    public GooseWindow(GooseVisit visit, int snoozeMinutes, TimeSpan? breakLength)
     {
         _breakLength = breakLength;
         _snoozeMinutes = snoozeMinutes;
@@ -96,10 +101,6 @@ public partial class GooseWindow : Window
         SnoozeButton.Visibility = visit.AllowSnooze ? Visibility.Visible : Visibility.Collapsed;
         FinishUpButton.Visibility = visit.AllowFinishUp ? Visibility.Visible : Visibility.Collapsed;
         Figure.Outfit = visit.Outfit ?? GooseOutfits.Random();
-
-        _stayTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(Math.Max(1, staySeconds)) };
-        _stayTimer.Tick += (_, _) => Leave(GooseOutcome.TimedOut);
-        _stayUntilDismissed = staySeconds <= 0;
 
         _enteredFromLeft = Random.Shared.Next(2) == 0;
         Top = _area.Bottom - Height;
@@ -123,7 +124,6 @@ public partial class GooseWindow : Window
         Closed += (_, _) =>
         {
             CompositionTarget.Rendering -= OnRendering;
-            _stayTimer.Stop();
             Finished?.Invoke();
         };
     }
@@ -162,6 +162,7 @@ public partial class GooseWindow : Window
                 Figure.HeadAngle = Math.Sin(now.TotalSeconds * 2.5) * 4;
                 // If the break runs out while the goose asks about ending it early, the question changes.
                 if (_question == Question.EndBreakEarly && DateTime.Now >= _breakEnd) AskIfReady();
+                if (_question == Question.TakeABreak) WatchForBreakWhileAway();
                 break;
 
             case Phase.ToEdge:
@@ -252,10 +253,12 @@ public partial class GooseWindow : Window
         return inStrip && cursor.Y >= figureTop && cursor.Y <= Top + Height;
     }
 
-    /// <param name="giveUpAfterWaiting">Whether the goose leaves on its own if nobody answers.</param>
-    private void StartTalking(bool giveUpAfterWaiting = true)
+    /// <summary>Shows the speech bubble. The goose waits as long as it takes for an answer.</summary>
+    private void StartTalking()
     {
         _phase = Phase.Talking;
+        _askedAt = DateTime.Now;
+        _awayLongEnoughForABreak = false;
         Figure.Facing = InwardDirection;
         Bubble.Visibility = Visibility.Visible;
         var pop = new DoubleAnimation(0.4, 1, TimeSpan.FromMilliseconds(350))
@@ -264,13 +267,10 @@ public partial class GooseWindow : Window
         };
         BubbleScale.BeginAnimation(ScaleTransform.ScaleXProperty, pop);
         BubbleScale.BeginAnimation(ScaleTransform.ScaleYProperty, pop);
-
-        if (giveUpAfterWaiting && !_stayUntilDismissed) _stayTimer.Start();
     }
 
     private void StopTalking()
     {
-        _stayTimer.Stop();
         Bubble.Visibility = Visibility.Collapsed;
         Figure.HeadAngle = 0;
     }
@@ -336,15 +336,40 @@ public partial class GooseWindow : Window
     }
 
     /// <summary>The user is back: wake up and ask whether they're ready to focus again.</summary>
-    private void AskIfReady()
+    private void AskIfReady(string message = "Break's over. Ready to focus again?")
     {
         Figure.Sleeping = false;
         Figure.ToolTip = null;
         BreakCard.Visibility = Visibility.Collapsed;
 
-        // No time limit: the next focus stretch only starts once the user says so.
-        Ask(Question.ReadyToFocus, "Welcome back!", "Break's over. Ready to focus again?", hint: null,
+        // The next focus stretch only starts once the user says so.
+        Ask(Question.ReadyToFocus, "Welcome back!", message, hint: null,
             primary: "Ready to focus", secondary: $"{_snoozeMinutes} more minutes");
+    }
+
+    /// <summary>
+    /// While the goose asks the user to take a break: if they were away from the mouse and keyboard
+    /// for at least a break's length, they've had their break, so once they're back the goose
+    /// skips ahead to asking whether they're ready to focus. Only time since the goose asked counts;
+    /// sitting still before it showed up (reading, watching a video) isn't a break.
+    /// </summary>
+    private void WatchForBreakWhileAway()
+    {
+        if (_breakLength is not { } length || length <= TimeSpan.Zero) return;
+        var idle = UserActivity.IdleTime();
+        var sinceAsked = DateTime.Now - _askedAt;
+        var awayWhileAsking = idle < sinceAsked ? idle : sinceAsked;
+        if (awayWhileAsking >= length)
+        {
+            _awayLongEnoughForABreak = true;
+        }
+        else if (_awayLongEnoughForABreak && idle < TimeSpan.FromSeconds(2))
+        {
+            _awayLongEnoughForABreak = false;
+            StopTalking();
+            TookBreakWhileAway?.Invoke();
+            AskIfReady("Looks like you already took a break while I waited. Ready to focus again?");
+        }
     }
 
     /// <summary>The goose was clicked mid-nap: wake up (a bit grumpy) and check before ending the break.</summary>
@@ -373,7 +398,7 @@ public partial class GooseWindow : Window
         DismissButton.Content = primary;
         SnoozeButton.Content = secondary;
         SnoozeButton.Visibility = Visibility.Visible;
-        StartTalking(giveUpAfterWaiting: false);
+        StartTalking();
     }
 
     /// <summary>The user is back (or cut the break short) and ready to focus: off the goose goes.</summary>

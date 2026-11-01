@@ -25,9 +25,6 @@ public sealed class GooseSettings
     /// <summary>How long a break lasts; the next reminder starts counting after it. 0 = count right away.</summary>
     public int BreakMinutes { get; set; } = 5;
 
-    /// <summary>How long the goose waits for an answer before leaving on its own. 0 = until dismissed.</summary>
-    public int StaySeconds { get; set; } = 60;
-
     public int SnoozeMinutes { get; set; } = 5;
 
     /// <summary>After this many idle minutes the user counts as away (on a break). 0 = off.</summary>
@@ -91,7 +88,6 @@ public sealed class GooseSettings
 
         AutoStartIntervalMinutes = Math.Clamp(AutoStartIntervalMinutes, 1, 24 * 60);
         BreakMinutes = Math.Clamp(BreakMinutes, 0, 120);
-        StaySeconds = Math.Clamp(StaySeconds, 0, 3600);
         SnoozeMinutes = Math.Clamp(SnoozeMinutes, 1, 24 * 60);
         AwayMinutes = Math.Clamp(AwayMinutes, 0, 120);
         LastSessionIntervalMinutes = Math.Clamp(LastSessionIntervalMinutes, 1, 24 * 60);

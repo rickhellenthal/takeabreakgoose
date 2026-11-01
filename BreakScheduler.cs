@@ -118,6 +118,19 @@ public sealed class BreakScheduler
         StateChanged?.Invoke();
     }
 
+    /// <summary>
+    /// The user was away long enough for a break while the goose waited for an answer: that counts
+    /// as the break, and the goose now asks whether they're ready to focus.
+    /// </summary>
+    public void BreakTakenWhileAway()
+    {
+        GooseVisiting = false;
+        AwaitingReturn = true;
+        BreakEndsAt = null;
+        SetNext(null);
+        StateChanged?.Invoke();
+    }
+
     /// <summary>The user asked for a few more minutes of break.</summary>
     public void ExtendBreak(DateTime endsAt)
     {
