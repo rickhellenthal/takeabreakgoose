@@ -70,14 +70,15 @@ public partial class GooseWindow : Window
 
         _enteredFromLeft = Random.Shared.Next(2) == 0;
         Top = _area.Bottom - Height;
-        Left = _enteredFromLeft ? _area.Left - Width : _area.Right;
+        // Start with the goose itself just off screen (the window is wider than the goose).
+        Left = _enteredFromLeft ? _area.Left - FigureRight : _area.Right - FigureLeft;
 
-        // Stop somewhere on the side it came from instead of crossing the whole taskbar.
-        double edgeMargin = _area.Width * 0.03;
-        double reach = Random.Shared.NextDouble() * _area.Width * 0.2;
+        // Stop a short walk in from the side it came from. The window stays on screen,
+        // so the speech bubble is never cut off.
+        double reach = Random.Shared.NextDouble() * _area.Width * 0.08;
         double target = _enteredFromLeft
-            ? _area.Left + edgeMargin + reach
-            : _area.Right - Width - edgeMargin - reach;
+            ? _area.Left + reach
+            : _area.Right - Width - reach;
         _targetLeft = Math.Clamp(target, _area.Left, Math.Max(_area.Left, _area.Right - Width));
         Figure.Facing = InwardDirection;
 
@@ -96,6 +97,10 @@ public partial class GooseWindow : Window
 
     /// <summary>The direction pointing from the goose's edge into the screen.</summary>
     private int InwardDirection => _enteredFromLeft ? 1 : -1;
+
+    // Where the goose figure sits horizontally inside the window.
+    private double FigureLeft => (Width - Figure.Width) / 2;
+    private double FigureRight => FigureLeft + Figure.Width;
 
     protected override void OnSourceInitialized(EventArgs e)
     {
@@ -142,7 +147,7 @@ public partial class GooseWindow : Window
 
             case Phase.WalkingOut:
                 Walk(-InwardDirection, dt);
-                if (Left > _area.Right || Left + Width < _area.Left)
+                if (Left + FigureLeft > _area.Right || Left + FigureRight < _area.Left)
                 {
                     _phase = Phase.WalkingIn; // stop moving while closing
                     CompositionTarget.Rendering -= OnRendering;
@@ -178,10 +183,9 @@ public partial class GooseWindow : Window
     /// <summary>The window position at which only the front of the goose shows past the screen edge.</summary>
     private double PeekLeft(double visible)
     {
-        double figureLeft = (Width - Figure.Width) / 2;
         return _enteredFromLeft
-            ? _area.Left + visible - (figureLeft + GooseFigure.BeakTipX)
-            : _area.Right - visible - (figureLeft + Figure.Width - GooseFigure.BeakTipX);
+            ? _area.Left + visible - (FigureLeft + GooseFigure.BeakTipX)
+            : _area.Right - visible - (FigureRight - GooseFigure.BeakTipX);
     }
 
     /// <summary>
@@ -252,6 +256,7 @@ public partial class GooseWindow : Window
         {
             // The user is done finishing up: come back and ask again.
             Figure.ToolTip = null;
+            MessageText.Text = "All finished up and saved? Then you're ready for your break!";
             _phase = Phase.Returning;
             return;
         }
