@@ -22,13 +22,13 @@ public sealed class GooseSettings
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? AlwaysOnIntervalMinutes { get; set; }
 
-    /// <summary>How long a break lasts; the next reminder starts counting after it. 0 = count right away.</summary>
+    /// <summary>
+    /// Default break length for new sessions. The next reminder starts counting after a break, and
+    /// being away from the computer this long counts as one. 0 = no breaks are counted.
+    /// </summary>
     public int BreakMinutes { get; set; } = 5;
 
     public int SnoozeMinutes { get; set; } = 5;
-
-    /// <summary>After this many idle minutes the user counts as away (on a break). 0 = off.</summary>
-    public int AwayMinutes { get; set; } = 5;
 
     // The last session the user started, used to pre-fill the start form.
     public int LastSessionIntervalMinutes { get; set; } = 45;
@@ -89,7 +89,6 @@ public sealed class GooseSettings
         AutoStartIntervalMinutes = Math.Clamp(AutoStartIntervalMinutes, 1, 24 * 60);
         BreakMinutes = Math.Clamp(BreakMinutes, 0, 120);
         SnoozeMinutes = Math.Clamp(SnoozeMinutes, 1, 24 * 60);
-        AwayMinutes = Math.Clamp(AwayMinutes, 0, 120);
         LastSessionIntervalMinutes = Math.Clamp(LastSessionIntervalMinutes, 1, 24 * 60);
         LastSessionLengthMinutes = Math.Clamp(LastSessionLengthMinutes, 1, 24 * 60);
         if (LastSessionEndTime < TimeSpan.Zero || LastSessionEndTime >= TimeSpan.FromDays(1))

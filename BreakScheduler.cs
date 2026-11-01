@@ -226,10 +226,12 @@ public sealed class BreakScheduler
 
         if (!AwaitingReturn && BreakEndsAt is DateTime breakEnd && now >= breakEnd) BreakEndsAt = null;
 
-        // While waiting for the user to come back from a break, the goose handles that itself.
-        if (_settings.AwayMinutes > 0 && !GooseVisiting && !AwaitingReturn)
+        // Being away from the mouse and keyboard for at least a break's length counts as a break.
+        // (While the goose is on screen or the user is on a break, the goose handles that itself.)
+        int breakMinutes = CurrentBreakMinutes;
+        if (Session != null && breakMinutes > 0 && !GooseVisiting && !AwaitingReturn)
         {
-            bool away = UserActivity.IdleTime() >= TimeSpan.FromMinutes(_settings.AwayMinutes);
+            bool away = UserActivity.IdleTime() >= TimeSpan.FromMinutes(breakMinutes);
             if (IsAway && !away)
             {
                 // Welcome back: the time away counted as a break, so start a fresh interval.

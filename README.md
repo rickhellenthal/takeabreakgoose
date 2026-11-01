@@ -42,9 +42,11 @@ Open the goose with **Ctrl+Alt+G**, the Start menu, or by clicking its icon in t
    - **snooze** it for a few minutes
    - say **Let me finish up**: the goose waits at the edge of the screen until you click it
 
-   The goose waits as long as it takes for an answer. Were you away long enough for a break while it waited? Then it counts that as your break.
+   The goose waits as long as it takes for an answer.
 3. **During your break** the goose naps on the taskbar. Need to cut the break short? Click it. It's not thrilled about being woken up, but it'll let you.
 4. **When you're back**, the goose wakes up and asks if you're ready to focus. The countdown to your next break only starts once you say so.
+
+Away from your computer for at least a break's length, for example at lunch or while the goose was waiting? That counts as your break. The countdown to the next one starts fresh when you're back.
 
 In a meeting? Turn on **Do not disturb** in your session (or from the tray icon). Your timer keeps running, but the goose stays away. A break that comes up in the meantime waits until you turn Do not disturb off.
 
@@ -56,7 +58,6 @@ The **Wardrobe** tab shows the goose's outfits. It picks one at random for each 
 
 - **Start with Windows**, and **start a focus session automatically** when the app starts, so the goose keeps an eye on you without you having to do anything
 - **Default break length** and **snooze length**
-- **Away counts as a break**: time away from your mouse and keyboard counts as a break
 - **The shortcut** that opens the app, and **the messages** the goose picks from
 
 Your settings are saved in `%APPDATA%\TakeABreakGoose\settings.json`. At the bottom of the Settings tab you can see which version you have, and whether a newer one is available.

@@ -443,7 +443,6 @@ public partial class MainWindow : Window
         AutoStartIntervalBox.Text = settings.AutoStartIntervalMinutes.ToString();
         BreakBox.Text = settings.BreakMinutes.ToString();
         SnoozeBox.Text = settings.SnoozeMinutes.ToString();
-        AwayBox.Text = settings.AwayMinutes.ToString();
         StartWithWindowsCheck.IsChecked = Autostart.IsEnabled;
         _hotkeyModifiers = settings.HotkeyModifiers;
         _hotkeyKey = settings.HotkeyKey;
@@ -488,7 +487,6 @@ public partial class MainWindow : Window
         if (!TryParse(AutoStartIntervalBox.Text, 1, 24 * 60, "The automatic session interval", out int autoStartInterval, fail)) return;
         if (!TryParse(BreakBox.Text, 0, 120, "Default break length", out int breakMinutes, fail)) return;
         if (!TryParse(SnoozeBox.Text, 1, 24 * 60, "Snooze length", out int snooze, fail)) return;
-        if (!TryParse(AwayBox.Text, 0, 120, "Away time", out int away, fail)) return;
 
         var messages = MessagesBox.Text
             .Split('\n')
@@ -506,7 +504,6 @@ public partial class MainWindow : Window
         settings.AutoStartIntervalMinutes = autoStartInterval;
         settings.BreakMinutes = breakMinutes;
         settings.SnoozeMinutes = snooze;
-        settings.AwayMinutes = away;
         settings.HotkeyModifiers = _hotkeyModifiers;
         settings.HotkeyKey = _hotkeyKey;
         settings.Messages = messages;
