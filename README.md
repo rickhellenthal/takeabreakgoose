@@ -76,4 +76,6 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
+To give the release a description, add `release-notes\<tag>.md` (for example `release-notes\v1.1.0.md`) before pushing the tag. Without it, the release lists the commits since the previous version.
+
 The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php) from `installer\TakeABreakGoose.iss`.

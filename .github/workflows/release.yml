@@ -54,11 +54,14 @@ jobs:
           Compress-Archive -Path publish-installer\TakeABreakGoose.exe
           -DestinationPath dist\TakeABreakGoose-${{ steps.version.outputs.version }}-portable.zip
 
+      # Uses release-notes/<tag>.md as the description when it exists,
+      # otherwise GitHub's list of commits since the last release.
       - name: Create the GitHub release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >
-          gh release create $env:TAG (Get-ChildItem dist).FullName
-          --title "Take a Break Goose ${{ steps.version.outputs.version }}"
-          --generate-notes
+        run: |
+          $notes = "release-notes/$env:TAG.md"
+          $notesArgs = if (Test-Path $notes) { @('--notes-file', $notes) } else { @('--generate-notes') }
+          gh release create $env:TAG (Get-ChildItem dist).FullName `
+            --title "Take a Break Goose ${{ steps.version.outputs.version }}" @notesArgs
