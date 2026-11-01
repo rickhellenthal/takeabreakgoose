@@ -131,6 +131,26 @@ public partial class GooseWindow : Window
     /// <summary>The direction pointing from the goose's edge into the screen.</summary>
     private int InwardDirection => _enteredFromLeft ? 1 : -1;
 
+    /// <summary>The goose came to ask for a break and the user hasn't taken it yet (including "let me finish up").</summary>
+    public bool StillAskingForBreak =>
+        _phase is Phase.WalkingIn or Phase.ToEdge or Phase.Peeking or Phase.Returning
+        || (_phase == Phase.Talking && _question == Question.TakeABreak);
+
+    /// <summary>The user is on the break this goose asked for, or is just back from it.</summary>
+    public bool OnBreak =>
+        _phase is Phase.Sleeping or Phase.BreakOver
+        || (_phase == Phase.Talking && _question is Question.ReadyToFocus or Question.EndBreakEarly);
+
+    /// <summary>Disappears right away (quick fade), e.g. when the user turns on Do not disturb.</summary>
+    public void LeaveNow()
+    {
+        CompositionTarget.Rendering -= OnRendering;
+        _phase = Phase.WalkingOut;
+        var fade = new DoubleAnimation(0, TimeSpan.FromMilliseconds(250));
+        fade.Completed += (_, _) => Close();
+        BeginAnimation(OpacityProperty, fade);
+    }
+
     // Where the goose figure sits horizontally inside the window.
     private double FigureLeft => (Width - Figure.Width) / 2;
     private double FigureRight => FigureLeft + Figure.Width;

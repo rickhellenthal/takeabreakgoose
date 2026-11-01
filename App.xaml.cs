@@ -12,6 +12,7 @@ public partial class App : Application, IGooseHost
     private GooseWindow? _goose;
     private GooseVisit? _pendingVisit;
     private bool _gooseJustVisiting;
+    private GooseVisit? _currentVisit;
     private MainWindow? _mainWindow;
 
     public GooseSettings Settings { get; private set; } = new();
@@ -48,6 +49,7 @@ public partial class App : Application, IGooseHost
         _tray.SummonRequested += () => SummonBreakGoose();
         _tray.PauseToggled += () => Scheduler.SetPaused(!Scheduler.IsPaused);
         _tray.StopSessionRequested += Scheduler.StopSession;
+        _tray.DoNotDisturbToggled += () => SetDoNotDisturb(!Scheduler.DoNotDisturb);
         _tray.QuitRequested += Shutdown;
 
         if (Settings.AutoStartSession)
@@ -105,6 +107,30 @@ public partial class App : Application, IGooseHost
 
     public bool GooseOnScreen => _goose != null;
 
+    public void SetDoNotDisturb(bool on)
+    {
+        if (on && Scheduler.Session == null) return;
+        if (on && _goose != null)
+        {
+            // Whatever the goose was doing, it disappears right away.
+            if (!_gooseJustVisiting && _currentVisit?.StartsBreak == true)
+            {
+                if (_goose.StillAskingForBreak) Scheduler.PostponeBreakForDoNotDisturb();
+                // Already on the break: a meeting means being back at work, so the next countdown starts.
+                else if (_goose.OnBreak) Scheduler.ReadyToFocus();
+            }
+            else if (!_gooseJustVisiting)
+            {
+                Scheduler.GooseAnswered(GooseOutcome.Dismissed, startsBreak: false);
+            }
+            // A reminder that was queued behind this goose waits too.
+            if (_pendingVisit?.StartsBreak == true) Scheduler.PostponeBreakForDoNotDisturb();
+            _pendingVisit = null;
+            _goose.LeaveNow();
+        }
+        Scheduler.SetDoNotDisturb(on);
+    }
+
     public bool ShowOffOutfit(GooseOutfit outfit)
     {
         if (_goose != null) return false;
@@ -136,6 +162,7 @@ public partial class App : Application, IGooseHost
 
         bool naps = visit.StartsBreak && Settings.BreakMinutes > 0;
         _gooseJustVisiting = visit.JustVisiting;
+        _currentVisit = visit;
         _goose = new GooseWindow(visit, Settings.SnoozeMinutes, naps ? BreakLength() : null);
         if (!visit.JustVisiting)
         {
@@ -212,5 +239,6 @@ public partial class App : Application, IGooseHost
     }
 
     private void UpdateTray() =>
-        _tray?.Update(Scheduler.Describe(), Scheduler.IsPaused, Scheduler.Session != null, Settings.HotkeyText);
+        _tray?.Update(Scheduler.Describe(), Scheduler.IsPaused, Scheduler.DoNotDisturb, Scheduler.Session != null,
+            Settings.HotkeyText);
 }

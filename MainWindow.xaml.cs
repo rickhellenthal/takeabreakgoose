@@ -25,6 +25,9 @@ public interface IGooseHost
     /// <summary>Whether a goose is on screen right now (walking, talking, peeking or napping).</summary>
     bool GooseOnScreen { get; }
 
+    /// <summary>Keeps the goose away during a focus session (e.g. during a meeting), or lets it come again.</summary>
+    void SetDoNotDisturb(bool on);
+
     /// <summary>Applies and saves new settings; returns an error message, or null on success.</summary>
     string? ApplySettings(GooseSettings settings, bool startWithWindows);
 }
@@ -33,6 +36,7 @@ public interface IGooseHost
 public partial class MainWindow : Window
 {
     private readonly IGooseHost _host;
+    private bool _showingStatus;
     private ModifierKeys _hotkeyModifiers;
     private Key _hotkeyKey;
 
@@ -176,6 +180,11 @@ public partial class MainWindow : Window
                 CountdownText.Text = "Welcome back";
                 CountdownCaption.Text = "Your break is over. Tell the goose when you're ready to focus again.";
             }
+            else if (scheduler.BreakWaiting)
+            {
+                CountdownText.Text = "Break time";
+                CountdownCaption.Text = "Your break is waiting. The goose comes as soon as you turn off Do not disturb.";
+            }
             else if (scheduler.IsAway)
             {
                 CountdownText.Text = "Away";
@@ -204,6 +213,15 @@ public partial class MainWindow : Window
                 ? $"{started} · ends {DescribeEnd(end, now)} ({FormatCountdown(end - now)} left)"
                 : $"{started} · no end time, stop it whenever you're done.";
             PauseButton.Content = scheduler.IsPaused ? "Resume" : "Pause";
+
+            _showingStatus = true;
+            DoNotDisturbSwitch.IsChecked = scheduler.DoNotDisturb;
+            _showingStatus = false;
+            DoNotDisturbHint.Text = !scheduler.DoNotDisturb
+                ? "Keep the goose away for now, for example during a meeting."
+                : scheduler.BreakWaiting
+                    ? "Your break is waiting until you turn this off."
+                    : "The goose stays away until you turn this off. Your timer keeps running.";
         }
         else
         {
@@ -360,6 +378,13 @@ public partial class MainWindow : Window
         _host.Scheduler.SetPaused(!_host.Scheduler.IsPaused);
 
     private void BreakNow_Click(object sender, RoutedEventArgs e) => _host.SummonBreakGoose();
+
+    private void DoNotDisturbSwitch_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_showingStatus) return; // the switch is just being updated to match the app
+        _host.SetDoNotDisturb(DoNotDisturbSwitch.IsChecked == true);
+        RefreshStatus();
+    }
 
     private void ShowSessionError(string message)
     {

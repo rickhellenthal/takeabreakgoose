@@ -46,6 +46,8 @@ Open the goose with **Ctrl+Alt+G**, the Start menu, or by clicking its icon in t
 3. **During your break** the goose naps on the taskbar. Need to cut the break short? Click it. It's not thrilled about being woken up, but it'll let you.
 4. **When you're back**, the goose wakes up and asks if you're ready to focus. The countdown to your next break only starts once you say so.
 
+In a meeting? Turn on **Do not disturb** in your session (or from the tray icon). Your timer keeps running, but the goose stays away. A break that comes up in the meantime waits until you turn Do not disturb off.
+
 When a session ends, the goose drops by to tell you you're done for now. Outside a focus session it stays quiet.
 
 The **Wardrobe** tab shows the goose's outfits. It picks one at random for each visit, or you can send a goose over to show off the outfit of your choice. That's just for fun, so it doesn't affect your session's timer.

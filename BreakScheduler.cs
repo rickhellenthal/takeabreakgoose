@@ -29,6 +29,15 @@ public sealed class BreakScheduler
     /// </summary>
     public bool AwaitingReturn { get; private set; }
 
+    /// <summary>
+    /// The user doesn't want the goose to show up right now (e.g. during a meeting). The countdown
+    /// keeps running; a break that comes due meanwhile waits until this is turned off.
+    /// </summary>
+    public bool DoNotDisturb { get; private set; }
+
+    /// <summary>A break came due during Do not disturb and is waiting for it to be turned off.</summary>
+    public bool BreakWaiting { get; private set; }
+
     /// <summary>Raised every second and whenever the state changes, so UIs can refresh countdowns.</summary>
     public event Action? StateChanged;
     public event Action? BreakDue;
@@ -56,7 +65,30 @@ public sealed class BreakScheduler
     {
         Session = null;
         IsPaused = false;
+        DoNotDisturb = false;
         Reschedule();
+    }
+
+    /// <summary>Only during a focus session. Turning it off brings a break that's been waiting.</summary>
+    public void SetDoNotDisturb(bool on)
+    {
+        if (on == DoNotDisturb || (on && Session == null)) return;
+        DoNotDisturb = on;
+        StateChanged?.Invoke();
+        if (!on && BreakWaiting)
+        {
+            BreakWaiting = false;
+            if (Session != null) BreakDue?.Invoke();
+        }
+    }
+
+    /// <summary>A goose asking for a break was sent away by Do not disturb: the break waits.</summary>
+    public void PostponeBreakForDoNotDisturb()
+    {
+        GooseVisiting = false;
+        NextBreakAt = null;
+        BreakWaiting = true;
+        StateChanged?.Invoke();
     }
 
     public void SetPaused(bool paused)
@@ -152,6 +184,12 @@ public sealed class BreakScheduler
     {
         if (GooseVisiting) return "The goose is here!";
         if (IsPaused) return "Reminders paused";
+        if (DoNotDisturb)
+        {
+            return BreakWaiting ? "Do not disturb · a break is waiting"
+                : NextBreakAt is DateTime due ? $"Do not disturb · next break at {due:HH:mm}"
+                : "Do not disturb";
+        }
         if (AwaitingReturn)
         {
             return BreakEndsAt is DateTime end && end > DateTime.Now
@@ -174,10 +212,14 @@ public sealed class BreakScheduler
 
         if (Session?.EndsAt is DateTime end && now >= end && !GooseVisiting)
         {
+            // A session that ends during Do not disturb ends quietly: no "session complete" goose,
+            // and no break that was waiting.
+            bool quietly = DoNotDisturb;
             Session = null;
             IsPaused = false;
+            DoNotDisturb = false;
             Reschedule();
-            SessionCompleted?.Invoke();
+            if (!quietly) SessionCompleted?.Invoke();
             return;
         }
 
@@ -204,7 +246,8 @@ public sealed class BreakScheduler
         if (!IsAway && !IsPaused && !GooseVisiting && !AwaitingReturn && NextBreakAt is DateTime next && now >= next)
         {
             NextBreakAt = null;
-            BreakDue?.Invoke();
+            if (DoNotDisturb) BreakWaiting = true;
+            else BreakDue?.Invoke();
         }
 
         StateChanged?.Invoke();
@@ -213,6 +256,7 @@ public sealed class BreakScheduler
     private void Reschedule()
     {
         if (!AwaitingReturn) BreakEndsAt = null;
+        BreakWaiting = false; // a fresh countdown replaces a break that was waiting
         SetNext(GooseVisiting || CurrentInterval is not int interval ? null : DateTime.Now.AddMinutes(interval));
         StateChanged?.Invoke();
     }
