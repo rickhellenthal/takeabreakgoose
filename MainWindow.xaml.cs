@@ -68,7 +68,18 @@ public partial class MainWindow : Window
 
     private void Tab_Checked(object sender, RoutedEventArgs e)
     {
-        if (SessionPage == null) return; // fires during InitializeComponent
+        if (SessionPage == null || _revertingTab) return; // fires during InitializeComponent, or while going back
+
+        // Leaving Settings with unsaved changes: ask first, and stay if they want to keep editing.
+        if (_currentTab == SettingsTab && sender != SettingsTab && !ResolveUnsavedSettings())
+        {
+            _revertingTab = true;
+            SettingsTab.IsChecked = true;
+            _revertingTab = false;
+            return;
+        }
+        _currentTab = (RadioButton)sender;
+
         SessionPage.Visibility = Show(SessionTab.IsChecked == true);
         WardrobePage.Visibility = Show(WardrobeTab.IsChecked == true);
         SettingsPage.Visibility = Show(SettingsTab.IsChecked == true);
@@ -448,6 +459,7 @@ public partial class MainWindow : Window
         _hotkeyKey = settings.HotkeyKey;
         HotkeyBox.Text = settings.HotkeyText;
         MessagesBox.Text = string.Join(Environment.NewLine, settings.Messages);
+        _savedSettingsForm = SettingsFormState();
     }
 
     private void HotkeyBox_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -481,12 +493,15 @@ public partial class MainWindow : Window
     private void ResetMessages_Click(object sender, RoutedEventArgs e) =>
         MessagesBox.Text = string.Join(Environment.NewLine, GooseSettings.DefaultMessages());
 
-    private void SaveSettings_Click(object sender, RoutedEventArgs e)
+    private void SaveSettings_Click(object sender, RoutedEventArgs e) => TrySaveSettings();
+
+    /// <summary>Validates and saves the settings form. Returns false (and shows why) if it can't.</summary>
+    private bool TrySaveSettings()
     {
         Action<string> fail = message => ShowSettingsStatus(message, error: true);
-        if (!TryParse(AutoStartIntervalBox.Text, 1, 24 * 60, "The automatic session interval", out int autoStartInterval, fail)) return;
-        if (!TryParse(BreakBox.Text, 0, 120, "Default break length", out int breakMinutes, fail)) return;
-        if (!TryParse(SnoozeBox.Text, 1, 24 * 60, "Snooze length", out int snooze, fail)) return;
+        if (!TryParse(AutoStartIntervalBox.Text, 1, 24 * 60, "The automatic session interval", out int autoStartInterval, fail)) return false;
+        if (!TryParse(BreakBox.Text, 0, 120, "Default break length", out int breakMinutes, fail)) return false;
+        if (!TryParse(SnoozeBox.Text, 1, 24 * 60, "Snooze length", out int snooze, fail)) return false;
 
         var messages = MessagesBox.Text
             .Split('\n')
@@ -496,7 +511,7 @@ public partial class MainWindow : Window
         if (messages.Count == 0)
         {
             fail("Give the goose at least one message to say.");
-            return;
+            return false;
         }
 
         var settings = _host.Settings.Clone();
@@ -509,13 +524,59 @@ public partial class MainWindow : Window
         settings.Messages = messages;
 
         string? error = _host.ApplySettings(settings, StartWithWindowsCheck.IsChecked == true);
-        if (error != null) fail(error);
-        else
-        {
-            ShowSettingsStatus("Saved ✓", error: false);
-            SelectBreakLength(settings.BreakMinutes); // the start card follows the new default
-        }
         RefreshStatus();
+        if (error != null)
+        {
+            fail(error);
+            return false;
+        }
+        ShowSettingsStatus("Saved ✓", error: false);
+        SelectBreakLength(settings.BreakMinutes); // the start card follows the new default
+        _savedSettingsForm = SettingsFormState();
+        return true;
+    }
+
+    // ---- Unsaved settings ----
+
+    private string _savedSettingsForm = "";
+    private RadioButton? _currentTab;
+    private bool _revertingTab;
+
+    /// <summary>Everything the settings form shows, to tell whether anything changed since loading or saving.</summary>
+    private string SettingsFormState() => string.Join("\u001f",
+        AutoStartCheck.IsChecked, AutoStartIntervalBox.Text, BreakBox.Text, SnoozeBox.Text,
+        StartWithWindowsCheck.IsChecked, HotkeyBox.Text, MessagesBox.Text);
+
+    private bool HasUnsavedSettings => SettingsFormState() != _savedSettingsForm;
+
+    /// <summary>
+    /// Asks what to do with unsaved settings. Returns true when it's fine to move on
+    /// (saved or discarded), false to stay in Settings.
+    /// </summary>
+    private bool ResolveUnsavedSettings()
+    {
+        if (!HasUnsavedSettings) return true;
+        switch (UnsavedChangesDialog.Ask(this))
+        {
+            case UnsavedChangesChoice.Save:
+                return TrySaveSettings();
+            case UnsavedChangesChoice.Discard:
+                LoadSettingsForm(_host.Settings);
+                SettingsStatus.Text = "";
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    {
+        base.OnClosing(e);
+        if (!e.Cancel && !ResolveUnsavedSettings())
+        {
+            e.Cancel = true;
+            SettingsTab.IsChecked = true; // show the problem, or the changes they want to keep editing
+        }
     }
 
 
