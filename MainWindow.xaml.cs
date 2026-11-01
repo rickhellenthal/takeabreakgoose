@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -458,7 +460,7 @@ public partial class MainWindow : Window
         _hotkeyModifiers = settings.HotkeyModifiers;
         _hotkeyKey = settings.HotkeyKey;
         HotkeyBox.Text = settings.HotkeyText;
-        MessagesBox.Text = string.Join(Environment.NewLine, settings.Messages);
+        ShowMessages(settings.Messages);
         _savedSettingsForm = SettingsFormState();
     }
 
@@ -490,8 +492,58 @@ public partial class MainWindow : Window
         SettingsStatus.Text = "";
     }
 
-    private void ResetMessages_Click(object sender, RoutedEventArgs e) =>
-        MessagesBox.Text = string.Join(Environment.NewLine, GooseSettings.DefaultMessages());
+    // ---- Messages ----
+
+    private readonly ObservableCollection<EditableMessage> _messages = new();
+
+    private void ShowMessages(IEnumerable<string> messages)
+    {
+        _messages.Clear();
+        foreach (var message in messages) _messages.Add(new EditableMessage(message));
+        MessageList.ItemsSource = _messages;
+    }
+
+    private void ResetMessages_Click(object sender, RoutedEventArgs e)
+    {
+        var defaults = GooseSettings.DefaultMessages();
+        bool alreadyDefault = _messages.Select(m => m.Text.Trim()).SequenceEqual(defaults);
+        if (!alreadyDefault && !ConfirmDialog.Ask(this, "Reset messages", "Reset the messages?",
+                $"This replaces your list with the goose's {defaults.Count} default messages. "
+                + "Your own messages will be gone after you save.", "Reset"))
+        {
+            return;
+        }
+        ShowMessages(defaults);
+    }
+
+    private void RemoveMessage_Click(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).DataContext is EditableMessage message) _messages.Remove(message);
+    }
+
+    private void AddMessage_Click(object sender, RoutedEventArgs e)
+    {
+        AddNewMessage();
+        NewMessageBox.Focus(); // ready for the next one
+    }
+
+    private void NewMessageBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Enter) return;
+        e.Handled = true;
+        AddNewMessage();
+    }
+
+    private void NewMessageBox_TextChanged(object sender, TextChangedEventArgs e) =>
+        NewMessageHint.Visibility = Show(NewMessageBox.Text.Length == 0);
+
+    private void AddNewMessage()
+    {
+        string text = NewMessageBox.Text.Trim();
+        if (text.Length == 0) return;
+        _messages.Add(new EditableMessage(text));
+        NewMessageBox.Clear();
+    }
 
     private void SaveSettings_Click(object sender, RoutedEventArgs e) => TrySaveSettings();
 
@@ -503,9 +555,10 @@ public partial class MainWindow : Window
         if (!TryParse(BreakBox.Text, 0, 120, "Default break length", out int breakMinutes, fail)) return false;
         if (!TryParse(SnoozeBox.Text, 1, 24 * 60, "Snooze length", out int snooze, fail)) return false;
 
-        var messages = MessagesBox.Text
-            .Split('\n')
-            .Select(m => m.Trim())
+        AddNewMessage(); // a message typed in the "Add a message" box but not added yet still counts
+
+        var messages = _messages
+            .Select(m => m.Text.Trim())
             .Where(m => m.Length > 0)
             .ToList();
         if (messages.Count == 0)
@@ -545,7 +598,8 @@ public partial class MainWindow : Window
     /// <summary>Everything the settings form shows, to tell whether anything changed since loading or saving.</summary>
     private string SettingsFormState() => string.Join("\u001f",
         AutoStartCheck.IsChecked, AutoStartIntervalBox.Text, BreakBox.Text, SnoozeBox.Text,
-        StartWithWindowsCheck.IsChecked, HotkeyBox.Text, MessagesBox.Text);
+        StartWithWindowsCheck.IsChecked, HotkeyBox.Text, string.Join("\n", _messages.Select(m => m.Text)),
+        NewMessageBox.Text.Trim());
 
     private bool HasUnsavedSettings => SettingsFormState() != _savedSettingsForm;
 

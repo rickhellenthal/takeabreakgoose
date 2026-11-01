@@ -102,6 +102,28 @@
             </Setter>
         </Style>
 
+        <!-- A small round button with just an icon, e.g. to remove a message. -->
+        <Style x:Key="IconButton" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="#8A8172" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Circle" Width="26" Height="26" CornerRadius="13" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Circle" Property="Background" Value="#EDE4D3" />
+                                <Setter Property="Foreground" Value="#C0392B" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <!-- An on/off switch. -->
         <Style x:Key="Switch" TargetType="ToggleButton">
             <Setter Property="Cursor" Value="Hand" />
@@ -397,10 +419,48 @@
                                         Margin="0" Click="ResetMessages_Click" />
                                 <TextBlock Text="Messages" Style="{StaticResource CardTitle}" />
                             </DockPanel>
-                            <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,8"
-                                       Text="One per line. The goose picks one at random." />
-                            <TextBox x:Name="MessagesBox" AcceptsReturn="True" TextWrapping="Wrap" Height="150"
-                                     VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top" />
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,10"
+                                       Text="The goose picks one of these at random when it's time for a break. Click a message to edit it." />
+
+                            <ItemsControl x:Name="MessageList" Focusable="False">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="8" Padding="6,3,3,3" Margin="0,0,0,6" BorderThickness="1">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#FAF7F2" />
+                                                    <Setter Property="BorderBrush" Value="#EFE8DC" />
+                                                    <Style.Triggers>
+                                                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                                            <Setter Property="Background" Value="White" />
+                                                            <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+                                                        </Trigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <DockPanel>
+                                                <Button DockPanel.Dock="Right" Content="✕" Style="{StaticResource IconButton}"
+                                                        ToolTip="Remove this message" Click="RemoveMessage_Click" />
+                                                <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                                                         BorderThickness="0" Background="Transparent" TextWrapping="Wrap"
+                                                         Padding="2,4" VerticalAlignment="Center" />
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <DockPanel Margin="0,4,0,0">
+                                <Button DockPanel.Dock="Right" Content="Add" Style="{StaticResource BaseButton}"
+                                        Padding="16,5" Margin="8,0,0,0" Click="AddMessage_Click" />
+                                <Grid>
+                                    <TextBox x:Name="NewMessageBox" Padding="6,5" KeyDown="NewMessageBox_KeyDown"
+                                             TextChanged="NewMessageBox_TextChanged" />
+                                    <TextBlock x:Name="NewMessageHint" Text="Add a message…" Style="{StaticResource Hint}"
+                                               FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center"
+                                               IsHitTestVisible="False" />
+                                </Grid>
+                            </DockPanel>
                         </StackPanel>
                     </Border>
 
