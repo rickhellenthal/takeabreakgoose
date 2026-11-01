@@ -235,7 +235,7 @@ public partial class MainWindow : Window
     {
         bool open = EndOptionsToggle.IsChecked == true;
         EndOptionsPanel.Visibility = Show(open);
-        EndOptionsToggle.Content = open ? "Remove end time" : "Set an end time ▾";
+        EndOptionsToggle.Content = open ? "Remove end time ▴" : "Set an end time ▾";
         UpdateEndPreview();
     }
 

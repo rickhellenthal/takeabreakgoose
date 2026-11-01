@@ -234,20 +234,12 @@
                                 <TextBlock Text="minutes" Style="{StaticResource Label}" Margin="8,0,0,0" />
                             </StackPanel>
 
-                            <TextBlock x:Name="SessionError" Foreground="#C62828" TextWrapping="Wrap"
-                                       Margin="0,12,0,0" Visibility="Collapsed" />
-
-                            <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
-                                <Button Content="Start session" Style="{StaticResource PrimaryButton}"
-                                        Padding="22,8" Click="StartSession_Click" />
-                                <ToggleButton x:Name="EndOptionsToggle" Style="{StaticResource LinkToggle}"
-                                              Margin="14,0,0,0" VerticalAlignment="Center"
-                                              Checked="EndOptionsToggle_Changed" Unchecked="EndOptionsToggle_Changed" />
-                            </StackPanel>
-
                             <!-- Optional: when the session ends. Tucked away so a quick start stays quick. -->
+                            <ToggleButton x:Name="EndOptionsToggle" Style="{StaticResource LinkToggle}"
+                                          HorizontalAlignment="Left" Margin="-4,10,0,0"
+                                          Checked="EndOptionsToggle_Changed" Unchecked="EndOptionsToggle_Changed" />
                             <Border x:Name="EndOptionsPanel" Background="#FAF7F2" CornerRadius="8" Padding="14,12"
-                                    Margin="0,12,0,0" Visibility="Collapsed">
+                                    Margin="0,4,0,0" Visibility="Collapsed">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
@@ -289,6 +281,14 @@
                                                FontSize="12" Foreground="#5E7773" TextWrapping="Wrap" />
                                 </Grid>
                             </Border>
+
+                            <TextBlock x:Name="SessionError" Foreground="#C62828" TextWrapping="Wrap"
+                                       Margin="0,12,0,0" Visibility="Collapsed" />
+
+                            <!-- Always the last thing in the card, whether or not an end time is set. -->
+                            <Button Content="Start session" Style="{StaticResource PrimaryButton}"
+                                    HorizontalAlignment="Left" Padding="22,8" Margin="0,16,0,0"
+                                    Click="StartSession_Click" />
                         </StackPanel>
                     </Border>
 
