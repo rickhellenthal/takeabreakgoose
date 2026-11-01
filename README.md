@@ -1,87 +1,71 @@
-# Take a Break Goose
+<p align="center">
+  <img src="docs/icon.png" width="120" alt="Take a Break Goose icon">
+</p>
 
-A small Windows 11 tray app. A goose walks onto your screen, on top of all your windows, and tells you to take a break so you don't burn out from hyperfocus.
+<h1 align="center">Take a Break Goose</h1>
+
+<p align="center">
+  A friendly goose for Windows 11 that waddles onto your screen to remind you to take a break,<br>
+  so hyperfocus doesn't burn you out.
+</p>
+
+<p align="center">
+  <a href="https://github.com/rickhellenthal/takeabreakgoose/releases/latest">
+    <img src="https://img.shields.io/badge/Download_for_Windows-F28C28?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows">
+  </a>
+</p>
+
+- 🪿 **A goose on your screen** walks in on top of all your windows when it's time for a break
+- ⏱️ **Focus sessions** with a break every 15, 30, 45 or 60 minutes (or your own number), until you stop or until a time you pick
+- 💤 **Napping goose** sleeps on the taskbar during your break, with a ring showing how much break is left
+- ✋ **"Let me finish up"** makes the goose wait, peeking around the edge of the screen, while you save your work
+- 🎩 **Outfits**: a raincoat, a bonnet, a bandana and a party hat
 
 ## Download
 
-Get the latest version from the [Releases page](https://github.com/rickhellenthal/takeabreakgoose/releases/latest):
+1. Download **`TakeABreakGoose-Setup-x.y.z.exe`** from the [latest release](https://github.com/rickhellenthal/takeabreakgoose/releases/latest).
+2. Run it. No admin rights needed. You can choose to add a desktop shortcut and to start the goose when you sign in to Windows.
 
-- **`TakeABreakGoose-Setup-x.y.z.exe`** installs the app for your user account (no admin rights needed). It adds a Start menu shortcut and, if you want, a desktop shortcut and "start with Windows". You can uninstall it from *Settings → Apps → Installed apps*.
-- **`TakeABreakGoose-x.y.z-portable.zip`** contains just the exe. Unzip it anywhere and run it.
+Prefer not to install anything? Download **`TakeABreakGoose-x.y.z-portable.zip`** instead, unzip it anywhere and run `TakeABreakGoose.exe`.
 
-Both include everything the app needs, so you don't have to install .NET.
+> **"Windows protected your PC"?** The app isn't code-signed, so Windows SmartScreen may warn you the first time. Click **More info**, then **Run anyway**.
 
-> The app isn't code-signed, so Windows SmartScreen may say *"Windows protected your PC"* the first time. Click **More info**, then **Run anyway**.
+To uninstall, go to *Settings → Apps → Installed apps* and remove **Take a Break Goose**.
 
 ## How it works
 
-Open the app with the global shortcut (default **Ctrl+Alt+G**), the desktop shortcut, or by clicking the tray icon. The window has three tabs.
+Open the goose with **Ctrl+Alt+G**, the Start menu, or by clicking its icon in the system tray.
 
-**Focus session**
-- Pick how often you want a break reminder (15, 30, 45 or 60 minutes, or a custom number) and click **Start session**.
-- Optionally, click **Set an end time** to end the session after a while (for example 2 hours) or at a time of day (for example 17:00, using your computer's clock). An end time that has already passed today means tomorrow.
-- While a session runs, the page shows a countdown to your next break and when the session ends. You can pause the session, stop it, or take a break right away.
-- When a session ends, the goose comes to tell you it's done.
+1. **Start a focus session.** Pick how often you want a break and click **Start session**. Want it to stop at a certain point? Click **Set an end time** to end it after a while (like 2 hours) or at a time of day (like 17:00).
+2. **The goose arrives** when it's break time. You can:
+   - take the break with **Okay, break time!**
+   - **snooze** it for a few minutes
+   - say **Let me finish up**: the goose waits at the edge of the screen until you click it
+3. **During your break** the goose naps on the taskbar. Need to cut the break short? Click it. It's not thrilled about being woken up, but it'll let you.
+4. **When you're back**, the goose wakes up and asks if you're ready to focus. The countdown to your next break only starts once you say so.
 
-**Wardrobe**
-- Shows the outfits the goose picks from on each visit: a raincoat, a bonnet, a bandana and a party hat.
-- Click **Send this goose** to have the goose come over in that outfit.
+When a session ends, the goose drops by to tell you you're done for now. Outside a focus session it stays quiet.
 
-**Settings**
-- **General**
-  - **Start with Windows:** launch the app when you sign in. It then starts quietly in the tray.
-  - **Start a focus session when the app starts:** an open-ended session with a break interval of your choice, so the goose keeps an eye on you without you starting a session yourself. Together with *Start with Windows*, it watches from the moment you sign in. Outside a focus session the goose stays quiet. This is off by default.
-  - **Shortcut** to open the app window.
-- **Breaks**
-  - **Break length:** the next reminder starts counting after your break.
-  - **Snooze length**, and how long the goose waits for an answer before it leaves.
-  - **Away counts as a break:** if you don't touch the mouse or keyboard for a few minutes, that time counts as a break, and the countdown starts fresh when you come back.
-- **Messages:** the list of messages the goose picks from.
+The **Wardrobe** tab shows the goose's outfits. It picks one at random for each visit, or you can send a goose over in the outfit of your choice.
 
-The goose comes in from the left or right edge, stops on that same side of the screen, and leaves the way it came.
+## Settings
 
-When it asks you to take a break, you can also choose **Let me finish up**. The goose then walks back to the edge and peeks around it while you save your work. It leans out further when your mouse comes near. Click it when you're ready, and it comes back with the snooze and break options.
+- **Start with Windows**, and **start a focus session automatically** when the app starts, so the goose keeps an eye on you without you having to do anything
+- **Break length**, **snooze length**, and how long the goose waits for an answer
+- **Away counts as a break**: time away from your mouse and keyboard counts as a break
+- **The shortcut** that opens the app, and **the messages** the goose picks from
 
-When you take the break, the goose sits down and naps on the taskbar until the break is over. A small card above it shows a ring that fills up as the break goes on, and how much time is left. When the break time is up, the goose keeps napping until you use the computer again. Then it wakes up and asks whether you're ready to focus. Click **Ready to focus** and it walks off, and the countdown to your next break starts from that moment. Or ask for a few more minutes and it naps a little longer. Until you answer, no new break reminders come in.
+Your settings are saved in `%APPDATA%\TakeABreakGoose\settings.json`.
 
-Need to end a break early? Click the napping goose. It's not thrilled about being woken up, but it lets you choose between **Keep resting** and **End my break**.
+<details>
+<summary><b>Building from source</b></summary>
 
-Settings are saved to `%APPDATA%\TakeABreakGoose\settings.json`.
-
-## Build & run
-
-Needs the .NET 8 SDK.
+You need the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
 
 ```bash
 dotnet run
 ```
 
-To make the goose appear right away when the app starts (handy for testing):
+Add `-- --summon` to make the goose appear right away, which is handy for testing. The app icon is generated by `tools\make-icon.ps1`, and installers are built automatically by the [release workflow](.github/workflows/release.yml).
 
-```bash
-dotnet run -- --summon
-```
-
-To publish the exe (the desktop shortcut points to `publish\TakeABreakGoose.exe`):
-
-```bash
-dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish
-```
-
-The app icon (`goose.ico`) is generated from a vector drawing by `tools\make-icon.ps1`.
-
-## Releasing a new version
-
-Push a version tag, and the [Release workflow](.github/workflows/release.yml) builds the installer and the portable zip, then publishes them as a GitHub release:
-
-```bash
-git tag v1.0.0
-```
-
-```bash
-git push origin v1.0.0
-```
-
-To give the release a description, add `release-notes\<tag>.md` (for example `release-notes\v1.1.0.md`) before pushing the tag. Without it, the release lists the commits since the previous version.
-
-The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php) from `installer\TakeABreakGoose.iss`.
+</details>

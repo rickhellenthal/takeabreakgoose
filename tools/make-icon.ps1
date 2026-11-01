@@ -1,7 +1,9 @@
 # Renders the app icon (goose.ico) from the vector drawing below, in all the sizes Windows uses.
-# Usage: powershell -File tools\make-icon.ps1 [-OutPath goose.ico] [-PreviewPath preview.png]
+# Usage: powershell -File tools\make-icon.ps1 [-OutPath goose.ico] [-PngPath docs\icon.png] [-PreviewPath preview.png]
 param(
     [string]$OutPath = (Join-Path $PSScriptRoot '..\goose.ico'),
+    # A 256x256 PNG of the same icon, used by the README.
+    [string]$PngPath = (Join-Path $PSScriptRoot '..\docs\icon.png'),
     [string]$PreviewPath
 )
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
@@ -57,6 +59,11 @@ for ($i = 0; $i -lt $sizes.Count; $i++) {
 }
 foreach ($image in $images) { $writer.Write($image) }
 $writer.Dispose()
+
+if ($PngPath) {
+    New-Item -ItemType Directory -Force (Split-Path $PngPath) | Out-Null
+    [System.IO.File]::WriteAllBytes([System.IO.Path]::GetFullPath($PngPath), $images[-1])
+}
 
 if ($PreviewPath) {
     # Every size side by side on a light and a dark strip, to check legibility.
