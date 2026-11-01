@@ -151,6 +151,20 @@ public partial class GooseWindow : Window
         BeginAnimation(OpacityProperty, fade);
     }
 
+    /// <summary>
+    /// Stops whatever it's doing (asking, peeking, napping) and walks off the screen,
+    /// e.g. when the user stops the session. Raises none of the answer events.
+    /// </summary>
+    public void WalkAway()
+    {
+        if (_phase == Phase.WalkingOut) return;
+        StopTalking();
+        BreakCard.Visibility = Visibility.Collapsed;
+        Figure.Sleeping = false;
+        Figure.ToolTip = null;
+        _phase = Phase.WalkingOut;
+    }
+
     // Where the goose figure sits horizontally inside the window.
     private double FigureLeft => (Width - Figure.Width) / 2;
     private double FigureRight => FigureLeft + Figure.Width;

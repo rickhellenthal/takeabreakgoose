@@ -44,7 +44,7 @@ public partial class App : Application, IGooseHost
         _tray = new TrayIcon();
         _tray.OpenRequested += ShowMainWindow;
         _tray.SummonRequested += () => SummonBreakGoose();
-        _tray.StopSessionRequested += Scheduler.StopSession;
+        _tray.StopSessionRequested += StopSession;
         _tray.DoNotDisturbToggled += () => SetDoNotDisturb(!Scheduler.DoNotDisturb);
         _tray.QuitRequested += Shutdown;
 
@@ -118,6 +118,14 @@ public partial class App : Application, IGooseHost
     }
 
     public bool GooseOnScreen => _goose != null;
+
+    public void StopSession()
+    {
+        Scheduler.StopSession();
+        // The session's goose (asking, peeking or napping) leaves with it; a wardrobe goose may stay.
+        if (_goose != null && !_gooseJustVisiting) _goose.WalkAway();
+        if (_pendingVisit?.StartsBreak == true) _pendingVisit = null;
+    }
 
     public void SetDoNotDisturb(bool on)
     {

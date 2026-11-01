@@ -18,6 +18,9 @@ public interface IGooseHost
     void StartSession(SessionPlan plan);
     void SummonBreakGoose();
 
+    /// <summary>Stops the running session; a goose that's there for it walks off.</summary>
+    void StopSession();
+
     /// <summary>
     /// Sends the goose over just to show off an outfit; it doesn't touch the session's timer.
     /// Returns false if a goose is already on screen.
@@ -408,7 +411,7 @@ public partial class MainWindow : Window
         _host.StartSession(new SessionPlan(interval, breakMinutes, mode, length, endTime));
     }
 
-    private void StopSession_Click(object sender, RoutedEventArgs e) => _host.Scheduler.StopSession();
+    private void StopSession_Click(object sender, RoutedEventArgs e) => _host.StopSession();
 
 
     private void BreakNow_Click(object sender, RoutedEventArgs e) => _host.SummonBreakGoose();

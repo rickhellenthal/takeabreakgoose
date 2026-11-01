@@ -76,6 +76,10 @@ public sealed class BreakScheduler
     {
         Session = null;
         DoNotDisturb = false;
+        // Whatever the goose was doing for this session is over too (it walks off).
+        GooseVisiting = false;
+        AwaitingReturn = false;
+        BreakEndsAt = null;
         Reschedule();
     }
 
