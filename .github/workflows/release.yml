@@ -1,0 +1,64 @@
+# Builds the installer and a portable zip, and publishes them as a GitHub release.
+# Runs when a version tag is pushed, e.g.:  git tag v1.0.0 && git push origin v1.0.0
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Work out the version from the tag
+        id: version
+        shell: pwsh
+        run: echo "version=$($env:TAG.TrimStart('v'))" >> $env:GITHUB_OUTPUT
+
+      # Self-contained, so friends don't need to install .NET first.
+      - name: Publish the app
+        shell: pwsh
+        run: >
+          dotnet publish TakeABreakGoose.csproj -c Release -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:Version=${{ steps.version.outputs.version }}
+          -o publish-installer
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build the installer
+        shell: pwsh
+        run: >
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          /DAppVersion=${{ steps.version.outputs.version }}
+          installer\TakeABreakGoose.iss
+
+      - name: Make the portable zip
+        shell: pwsh
+        run: >
+          Compress-Archive -Path publish-installer\TakeABreakGoose.exe
+          -DestinationPath dist\TakeABreakGoose-${{ steps.version.outputs.version }}-portable.zip
+
+      - name: Create the GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create $env:TAG (Get-ChildItem dist).FullName
+          --title "Take a Break Goose ${{ steps.version.outputs.version }}"
+          --generate-notes

@@ -2,6 +2,17 @@
 
 A small Windows 11 tray app. A goose walks onto your screen, on top of all your windows, and tells you to take a break so you don't burn out from hyperfocus.
 
+## Download
+
+Get the latest version from the [Releases page](https://github.com/rickhellenthal/takeabreakgoose/releases/latest):
+
+- **`TakeABreakGoose-Setup-x.y.z.exe`** installs the app for your user account (no admin rights needed). It adds a Start menu shortcut and, if you want, a desktop shortcut and "start with Windows". You can uninstall it from *Settings → Apps → Installed apps*.
+- **`TakeABreakGoose-x.y.z-portable.zip`** contains just the exe. Unzip it anywhere and run it.
+
+Both include everything the app needs, so you don't have to install .NET.
+
+> The app isn't code-signed, so Windows SmartScreen may say *"Windows protected your PC"* the first time. Click **More info**, then **Run anyway**.
+
 ## How it works
 
 Open the app with the global shortcut (default **Ctrl+Alt+G**), the desktop shortcut, or by clicking the tray icon. The window has three tabs.
@@ -25,7 +36,9 @@ Open the app with the global shortcut (default **Ctrl+Alt+G**), the desktop shor
 
 The goose comes in from the left or right edge, stops on that same side of the screen, and leaves the way it came.
 
-When it asks you to take a break, you can also choose **Let me finish up**. The goose then walks back to the edge and peeks around it while you save your work. It leans out further when your mouse comes near. Click it when you're ready, and it comes back with the snooze and break options. Settings are saved to `%APPDATA%\TakeABreakGoose\settings.json`.
+When it asks you to take a break, you can also choose **Let me finish up**. The goose then walks back to the edge and peeks around it while you save your work. It leans out further when your mouse comes near. Click it when you're ready, and it comes back with the snooze and break options.
+
+Settings are saved to `%APPDATA%\TakeABreakGoose\settings.json`.
 
 ## Build & run
 
@@ -46,3 +59,19 @@ To publish the exe (the desktop shortcut points to `publish\TakeABreakGoose.exe`
 ```bash
 dotnet publish -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o publish
 ```
+
+The app icon (`goose.ico`) is generated from a vector drawing by `tools\make-icon.ps1`.
+
+## Releasing a new version
+
+Push a version tag, and the [Release workflow](.github/workflows/release.yml) builds the installer and the portable zip, then publishes them as a GitHub release:
+
+```bash
+git tag v1.0.0
+```
+
+```bash
+git push origin v1.0.0
+```
+
+The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php) from `installer\TakeABreakGoose.iss`.
