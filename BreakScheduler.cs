@@ -7,7 +7,7 @@ namespace TakeABreakGoose;
 public sealed record WorkSession(int IntervalMinutes, DateTime StartedAt, DateTime? EndsAt);
 
 /// <summary>
-/// Decides when the goose should show up. Reminders come from the running work session,
+/// Decides when the goose should show up. Reminders come from the running focus session,
 /// or, when no session is running and always-on is enabled, from the always-on interval.
 /// </summary>
 public sealed class BreakScheduler
@@ -127,10 +127,10 @@ public sealed class BreakScheduler
         if (BreakEndsAt is DateTime breakEnd) return $"On a break until {breakEnd:HH:mm}";
         if (NextBreakAt is DateTime next)
         {
-            string mode = Session != null ? "Work session" : _settings.AlwaysOn ? "Always on" : "Snoozed";
+            string mode = Session != null ? "Focus session" : _settings.AlwaysOn ? "Always on" : "Snoozed";
             return $"{mode} · next break at {next:HH:mm}";
         }
-        return "No work session running";
+        return "No focus session running";
     }
 
     private void Tick()

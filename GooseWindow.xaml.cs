@@ -10,30 +10,39 @@ using System.Windows.Threading;
 
 namespace TakeABreakGoose;
 
-/// <summary>What the goose says during one visit.</summary>
-public sealed record GooseVisit(string Title, string Message, string? Hint, string DismissText, bool AllowSnooze);
+/// <summary>What the goose says during one visit. A null outfit means a random one.</summary>
+public sealed record GooseVisit(
+    string Title,
+    string Message,
+    string? Hint,
+    string DismissText,
+    bool AllowSnooze,
+    bool AllowFinishUp,
+    GooseOutfit? Outfit = null);
 
 public enum GooseOutcome { Dismissed, Snoozed, TimedOut }
 
 /// <summary>
 /// A transparent, always-on-top window that walks a goose in from a screen edge,
-/// shows a break reminder, then walks back out.
+/// shows a break reminder, then walks back out. If the user needs to finish up first,
+/// the goose waits peeking around the screen edge until it's clicked.
 /// </summary>
 public partial class GooseWindow : Window
 {
-    private enum Phase { WalkingIn, Talking, WalkingOut }
+    private enum Phase { WalkingIn, Talking, ToEdge, Peeking, Returning, WalkingOut }
 
-    private const double WalkSpeed = 150; // DIPs per second
-    private const double StepRate = 12;   // leg swing speed, radians per second
+    private const double WalkSpeed = 150;   // DIPs per second
+    private const double StepRate = 12;     // leg swing speed, radians per second
+    private const double PeekVisible = 40;  // how much of the goose shows while peeking
+    private const double PeekHoverVisible = 95;
 
     private readonly Rect _area = SystemParameters.WorkArea;
     private readonly Stopwatch _clock = new();
     private readonly DispatcherTimer _stayTimer;
     private readonly bool _stayUntilDismissed;
+    private readonly bool _enteredFromLeft;
     private TimeSpan _lastFrame;
     private Phase _phase = Phase.WalkingIn;
-    private readonly bool _enteredFromLeft;
-    private int _direction;
     private double _targetLeft;
     private double _stepPhase;
     private GooseOutcome _outcome = GooseOutcome.TimedOut;
@@ -52,14 +61,14 @@ public partial class GooseWindow : Window
         DismissButton.Content = visit.DismissText;
         SnoozeButton.Content = $"Snooze {snoozeMinutes} min";
         SnoozeButton.Visibility = visit.AllowSnooze ? Visibility.Visible : Visibility.Collapsed;
-        PutOnRandomOutfit();
+        FinishUpButton.Visibility = visit.AllowFinishUp ? Visibility.Visible : Visibility.Collapsed;
+        Figure.Outfit = visit.Outfit ?? GooseOutfits.Random();
 
         _stayTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(Math.Max(1, staySeconds)) };
         _stayTimer.Tick += (_, _) => Leave(GooseOutcome.TimedOut);
         _stayUntilDismissed = staySeconds <= 0;
 
         _enteredFromLeft = Random.Shared.Next(2) == 0;
-        _direction = _enteredFromLeft ? 1 : -1;
         Top = _area.Bottom - Height;
         Left = _enteredFromLeft ? _area.Left - Width : _area.Right;
 
@@ -70,7 +79,7 @@ public partial class GooseWindow : Window
             ? _area.Left + edgeMargin + reach
             : _area.Right - Width - edgeMargin - reach;
         _targetLeft = Math.Clamp(target, _area.Left, Math.Max(_area.Left, _area.Right - Width));
-        Face(_direction);
+        Figure.Facing = InwardDirection;
 
         Loaded += (_, _) =>
         {
@@ -84,6 +93,9 @@ public partial class GooseWindow : Window
             Finished?.Invoke(_outcome);
         };
     }
+
+    /// <summary>The direction pointing from the goose's edge into the screen.</summary>
+    private int InwardDirection => _enteredFromLeft ? 1 : -1;
 
     protected override void OnSourceInitialized(EventArgs e)
     {
@@ -103,21 +115,33 @@ public partial class GooseWindow : Window
         switch (_phase)
         {
             case Phase.WalkingIn:
-                Walk(dt);
-                if ((_direction > 0 && Left >= _targetLeft) || (_direction < 0 && Left <= _targetLeft))
-                {
-                    Left = _targetLeft;
-                    StartTalking();
-                }
+            case Phase.Returning:
+                if (WalkTowards(_targetLeft, dt)) StartTalking();
                 break;
 
             case Phase.Talking:
                 // Idle: a gentle head bob while waiting for an answer.
-                HeadTilt.Angle = Math.Sin(now.TotalSeconds * 2.5) * 4;
+                Figure.HeadAngle = Math.Sin(now.TotalSeconds * 2.5) * 4;
+                break;
+
+            case Phase.ToEdge:
+                if (WalkTowards(PeekLeft(PeekVisible), dt))
+                {
+                    _phase = Phase.Peeking;
+                    Figure.Facing = InwardDirection;
+                    Figure.ToolTip = "Click me when you're ready for your break";
+                }
+                break;
+
+            case Phase.Peeking:
+                // Lean out a bit further while the mouse is near the goose.
+                double peekLeft = PeekLeft(IsCursorNearPeek() ? PeekHoverVisible : PeekVisible);
+                Left += (peekLeft - Left) * Math.Min(1, dt * 10);
+                Figure.HeadAngle = Math.Sin(now.TotalSeconds * 1.6) * 6;
                 break;
 
             case Phase.WalkingOut:
-                Walk(dt);
+                Walk(-InwardDirection, dt);
                 if (Left > _area.Right || Left + Width < _area.Left)
                 {
                     _phase = Phase.WalkingIn; // stop moving while closing
@@ -128,23 +152,61 @@ public partial class GooseWindow : Window
         }
     }
 
-    private void Walk(double dt)
+    /// <summary>Walks one frame towards a window position. Returns true on arrival.</summary>
+    private bool WalkTowards(double targetLeft, double dt)
     {
-        Left += _direction * WalkSpeed * dt;
+        int direction = Math.Sign(targetLeft - Left);
+        if (direction != 0)
+        {
+            Walk(direction, dt);
+            bool stillWalking = direction > 0 ? Left < targetLeft : Left > targetLeft;
+            if (stillWalking) return false;
+        }
+        Left = targetLeft;
+        Figure.SetStride(0);
+        return true;
+    }
+
+    private void Walk(int direction, double dt)
+    {
+        Figure.Facing = direction;
+        Left += direction * WalkSpeed * dt;
         _stepPhase += dt * StepRate;
-        double swing = Math.Sin(_stepPhase);
-        LegBackRotate.Angle = swing * 28;
-        LegFrontRotate.Angle = -swing * 28;
-        BodyBob.Y = -Math.Abs(swing) * 3;
+        Figure.SetStride(Math.Sin(_stepPhase));
+    }
+
+    /// <summary>The window position at which only the front of the goose shows past the screen edge.</summary>
+    private double PeekLeft(double visible)
+    {
+        double figureLeft = (Width - Figure.Width) / 2;
+        return _enteredFromLeft
+            ? _area.Left + visible - (figureLeft + GooseFigure.BeakTipX)
+            : _area.Right - visible - (figureLeft + Figure.Width - GooseFigure.BeakTipX);
+    }
+
+    /// <summary>
+    /// Whether the cursor is in the strip at the screen edge where the goose peeks. Checked against
+    /// a fixed area rather than mouse enter/leave, because the transparent gaps around the goose
+    /// would otherwise slide under the cursor as it leans out and make it bounce back and forth.
+    /// </summary>
+    private bool IsCursorNearPeek()
+    {
+        var source = PresentationSource.FromVisual(this);
+        if (source?.CompositionTarget == null || !GetCursorPos(out POINT p)) return false;
+        Point cursor = source.CompositionTarget.TransformFromDevice.Transform(new Point(p.X, p.Y));
+
+        double reach = PeekHoverVisible + 10;
+        bool inStrip = _enteredFromLeft
+            ? cursor.X >= _area.Left && cursor.X <= _area.Left + reach
+            : cursor.X <= _area.Right && cursor.X >= _area.Right - reach;
+        double figureTop = Top + Height - Figure.ActualHeight;
+        return inStrip && cursor.Y >= figureTop && cursor.Y <= Top + Height;
     }
 
     private void StartTalking()
     {
         _phase = Phase.Talking;
-        LegBackRotate.Angle = 0;
-        LegFrontRotate.Angle = 0;
-        BodyBob.Y = 0;
-
+        Figure.Facing = InwardDirection;
         Bubble.Visibility = Visibility.Visible;
         var pop = new DoubleAnimation(0.4, 1, TimeSpan.FromMilliseconds(350))
         {
@@ -156,50 +218,45 @@ public partial class GooseWindow : Window
         if (!_stayUntilDismissed) _stayTimer.Start();
     }
 
+    private void StopTalking()
+    {
+        _stayTimer.Stop();
+        Bubble.Visibility = Visibility.Collapsed;
+        Figure.HeadAngle = 0;
+    }
+
     private void Leave(GooseOutcome outcome)
     {
         if (_phase != Phase.Talking) return;
         _outcome = outcome;
-        _stayTimer.Stop();
-        Bubble.Visibility = Visibility.Collapsed;
-        HeadTilt.Angle = 0;
-
-        // Go back out the way it came in.
-        _direction = _enteredFromLeft ? -1 : 1;
-        Face(_direction);
+        StopTalking();
         _phase = Phase.WalkingOut;
     }
 
-    private void Face(int direction) => GooseFlip.ScaleX = direction;
-
-    private void PutOnRandomOutfit()
+    private void FinishUp_Click(object sender, RoutedEventArgs e)
     {
-        // Each outfit is one or more parts; the raincoat's hood sits on the head so it tilts along.
-        UIElement[][] outfits =
-        {
-            new UIElement[] { RaincoatCape, RaincoatHood },
-            new UIElement[] { Bonnet },
-            new UIElement[] { Bandana },
-            new UIElement[] { PartyHat },
-        };
-        foreach (var part in outfits[Random.Shared.Next(outfits.Length)])
-            part.Visibility = Visibility.Visible;
+        if (_phase != Phase.Talking) return;
+        StopTalking();
+        // It only offers this once; when it comes back it's break time.
+        FinishUpButton.Visibility = Visibility.Collapsed;
+        _phase = Phase.ToEdge;
     }
 
     private void Dismiss_Click(object sender, RoutedEventArgs e) => Leave(GooseOutcome.Dismissed);
 
     private void Snooze_Click(object sender, RoutedEventArgs e) => Leave(GooseOutcome.Snoozed);
 
-    private void Goose_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void Figure_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        // Poking the goose makes it flap its head indignantly.
-        var honk = new DoubleAnimation(0, -18, TimeSpan.FromMilliseconds(90))
+        if (_phase == Phase.Peeking)
         {
-            AutoReverse = true,
-            RepeatBehavior = new RepeatBehavior(2),
-        };
-        HeadTilt.BeginAnimation(RotateTransform.AngleProperty, honk);
-        honk.Completed += (_, _) => HeadTilt.BeginAnimation(RotateTransform.AngleProperty, null);
+            // The user is done finishing up: come back and ask again.
+            Figure.ToolTip = null;
+            _phase = Phase.Returning;
+            return;
+        }
+        // Poking the goose makes it flap its head indignantly.
+        Figure.Flap();
     }
 
     private const int GWL_EXSTYLE = -20;
@@ -211,4 +268,14 @@ public partial class GooseWindow : Window
 
     [DllImport("user32.dll")]
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct POINT
+    {
+        public int X;
+        public int Y;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool GetCursorPos(out POINT point);
 }

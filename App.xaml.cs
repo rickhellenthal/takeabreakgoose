@@ -33,16 +33,16 @@ public partial class App : Application, IGooseHost
         Settings = SettingsStore.Load();
 
         Scheduler = new BreakScheduler(Settings);
-        Scheduler.BreakDue += SummonBreakGoose;
+        Scheduler.BreakDue += () => SummonBreakGoose();
         Scheduler.SessionCompleted += () => SummonGoose(new GooseVisit(
             "Session complete!",
-            "Your work session is done. Great job! Time to wrap up and give your brain some rest.",
-            null, "Thanks, goose!", AllowSnooze: false));
+            "Your focus session is done. Great job! Time to wrap up and give your brain some rest.",
+            null, "Thanks, goose!", AllowSnooze: false, AllowFinishUp: false));
         Scheduler.StateChanged += UpdateTray;
 
         _tray = new TrayIcon();
         _tray.OpenRequested += ShowMainWindow;
-        _tray.SummonRequested += SummonBreakGoose;
+        _tray.SummonRequested += () => SummonBreakGoose();
         _tray.PauseToggled += () => Scheduler.SetPaused(!Scheduler.IsPaused);
         _tray.StopSessionRequested += Scheduler.StopSession;
         _tray.QuitRequested += Shutdown;
@@ -57,7 +57,7 @@ public partial class App : Application, IGooseHost
         if (!hotkeyOk)
             _tray.ShowBalloon($"{Settings.HotkeyText} is already used by another program. Open the goose from this tray icon to pick another shortcut.");
         else if (Array.IndexOf(e.Args, Autostart.Argument) >= 0)
-            _tray.ShowBalloon($"The goose is here. Press {Settings.HotkeyText} to start a work session.");
+            _tray.ShowBalloon($"The goose is here. Press {Settings.HotkeyText} to start a focus session.");
 
         if (Array.IndexOf(e.Args, "--summon") >= 0) SummonBreakGoose();
     }
@@ -84,13 +84,14 @@ public partial class App : Application, IGooseHost
         Scheduler.StartSession(intervalMinutes, lengthMinutes);
     }
 
-    public void SummonBreakGoose()
+    public void SummonBreakGoose(GooseOutfit? outfit = null)
     {
         string message = Settings.Messages[Random.Shared.Next(Settings.Messages.Count)];
         string? hint = Settings.BreakMinutes > 0
             ? $"Take {Settings.BreakMinutes} minutes. I'll start counting again after that."
             : null;
-        SummonGoose(new GooseVisit("HONK!", message, hint, "Okay, break time!", AllowSnooze: true));
+        SummonGoose(new GooseVisit("HONK!", message, hint, "Okay, break time!",
+            AllowSnooze: true, AllowFinishUp: true, outfit));
     }
 
     private void SummonGoose(GooseVisit visit)

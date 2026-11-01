@@ -14,13 +14,13 @@ public interface IGooseHost
     GooseSettings Settings { get; }
     BreakScheduler Scheduler { get; }
     void StartSession(int intervalMinutes, int? lengthMinutes);
-    void SummonBreakGoose();
+    void SummonBreakGoose(GooseOutfit? outfit = null);
 
     /// <summary>Applies and saves new settings; returns an error message, or null on success.</summary>
     string? ApplySettings(GooseSettings settings, bool startWithWindows);
 }
 
-/// <summary>The landing page: start or follow a work session, and change settings.</summary>
+/// <summary>The landing page: start or follow a focus session, browse the wardrobe, and change settings.</summary>
 public partial class MainWindow : Window
 {
     private readonly IGooseHost _host;
@@ -35,6 +35,7 @@ public partial class MainWindow : Window
         HeaderIcon.Source = LargestIconFrame();
         LoadSessionForm(host.Settings);
         LoadSettingsForm(host.Settings);
+        BuildWardrobe();
 
         _host.Scheduler.StateChanged += RefreshStatus;
         Closed += (_, _) => _host.Scheduler.StateChanged -= RefreshStatus;
@@ -53,14 +54,64 @@ public partial class MainWindow : Window
     private void Tab_Checked(object sender, RoutedEventArgs e)
     {
         if (SessionPage == null) return; // fires during InitializeComponent
-        bool settings = SettingsTab.IsChecked == true;
-        SessionPage.Visibility = settings ? Visibility.Collapsed : Visibility.Visible;
-        SettingsPage.Visibility = settings ? Visibility.Visible : Visibility.Collapsed;
-        SettingsFooter.Visibility = settings ? Visibility.Visible : Visibility.Collapsed;
+        SessionPage.Visibility = Show(SessionTab.IsChecked == true);
+        WardrobePage.Visibility = Show(WardrobeTab.IsChecked == true);
+        SettingsPage.Visibility = Show(SettingsTab.IsChecked == true);
+        SettingsFooter.Visibility = Show(SettingsTab.IsChecked == true);
         SettingsStatus.Text = "";
     }
 
-    // ---- Work session ----
+    private static Visibility Show(bool visible) => visible ? Visibility.Visible : Visibility.Collapsed;
+
+    // ---- Wardrobe ----
+
+    private void BuildWardrobe()
+    {
+        foreach (var outfit in GooseOutfits.All)
+        {
+            var sendButton = new Button
+            {
+                Content = "Send this goose",
+                Style = (Style)FindResource("BaseButton"),
+                Padding = new Thickness(12, 5, 12, 5),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(0, 10, 0, 0),
+            };
+            sendButton.Click += (_, _) => _host.SummonBreakGoose(outfit);
+
+            var stage = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0xB5, 0xB8, 0x98)),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(0, 4, 0, 4),
+                Child = new GooseFigure { Outfit = outfit },
+            };
+
+            WardrobeGrid.Children.Add(new Border
+            {
+                Style = (Style)FindResource("Card"),
+                Margin = new Thickness(0, 0, 10, 10),
+                Padding = new Thickness(12),
+                Child = new StackPanel
+                {
+                    Children =
+                    {
+                        stage,
+                        new TextBlock
+                        {
+                            Text = GooseOutfits.Name(outfit),
+                            Style = (Style)FindResource("CardTitle"),
+                            Margin = new Thickness(0, 10, 0, 2),
+                        },
+                        new TextBlock { Text = GooseOutfits.Description(outfit), Style = (Style)FindResource("Hint") },
+                        sendButton,
+                    },
+                },
+            });
+        }
+    }
+
+    // ---- Focus session ----
 
     private void LoadSessionForm(GooseSettings settings)
     {
@@ -126,8 +177,8 @@ public partial class MainWindow : Window
         }
 
         AlwaysOnNote.Text = settings.AlwaysOn
-            ? $"Always on: outside a work session the goose still visits every {settings.AlwaysOnIntervalMinutes} min."
-            : "Outside a work session the goose stays quiet. You can turn on always-on reminders in Settings.";
+            ? $"Always on: outside a focus session the goose still visits every {settings.AlwaysOnIntervalMinutes} min."
+            : "Outside a focus session the goose stays quiet. You can turn on always-on reminders in Settings.";
     }
 
     private static string FormatCountdown(TimeSpan time)

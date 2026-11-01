@@ -31,7 +31,7 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add("Take a break now", null, (_, _) => SummonRequested?.Invoke());
         _pauseItem = new Forms.ToolStripMenuItem("Pause reminders", null, (_, _) => PauseToggled?.Invoke());
         menu.Items.Add(_pauseItem);
-        _stopSessionItem = new Forms.ToolStripMenuItem("Stop work session", null, (_, _) => StopSessionRequested?.Invoke());
+        _stopSessionItem = new Forms.ToolStripMenuItem("Stop focus session", null, (_, _) => StopSessionRequested?.Invoke());
         menu.Items.Add(_stopSessionItem);
         menu.Items.Add(new Forms.ToolStripSeparator());
         menu.Items.Add("Quit", null, (_, _) => QuitRequested?.Invoke());

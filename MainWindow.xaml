@@ -113,32 +113,36 @@
     <Grid Margin="20,18,20,16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <DockPanel Grid.Row="0" Margin="0,0,0,16">
+        <DockPanel Grid.Row="0" Margin="0,0,0,14">
             <Image x:Name="HeaderIcon" Width="42" Height="42" DockPanel.Dock="Left" />
-            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                <RadioButton x:Name="SessionTab" Content="Work session" GroupName="Tabs"
-                             Style="{StaticResource TabPill}" IsChecked="True" Checked="Tab_Checked" />
-                <RadioButton x:Name="SettingsTab" Content="Settings" GroupName="Tabs"
-                             Style="{StaticResource TabPill}" Checked="Tab_Checked" />
-            </StackPanel>
             <StackPanel Margin="12,0" VerticalAlignment="Center">
                 <TextBlock Text="Take a Break Goose" FontSize="18" FontWeight="SemiBold" />
                 <TextBlock x:Name="HeaderStatus" Style="{StaticResource Hint}" />
             </StackPanel>
         </DockPanel>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Focusable="False">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,14">
+            <RadioButton x:Name="SessionTab" Content="Focus session" GroupName="Tabs"
+                         Style="{StaticResource TabPill}" IsChecked="True" Checked="Tab_Checked" />
+            <RadioButton x:Name="WardrobeTab" Content="Wardrobe" GroupName="Tabs"
+                         Style="{StaticResource TabPill}" Checked="Tab_Checked" />
+            <RadioButton x:Name="SettingsTab" Content="Settings" GroupName="Tabs"
+                         Style="{StaticResource TabPill}" Checked="Tab_Checked" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Focusable="False">
             <Grid>
-                <!-- Work session page -->
+                <!-- Focus session page -->
                 <StackPanel x:Name="SessionPage">
                     <Border x:Name="ActiveCard" Style="{StaticResource Card}" Visibility="Collapsed">
                         <StackPanel>
-                            <TextBlock Text="Work session running" Style="{StaticResource CardTitle}" />
+                            <TextBlock Text="Focus session running" Style="{StaticResource CardTitle}" />
                             <TextBlock x:Name="CountdownText" FontSize="40" FontWeight="Light" Margin="0,6,0,0" />
                             <TextBlock x:Name="CountdownCaption" Style="{StaticResource Hint}" FontSize="13" />
                             <TextBlock x:Name="SessionEndText" Style="{StaticResource Hint}" Margin="0,10,0,0" />
@@ -155,7 +159,7 @@
 
                     <Border x:Name="StartCard" Style="{StaticResource Card}">
                         <StackPanel>
-                            <TextBlock Text="Start a work session" Style="{StaticResource CardTitle}" />
+                            <TextBlock Text="Start a focus session" Style="{StaticResource CardTitle}" />
                             <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,0"
                                        Text="The goose reminds you to take breaks while you work, and lets you know when the session is over." />
 
@@ -163,10 +167,10 @@
                             <StackPanel Orientation="Horizontal">
                                 <TextBox x:Name="SessionIntervalBox" Width="56" />
                                 <TextBlock Text="minutes" Style="{StaticResource Label}" Margin="8,0,16,0" />
-                                <Button Content="25" Tag="25" Style="{StaticResource ChipButton}" Click="IntervalPreset_Click" />
+                                <Button Content="15" Tag="15" Style="{StaticResource ChipButton}" Click="IntervalPreset_Click" />
+                                <Button Content="30" Tag="30" Style="{StaticResource ChipButton}" Click="IntervalPreset_Click" />
                                 <Button Content="45" Tag="45" Style="{StaticResource ChipButton}" Click="IntervalPreset_Click" />
                                 <Button Content="60" Tag="60" Style="{StaticResource ChipButton}" Click="IntervalPreset_Click" />
-                                <Button Content="90" Tag="90" Style="{StaticResource ChipButton}" Click="IntervalPreset_Click" />
                             </StackPanel>
 
                             <CheckBox x:Name="SessionEndCheck" Content="End the session after" Margin="0,16,0,6" />
@@ -197,14 +201,21 @@
                     <TextBlock x:Name="AlwaysOnNote" Style="{StaticResource Hint}" Margin="4,0" />
                 </StackPanel>
 
+                <!-- Wardrobe page: cards are filled in from code, one per outfit -->
+                <StackPanel x:Name="WardrobePage" Visibility="Collapsed">
+                    <TextBlock Style="{StaticResource Hint}" FontSize="13" Margin="2,0,2,12"
+                               Text="The goose picks one of these outfits every time it visits. Send one over to see it in action." />
+                    <UniformGrid x:Name="WardrobeGrid" Columns="2" />
+                </StackPanel>
+
                 <!-- Settings page -->
                 <StackPanel x:Name="SettingsPage" Visibility="Collapsed">
                     <Border Style="{StaticResource Card}">
                         <StackPanel>
                             <TextBlock Text="Always on" Style="{StaticResource CardTitle}" />
                             <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,10"
-                                       Text="Let the goose keep an eye on you even when no work session is running." />
-                            <CheckBox x:Name="AlwaysOnCheck" Content="Remind me outside work sessions too" />
+                                       Text="Let the goose keep an eye on you even when no focus session is running." />
+                            <CheckBox x:Name="AlwaysOnCheck" Content="Remind me outside focus sessions too" />
                             <StackPanel Orientation="Horizontal" Margin="22,8,0,0"
                                         IsEnabled="{Binding IsChecked, ElementName=AlwaysOnCheck}">
                                 <TextBlock Text="every" Style="{StaticResource Label}" Margin="0,0,8,0" />
@@ -285,7 +296,7 @@
         </ScrollViewer>
 
         <!-- Settings footer -->
-        <DockPanel x:Name="SettingsFooter" Grid.Row="2" Margin="0,12,0,0" Visibility="Collapsed" LastChildFill="False">
+        <DockPanel x:Name="SettingsFooter" Grid.Row="3" Margin="0,12,0,0" Visibility="Collapsed" LastChildFill="False">
             <Button DockPanel.Dock="Left" Content="Summon goose now" Style="{StaticResource BaseButton}"
                     Click="Summon_Click" />
             <Button DockPanel.Dock="Right" Content="Save" Style="{StaticResource PrimaryButton}" Padding="24,7"

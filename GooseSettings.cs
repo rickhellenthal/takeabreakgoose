@@ -10,7 +10,7 @@ namespace TakeABreakGoose;
 
 public sealed class GooseSettings
 {
-    /// <summary>Keep reminding even when no work session is running.</summary>
+    /// <summary>Keep reminding even when no focus session is running.</summary>
     public bool AlwaysOn { get; set; }
 
     public int AlwaysOnIntervalMinutes { get; set; } = 60;
