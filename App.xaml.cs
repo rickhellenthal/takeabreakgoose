@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace TakeABreakGoose;
 
@@ -15,6 +16,7 @@ public partial class App : Application, IGooseHost
     private HotkeyManager? _hotkey;
     private GooseCoordinator _goose = null!;
     private MainWindow? _mainWindow;
+    private DispatcherTimer? _callCheck;
 
     public GooseSettings Settings { get; private set; } = new();
     public BreakScheduler Scheduler { get; private set; } = null!;
@@ -52,6 +54,12 @@ public partial class App : Application, IGooseHost
             Scheduler.StartSession(Settings.AutoStartIntervalMinutes, Settings.BreakMinutes, endsAt: null, automatically: true);
         UpdateTray();
 
+        CameraActivity.Start();
+        _callCheck = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        _callCheck.Tick += (_, _) => _goose.CheckForCall(Calls.InProgress());
+        _callCheck.Start();
+        _goose.CallStarted += ExplainCallsOnce;
+
         _hotkey = new HotkeyManager();
         _hotkey.Pressed += ShowMainWindow;
         bool hotkeyOk = _hotkey.Register(Settings.HotkeyModifiers, Settings.HotkeyKey);
@@ -70,6 +78,8 @@ public partial class App : Application, IGooseHost
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _callCheck?.Stop();
+        CameraActivity.Stop();
         _hotkey?.Dispose();
         _tray?.Dispose();
         if (_singleInstance != null)
@@ -102,6 +112,8 @@ public partial class App : Application, IGooseHost
     public bool GooseOnScreen => _goose.GooseOnScreen;
 
     public void SetDoNotDisturb(bool on) => _goose.SetDoNotDisturb(on);
+
+    public bool DoNotDisturbForCall => _goose.DoNotDisturbForCall;
 
     public string? ApplySettings(GooseSettings newSettings, bool startWithWindows)
     {
@@ -146,6 +158,15 @@ public partial class App : Application, IGooseHost
         _mainWindow.Activate();
     }
 
+    /// <summary>The first time a call keeps the goose away, says so, so a skipped break isn't a mystery.</summary>
+    private void ExplainCallsOnce()
+    {
+        if (Settings.CallNoticeShown) return;
+        Settings.CallNoticeShown = true;
+        TrySave();
+        _tray?.ShowBalloon("You're in a call, so the goose stays away until it's over. You can turn this off in Settings.");
+    }
+
     private void TrySave()
     {
         try
@@ -159,6 +180,6 @@ public partial class App : Application, IGooseHost
     }
 
     private void UpdateTray() =>
-        _tray?.Update(Scheduler.Describe(), Scheduler.DoNotDisturb, Scheduler.Session != null,
-            Settings.HotkeyText);
+        _tray?.Update(Scheduler.Describe(_goose.DoNotDisturbForCall), Scheduler.DoNotDisturb,
+            _goose.DoNotDisturbForCall, Scheduler.Session != null, Settings.HotkeyText);
 }

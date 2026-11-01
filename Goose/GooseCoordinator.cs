@@ -11,6 +11,7 @@ public sealed class GooseCoordinator
 {
     private readonly BreakScheduler _scheduler;
     private readonly Func<GooseSettings> _settings;
+    private readonly CallDoNotDisturb _call = new();
     private GooseWindow? _goose;
     private GooseVisit? _currentVisit;
     private GooseVisit? _pendingVisit;
@@ -81,6 +82,22 @@ public sealed class GooseCoordinator
             _goose.LeaveNow();
         }
         _scheduler.SetDoNotDisturb(on);
+    }
+
+    /// <summary>Do not disturb is on because of a call, and goes off again when the call is over.</summary>
+    public bool DoNotDisturbForCall => _call.TurnedOn;
+
+    /// <summary>A call turned Do not disturb on.</summary>
+    public event Action? CallStarted;
+
+    /// <summary>Turns Do not disturb on when a call starts and off again when it is over.</summary>
+    public void CheckForCall(bool inCall)
+    {
+        var change = _call.Update(inCall, _settings().DoNotDisturbDuringCalls,
+            _scheduler.Session != null, _scheduler.DoNotDisturb);
+        if (change is not bool on) return;
+        SetDoNotDisturb(on);
+        if (on) CallStarted?.Invoke();
     }
 
     /// <summary>The session reached its end time: the goose comes by, in its party hat, to say goodbye.</summary>

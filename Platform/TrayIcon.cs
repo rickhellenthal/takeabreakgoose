@@ -51,12 +51,14 @@ public sealed class TrayIcon : IDisposable
         };
     }
 
-    public void Update(string status, bool doNotDisturb, bool sessionRunning, string hotkeyText)
+    /// <param name="inCall">Do not disturb is on because the user is in a call.</param>
+    public void Update(string status, bool doNotDisturb, bool inCall, bool sessionRunning, string hotkeyText)
     {
         string text = $"Take a Break Goose\n{status}";
         if (text.Length > 63) text = text[..63]; // NotifyIcon.Text is limited to 63 chars
         if (_icon.Text != text) _icon.Text = text;
         _doNotDisturbItem.Checked = doNotDisturb;
+        _doNotDisturbItem.Text = inCall ? "Do not disturb (you're in a call)" : "Do not disturb";
         // Breaks, Do not disturb and stopping only mean something during a focus session.
         // Do not disturb can outlast its session (the goose's goodbye waits for it), so it stays while on.
         _breakNowItem.Visible = _stopSessionItem.Visible = sessionRunning;

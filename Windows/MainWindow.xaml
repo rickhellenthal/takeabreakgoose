@@ -23,19 +23,25 @@
             </StackPanel>
         </DockPanel>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,14">
-            <RadioButton x:Name="SessionTab" Content="Focus session" GroupName="Tabs"
-                         Style="{StaticResource TabPill}" IsChecked="True" Checked="Tab_Checked" />
-            <RadioButton x:Name="WardrobeTab" Content="Wardrobe" GroupName="Tabs"
-                         Style="{StaticResource TabPill}" Checked="Tab_Checked" />
-            <RadioButton x:Name="SettingsTab" Content="Settings" GroupName="Tabs"
-                         Style="{StaticResource TabPill}" Checked="Tab_Checked" />
-        </StackPanel>
+        <Grid Grid.Row="1" Margin="0,0,0,14">
+            <StackPanel x:Name="Tabs" Orientation="Horizontal">
+                <RadioButton x:Name="SessionTab" Content="Focus session" GroupName="Tabs"
+                             Style="{StaticResource TabPill}" IsChecked="True" Checked="Tab_Checked" />
+                <RadioButton x:Name="WardrobeTab" Content="Wardrobe" GroupName="Tabs"
+                             Style="{StaticResource TabPill}" Checked="Tab_Checked" />
+                <RadioButton x:Name="SettingsTab" Content="Settings" GroupName="Tabs"
+                             Style="{StaticResource TabPill}" Checked="Tab_Checked" />
+            </StackPanel>
+            <!-- Instead of the tabs while a page within Settings is open. -->
+            <Button x:Name="BackButton" Content="←  Settings" Style="{StaticResource BackButton}"
+                    HorizontalAlignment="Left" Visibility="Collapsed" Click="Back_Click" />
+        </Grid>
 
         <Grid Grid.Row="2">
             <local:FocusSessionPage x:Name="SessionView" />
             <local:WardrobePage x:Name="WardrobeView" Visibility="Collapsed" />
             <local:SettingsPage x:Name="SettingsView" Visibility="Collapsed" />
+            <local:MessagesPage x:Name="MessagesView" Visibility="Collapsed" />
         </Grid>
     </Grid>
 </Window>

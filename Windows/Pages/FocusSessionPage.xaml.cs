@@ -110,10 +110,16 @@ public partial class FocusSessionPage : UserControl
             DoNotDisturbSwitch.IsChecked = scheduler.DoNotDisturb;
             _showingStatus = false;
             DoNotDisturbHint.Text = !scheduler.DoNotDisturb
-                ? "Keep the goose away for now, for example during a meeting."
-                : scheduler.BreakWaiting
-                    ? "Your break is waiting until you turn this off."
-                    : "The goose stays away until you turn this off. Your timer keeps running.";
+                ? settings.DoNotDisturbDuringCalls
+                    ? "Keep the goose away for now. During a call, this turns on by itself."
+                    : "Keep the goose away for now, for example during a meeting."
+                : _host.DoNotDisturbForCall
+                    ? scheduler.BreakWaiting
+                        ? "On because you're in a call. Your break is waiting until the call is over."
+                        : "On because you're in a call, and off again when it's over. Your timer keeps running."
+                    : scheduler.BreakWaiting
+                        ? "Your break is waiting until you turn this off."
+                        : "The goose stays away until you turn this off. Your timer keeps running.";
         }
         else
         {
@@ -121,6 +127,9 @@ public partial class FocusSessionPage : UserControl
         }
 
         SignOffBanner.Visibility = Ui.Show(session == null && scheduler.DoNotDisturb);
+        SignOffHint.Text = _host.DoNotDisturbForCall
+            ? "Do not disturb is still on because you're in a call. The goose will say goodbye when the call is over, or when you turn Do not disturb off."
+            : "Do not disturb is still on. The goose will say goodbye when you turn it off.";
         AutoStartNote.Visibility = Ui.Show(session == null);
         AutoStartNote.Text = settings.AutoStartSession
             ? $"When the app starts, it starts a focus session by itself (a break every {settings.AutoStartIntervalMinutes} min). You can change this in Settings."

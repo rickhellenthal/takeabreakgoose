@@ -9,7 +9,7 @@
          content can leave black strips at the edges on some display scales. -->
     <StackPanel Margin="22,18,22,18">
         <TextBlock Text="Save your changes?" FontSize="16" FontWeight="SemiBold" />
-        <TextBlock Text="You changed some settings but didn't save them yet." TextWrapping="Wrap"
+        <TextBlock x:Name="MessageText" TextWrapping="Wrap"
                    Foreground="#7A7A7A" Margin="0,4,0,18" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button Content="Keep editing" Style="{StaticResource BaseButton}" IsCancel="True" Click="KeepEditing_Click" />

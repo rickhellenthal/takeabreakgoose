@@ -25,6 +25,11 @@
                         <TextBlock Style="{StaticResource Hint}" Margin="22,6,0,0"
                                    Text="Together with the option above, the goose keeps an eye on you from the moment you sign in, without you having to start a session." />
 
+                        <CheckBox x:Name="CallDoNotDisturbCheck" Content="Turn on Do not disturb during calls"
+                                  Margin="0,14,0,0" />
+                        <TextBlock Style="{StaticResource Hint}" Margin="22,6,0,0"
+                                   Text="The goose notices a call when your camera is in use, or when a meeting app like Teams, Zoom or Google Meet uses your microphone. Voice chat in games and Discord doesn't count. Do not disturb turns off again when the call is over." />
+
                         <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                             <TextBlock Text="Shortcut to open this window" Style="{StaticResource Label}" />
                             <TextBox x:Name="HotkeyBox" Width="150" IsReadOnly="True" IsReadOnlyCaretVisible="False"
@@ -65,55 +70,16 @@
                 </Border>
 
                 <Border Style="{StaticResource Card}">
-                    <StackPanel>
-                        <DockPanel>
-                            <Button DockPanel.Dock="Right" Content="Reset to defaults" Style="{StaticResource ChipButton}"
-                                    Margin="0" Click="ResetMessages_Click" />
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Edit messages" Style="{StaticResource BaseButton}"
+                                VerticalAlignment="Center" Margin="12,0,0,0" Click="EditMessages_Click" />
+                        <StackPanel>
                             <TextBlock Text="Messages" Style="{StaticResource CardTitle}" />
-                        </DockPanel>
-                        <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,10"
-                                   Text="The goose picks one of these at random when it's time for a break. Click a message to edit it." />
-
-                        <ItemsControl x:Name="MessageList" Focusable="False">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border CornerRadius="8" Padding="6,3,3,3" Margin="0,0,0,6" BorderThickness="1">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="Background" Value="#FAF7F2" />
-                                                <Setter Property="BorderBrush" Value="#EFE8DC" />
-                                                <Style.Triggers>
-                                                    <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                                                        <Setter Property="Background" Value="White" />
-                                                        <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
-                                                    </Trigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <DockPanel>
-                                            <Button DockPanel.Dock="Right" Content="✕" Style="{StaticResource IconButton}"
-                                                    ToolTip="Remove this message" Click="RemoveMessage_Click" />
-                                            <TextBox Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
-                                                     BorderThickness="0" Background="Transparent" TextWrapping="Wrap"
-                                                     Padding="2,4" VerticalAlignment="Center" />
-                                        </DockPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <DockPanel Margin="0,4,0,0">
-                            <Button DockPanel.Dock="Right" Content="Add" Style="{StaticResource BaseButton}"
-                                    Padding="16,5" Margin="8,0,0,0" Click="AddMessage_Click" />
-                            <Grid>
-                                <TextBox x:Name="NewMessageBox" Padding="6,5" KeyDown="NewMessageBox_KeyDown"
-                                         TextChanged="NewMessageBox_TextChanged" />
-                                <TextBlock x:Name="NewMessageHint" Text="Add a message…" Style="{StaticResource Hint}"
-                                           FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center"
-                                           IsHitTestVisible="False" />
-                            </Grid>
-                        </DockPanel>
-                    </StackPanel>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,0"
+                                       Text="The goose picks one of these at random when it's time for a break." />
+                            <TextBlock x:Name="MessageCountText" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </DockPanel>
                 </Border>
 
                 <!-- Version, and a quiet note when a newer one is out -->

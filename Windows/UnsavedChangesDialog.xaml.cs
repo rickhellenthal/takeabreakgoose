@@ -15,9 +15,11 @@ public partial class UnsavedChangesDialog : Window
     }
 
     /// <summary>Closing the dialog any other way (Esc, the X) counts as "keep editing".</summary>
-    public static UnsavedChangesChoice Ask(Window owner)
+    public static UnsavedChangesChoice Ask(Window owner,
+        string message = "You changed some settings but didn't save them yet.")
     {
         var dialog = new UnsavedChangesDialog { Owner = owner };
+        dialog.MessageText.Text = message;
         dialog.ShowDialog();
         return dialog._choice;
     }

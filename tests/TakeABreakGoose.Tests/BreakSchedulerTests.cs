@@ -149,6 +149,7 @@ public class BreakSchedulerTests
         Assert.Equal(0, _h.BreaksDue);
         Assert.True(_h.Scheduler.BreakWaiting);
         Assert.Equal("Do not disturb · a break is waiting", _h.Scheduler.Describe());
+        Assert.Equal("In a call · a break is waiting", _h.Scheduler.Describe(inCall: true));
 
         _h.Scheduler.SetDoNotDisturb(false);
         Assert.Equal(1, _h.BreaksDue);

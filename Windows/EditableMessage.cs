@@ -2,7 +2,7 @@ using System.ComponentModel;
 
 namespace TakeABreakGoose;
 
-/// <summary>One message in the Settings list, editable in place.</summary>
+/// <summary>One message in the messages window, editable in place.</summary>
 public sealed class EditableMessage : INotifyPropertyChanged
 {
     private string _text;

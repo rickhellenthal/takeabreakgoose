@@ -37,8 +37,7 @@
                             VerticalAlignment="Center" Margin="12,0,0,0" Click="EndDoNotDisturb_Click" />
                     <StackPanel>
                         <TextBlock Text="Your focus session is done" FontWeight="SemiBold" />
-                        <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,0"
-                                   Text="Do not disturb is still on. The goose will say goodbye when you turn it off." />
+                        <TextBlock x:Name="SignOffHint" Style="{StaticResource Hint}" Margin="0,2,0,0" />
                     </StackPanel>
                 </DockPanel>
             </Border>

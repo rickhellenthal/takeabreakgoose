@@ -39,6 +39,14 @@ public class GooseSettingsTests
     }
 
     [Fact]
+    public void Settings_from_older_versions_get_do_not_disturb_during_video_calls()
+    {
+        var settings = SettingsStore.Parse("""{ "BreakMinutes": 10 }""");
+
+        Assert.True(settings.DoNotDisturbDuringCalls);
+    }
+
+    [Fact]
     public void Hand_edited_values_are_clamped_to_something_sensible()
     {
         var settings = new GooseSettings { BreakMinutes = -5, SnoozeMinutes = 0, AutoStartIntervalMinutes = 100_000 };

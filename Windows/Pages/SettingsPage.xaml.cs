@@ -1,7 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -15,7 +12,6 @@ public partial class SettingsPage : UserControl
     private IGooseHost _host = null!;
     private ModifierKeys _hotkeyModifiers;
     private Key _hotkeyKey;
-    private readonly ObservableCollection<EditableMessage> _messages = new();
     private string _savedForm = "";
     private AvailableUpdate? _update;
 
@@ -45,10 +41,11 @@ public partial class SettingsPage : UserControl
         BreakBox.Text = settings.BreakMinutes.ToString();
         SnoozeBox.Text = settings.SnoozeMinutes.ToString();
         StartWithWindowsCheck.IsChecked = Autostart.IsEnabled;
+        CallDoNotDisturbCheck.IsChecked = settings.DoNotDisturbDuringCalls;
         _hotkeyModifiers = settings.HotkeyModifiers;
         _hotkeyKey = settings.HotkeyKey;
         HotkeyBox.Text = settings.HotkeyText;
-        ShowMessages(settings.Messages);
+        ShowMessageCount(settings.Messages.Count);
         _savedForm = FormState();
     }
 
@@ -82,54 +79,13 @@ public partial class SettingsPage : UserControl
 
     // ---- Messages ----
 
-    private void ShowMessages(IEnumerable<string> messages)
-    {
-        _messages.Clear();
-        foreach (var message in messages) _messages.Add(new EditableMessage(message));
-        MessageList.ItemsSource = _messages;
-    }
+    /// <summary>The user wants to edit the messages, which have a page of their own.</summary>
+    public event Action? EditMessagesRequested;
 
-    private void ResetMessages_Click(object sender, RoutedEventArgs e)
-    {
-        var defaults = GooseSettings.DefaultMessages();
-        bool alreadyDefault = _messages.Select(m => m.Text.Trim()).SequenceEqual(defaults);
-        if (!alreadyDefault && !ConfirmDialog.Ask(Window.GetWindow(this)!, "Reset messages", "Reset the messages?",
-                $"This replaces your list with the goose's {defaults.Count} default messages. "
-                + "Your own messages will be gone after you save.", "Reset"))
-        {
-            return;
-        }
-        ShowMessages(defaults);
-    }
+    public void ShowMessageCount(int count) =>
+        MessageCountText.Text = count == 1 ? "1 message" : $"{count} messages";
 
-    private void RemoveMessage_Click(object sender, RoutedEventArgs e)
-    {
-        if (((FrameworkElement)sender).DataContext is EditableMessage message) _messages.Remove(message);
-    }
-
-    private void AddMessage_Click(object sender, RoutedEventArgs e)
-    {
-        AddNewMessage();
-        NewMessageBox.Focus(); // ready for the next one
-    }
-
-    private void NewMessageBox_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Enter) return;
-        e.Handled = true;
-        AddNewMessage();
-    }
-
-    private void NewMessageBox_TextChanged(object sender, TextChangedEventArgs e) =>
-        NewMessageHint.Visibility = Ui.Show(NewMessageBox.Text.Length == 0);
-
-    private void AddNewMessage()
-    {
-        string text = NewMessageBox.Text.Trim();
-        if (text.Length == 0) return;
-        _messages.Add(new EditableMessage(text));
-        NewMessageBox.Clear();
-    }
+    private void EditMessages_Click(object sender, RoutedEventArgs e) => EditMessagesRequested?.Invoke();
 
     // ---- Saving ----
 
@@ -143,26 +99,14 @@ public partial class SettingsPage : UserControl
         if (!Ui.TryParseNumber(BreakBox.Text, 0, 120, "Default break length", out int breakMinutes, fail)) return false;
         if (!Ui.TryParseNumber(SnoozeBox.Text, 1, 24 * 60, "Snooze length", out int snooze, fail)) return false;
 
-        AddNewMessage(); // a message typed in the "Add a message" box but not added yet still counts
-
-        var messages = _messages
-            .Select(m => m.Text.Trim())
-            .Where(m => m.Length > 0)
-            .ToList();
-        if (messages.Count == 0)
-        {
-            fail("Give the goose at least one message to say.");
-            return false;
-        }
-
         var settings = _host.Settings.Clone();
         settings.AutoStartSession = AutoStartCheck.IsChecked == true;
         settings.AutoStartIntervalMinutes = autoStartInterval;
         settings.BreakMinutes = breakMinutes;
         settings.SnoozeMinutes = snooze;
+        settings.DoNotDisturbDuringCalls = CallDoNotDisturbCheck.IsChecked == true;
         settings.HotkeyModifiers = _hotkeyModifiers;
         settings.HotkeyKey = _hotkeyKey;
-        settings.Messages = messages;
 
         string? error = _host.ApplySettings(settings, StartWithWindowsCheck.IsChecked == true);
         if (error != null)
@@ -187,8 +131,7 @@ public partial class SettingsPage : UserControl
     /// <summary>Everything the form shows, to tell whether anything changed since loading or saving.</summary>
     private string FormState() => string.Join("\u001f",
         AutoStartCheck.IsChecked, AutoStartIntervalBox.Text, BreakBox.Text, SnoozeBox.Text,
-        StartWithWindowsCheck.IsChecked, HotkeyBox.Text, string.Join("\n", _messages.Select(m => m.Text)),
-        NewMessageBox.Text.Trim());
+        StartWithWindowsCheck.IsChecked, CallDoNotDisturbCheck.IsChecked, HotkeyBox.Text);
 
     private bool HasUnsavedChanges => FormState() != _savedForm;
 

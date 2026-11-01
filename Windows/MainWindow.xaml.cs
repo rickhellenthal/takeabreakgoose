@@ -10,7 +10,8 @@ namespace TakeABreakGoose;
 
 /// <summary>
 /// The app window: a header with the current status, and three tabs (Focus session, Wardrobe,
-/// Settings), each a page of its own.
+/// Settings), each a page of its own. Settings opens the messages on a page of their own, with a
+/// back button where the tabs are.
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -28,6 +29,9 @@ public partial class MainWindow : Window
         WardrobeView.Initialize(host);
         SettingsView.Initialize(host);
         SettingsView.Saved += SessionView.SelectBreakLength; // the start card follows the new default
+        MessagesView.Initialize(host);
+        SettingsView.EditMessagesRequested += OpenMessages;
+        MessagesView.Saved += SettingsView.ShowMessageCount;
         Loaded += async (_, _) => ShowUpdate(await UpdateChecker.CheckAsync());
 
         _host.Scheduler.StateChanged += RefreshStatus;
@@ -44,7 +48,7 @@ public partial class MainWindow : Window
 
     private void RefreshStatus()
     {
-        HeaderStatus.Text = _host.Scheduler.Describe();
+        HeaderStatus.Text = _host.Scheduler.Describe(_host.DoNotDisturbForCall);
         SessionView.Refresh();
         WardrobeView.Refresh();
     }
@@ -73,13 +77,44 @@ public partial class MainWindow : Window
         SettingsView.ScrollToTop();
     }
 
+    private bool MessagesOpen => MessagesView.Visibility == Visibility.Visible;
+
+    private void OpenMessages()
+    {
+        MessagesView.Open();
+        ShowMessagesPage(true);
+    }
+
+    private void Back_Click(object sender, RoutedEventArgs e)
+    {
+        if (MessagesView.ResolveUnsavedChanges()) ShowMessagesPage(false);
+    }
+
+    /// <summary>Swaps Settings for the messages page (and the tabs for a back button), or back.</summary>
+    private void ShowMessagesPage(bool show)
+    {
+        MessagesView.Visibility = Ui.Show(show);
+        SettingsView.Visibility = Ui.Show(!show);
+        BackButton.Visibility = Ui.Show(show);
+        Tabs.Visibility = Ui.Show(!show);
+        SettingsView.ClearStatus();
+    }
+
     protected override void OnClosing(CancelEventArgs e)
     {
         base.OnClosing(e);
-        if (!e.Cancel && !SettingsView.ResolveUnsavedChanges())
+        if (e.Cancel) return;
+        if (MessagesOpen && !MessagesView.ResolveUnsavedChanges())
         {
             e.Cancel = true;
-            SettingsTab.IsChecked = true; // show the problem, or the changes they want to keep editing
+            return;
+        }
+        if (!SettingsView.ResolveUnsavedChanges())
+        {
+            e.Cancel = true;
+            // Show the problem, or the changes they want to keep editing.
+            if (MessagesOpen) ShowMessagesPage(false);
+            SettingsTab.IsChecked = true;
         }
     }
 

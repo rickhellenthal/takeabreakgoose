@@ -23,6 +23,9 @@ public interface IGooseHost
     /// <summary>Keeps the goose away during a focus session (e.g. during a meeting), or lets it come again.</summary>
     void SetDoNotDisturb(bool on);
 
+    /// <summary>Do not disturb is on because of a call, and goes off again when the call is over.</summary>
+    bool DoNotDisturbForCall { get; }
+
     /// <summary>Applies and saves new settings; returns an error message, or null on success.</summary>
     string? ApplySettings(GooseSettings settings, bool startWithWindows);
 }

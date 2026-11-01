@@ -195,15 +195,17 @@ public sealed class BreakScheduler
     }
 
     /// <summary>A one-line summary for the tray tooltip and the window header.</summary>
-    public string Describe()
+    /// <param name="inCall">Do not disturb is on because the user is in a call.</param>
+    public string Describe(bool inCall = false)
     {
         if (GooseVisiting) return "The goose is here!";
         if (DoNotDisturb)
         {
-            return SignOffWaiting != null ? "Do not disturb · your session is done"
-                : BreakWaiting ? "Do not disturb · a break is waiting"
-                : NextBreakAt is DateTime due ? $"Do not disturb · next break at {due:HH:mm}"
-                : "Do not disturb";
+            string reason = inCall ? "In a call" : "Do not disturb";
+            return SignOffWaiting != null ? $"{reason} · your session is done"
+                : BreakWaiting ? $"{reason} · a break is waiting"
+                : NextBreakAt is DateTime due ? $"{reason} · next break at {due:HH:mm}"
+                : reason;
         }
         if (AwaitingReturn)
         {

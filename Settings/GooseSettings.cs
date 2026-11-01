@@ -28,6 +28,12 @@ public sealed class GooseSettings
 
     public int SnoozeMinutes { get; set; } = 5;
 
+    /// <summary>Turn Do not disturb on during a focus session while the user is in a call (see <see cref="Calls"/>).</summary>
+    public bool DoNotDisturbDuringCalls { get; set; } = true;
+
+    /// <summary>The user has been told, once, that the goose stays away during calls.</summary>
+    public bool CallNoticeShown { get; set; }
+
     // The last session the user started, used to pre-fill the start form.
     public int LastSessionIntervalMinutes { get; set; } = 45;
     public SessionEndMode LastSessionEndMode { get; set; } = SessionEndMode.None;
