@@ -52,6 +52,7 @@ public partial class GooseWindow : Window
         DismissButton.Content = visit.DismissText;
         SnoozeButton.Content = $"Snooze {snoozeMinutes} min";
         SnoozeButton.Visibility = visit.AllowSnooze ? Visibility.Visible : Visibility.Collapsed;
+        PutOnRandomOutfit();
 
         _stayTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(Math.Max(1, staySeconds)) };
         _stayTimer.Tick += (_, _) => Leave(GooseOutcome.TimedOut);
@@ -170,6 +171,20 @@ public partial class GooseWindow : Window
     }
 
     private void Face(int direction) => GooseFlip.ScaleX = direction;
+
+    private void PutOnRandomOutfit()
+    {
+        // Each outfit is one or more parts; the raincoat's hood sits on the head so it tilts along.
+        UIElement[][] outfits =
+        {
+            new UIElement[] { RaincoatCape, RaincoatHood },
+            new UIElement[] { Bonnet },
+            new UIElement[] { Bandana },
+            new UIElement[] { PartyHat },
+        };
+        foreach (var part in outfits[Random.Shared.Next(outfits.Length)])
+            part.Visibility = Visibility.Visible;
+    }
 
     private void Dismiss_Click(object sender, RoutedEventArgs e) => Leave(GooseOutcome.Dismissed);
 
