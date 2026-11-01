@@ -1,0 +1,128 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Windows.Input;
+
+namespace TakeABreakGoose;
+
+public sealed class GooseSettings
+{
+    /// <summary>Keep reminding even when no work session is running.</summary>
+    public bool AlwaysOn { get; set; }
+
+    public int AlwaysOnIntervalMinutes { get; set; } = 60;
+
+    /// <summary>How long a break lasts; the next reminder starts counting after it. 0 = count right away.</summary>
+    public int BreakMinutes { get; set; } = 5;
+
+    /// <summary>How long the goose waits for an answer before leaving on its own. 0 = until dismissed.</summary>
+    public int StaySeconds { get; set; } = 60;
+
+    public int SnoozeMinutes { get; set; } = 5;
+
+    /// <summary>After this many idle minutes the user counts as away (on a break). 0 = off.</summary>
+    public int AwayMinutes { get; set; } = 5;
+
+    // The last session the user started, used to pre-fill the start form.
+    public int LastSessionIntervalMinutes { get; set; } = 45;
+    public bool LastSessionHasEnd { get; set; }
+    public int LastSessionLengthMinutes { get; set; } = 120;
+
+    public ModifierKeys HotkeyModifiers { get; set; } = ModifierKeys.Control | ModifierKeys.Alt;
+
+    public Key HotkeyKey { get; set; } = Key.G;
+
+    public List<string> Messages { get; set; } = DefaultMessages();
+
+    public static List<string> DefaultMessages() => new()
+    {
+        "Time to stand up and stretch those legs.",
+        "Look at something far away for 20 seconds. Your eyes will thank you.",
+        "Hydration check! Go get a glass of water.",
+        "Step away from the keyboard. The bug will still be there in five minutes.",
+        "Shoulders down, jaw unclenched, take a deep breath.",
+        "Go for a short walk. Even geese waddle around now and then.",
+        "Hyperfocus is a superpower, but even superheroes take breaks.",
+        "Have you eaten something today?",
+    };
+
+    public GooseSettings Clone()
+    {
+        var clone = (GooseSettings)MemberwiseClone();
+        clone.Messages = new List<string>(Messages);
+        return clone;
+    }
+
+    public string HotkeyText => FormatHotkey(HotkeyModifiers, HotkeyKey);
+
+    public static string FormatHotkey(ModifierKeys modifiers, Key key)
+    {
+        var parts = new List<string>();
+        if (modifiers.HasFlag(ModifierKeys.Control)) parts.Add("Ctrl");
+        if (modifiers.HasFlag(ModifierKeys.Alt)) parts.Add("Alt");
+        if (modifiers.HasFlag(ModifierKeys.Shift)) parts.Add("Shift");
+        if (modifiers.HasFlag(ModifierKeys.Windows)) parts.Add("Win");
+        parts.Add(key is >= Key.D0 and <= Key.D9 ? ((int)(key - Key.D0)).ToString() : key.ToString());
+        return string.Join("+", parts);
+    }
+
+    /// <summary>Clamps values loaded from disk so a hand-edited file can't break the app.</summary>
+    public void Sanitize()
+    {
+        AlwaysOnIntervalMinutes = Math.Clamp(AlwaysOnIntervalMinutes, 1, 24 * 60);
+        BreakMinutes = Math.Clamp(BreakMinutes, 0, 120);
+        StaySeconds = Math.Clamp(StaySeconds, 0, 3600);
+        SnoozeMinutes = Math.Clamp(SnoozeMinutes, 1, 24 * 60);
+        AwayMinutes = Math.Clamp(AwayMinutes, 0, 120);
+        LastSessionIntervalMinutes = Math.Clamp(LastSessionIntervalMinutes, 1, 24 * 60);
+        LastSessionLengthMinutes = Math.Clamp(LastSessionLengthMinutes, 1, 24 * 60);
+        Messages = (Messages ?? new List<string>())
+            .Select(m => m?.Trim() ?? "")
+            .Where(m => m.Length > 0)
+            .ToList();
+        if (Messages.Count == 0) Messages = DefaultMessages();
+        if (HotkeyKey == Key.None) HotkeyKey = Key.G;
+        if (HotkeyModifiers == ModifierKeys.None) HotkeyModifiers = ModifierKeys.Control | ModifierKeys.Alt;
+    }
+}
+
+public static class SettingsStore
+{
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter() },
+    };
+
+    public static string FilePath { get; } = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "TakeABreakGoose",
+        "settings.json");
+
+    public static GooseSettings Load()
+    {
+        GooseSettings settings;
+        try
+        {
+            settings = File.Exists(FilePath)
+                ? JsonSerializer.Deserialize<GooseSettings>(File.ReadAllText(FilePath), JsonOptions) ?? new GooseSettings()
+                : new GooseSettings();
+        }
+        catch (Exception)
+        {
+            // A corrupt settings file shouldn't keep the goose from showing up.
+            settings = new GooseSettings();
+        }
+        settings.Sanitize();
+        return settings;
+    }
+
+    public static void Save(GooseSettings settings)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
+        File.WriteAllText(FilePath, JsonSerializer.Serialize(settings, JsonOptions));
+    }
+}

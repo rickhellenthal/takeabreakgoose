@@ -1,0 +1,297 @@
+<Window x:Class="TakeABreakGoose.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Take a Break Goose"
+        Width="540" Height="640" MinHeight="420" ResizeMode="CanResize"
+        WindowStartupLocation="CenterScreen" Icon="goose.ico"
+        FontFamily="Segoe UI" FontSize="13" Background="#FAF7F2" Foreground="#222222">
+    <Window.Resources>
+        <SolidColorBrush x:Key="Accent" Color="#F28C28" />
+        <SolidColorBrush x:Key="AccentDark" Color="#D9711A" />
+        <SolidColorBrush x:Key="Muted" Color="#7A7A7A" />
+
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="#E8E1D6" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="Padding" Value="18,16" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+
+        <Style x:Key="CardTitle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="Hint" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource Muted}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+
+        <Style x:Key="Label" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,12,0" />
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="5,3" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="BaseButton" TargetType="Button">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Padding" Value="16,7" />
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Foreground" Value="#222222" />
+            <Setter Property="BorderBrush" Value="#D6CFC4" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Chrome" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Chrome" Property="Opacity" Value="0.4" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
+            <Setter Property="Background" Value="{StaticResource Accent}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentDark}" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="ChipButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
+            <Setter Property="Padding" Value="10,3" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+
+        <Style x:Key="TabPill" TargetType="RadioButton">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Foreground" Value="#555555" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Pill" CornerRadius="14" Padding="14,5" Background="Transparent">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Pill" Property="Background" Value="#2B2B2B" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Pill" Property="Opacity" Value="0.85" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20,18,20,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,16">
+            <Image x:Name="HeaderIcon" Width="42" Height="42" DockPanel.Dock="Left" />
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <RadioButton x:Name="SessionTab" Content="Work session" GroupName="Tabs"
+                             Style="{StaticResource TabPill}" IsChecked="True" Checked="Tab_Checked" />
+                <RadioButton x:Name="SettingsTab" Content="Settings" GroupName="Tabs"
+                             Style="{StaticResource TabPill}" Checked="Tab_Checked" />
+            </StackPanel>
+            <StackPanel Margin="12,0" VerticalAlignment="Center">
+                <TextBlock Text="Take a Break Goose" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock x:Name="HeaderStatus" Style="{StaticResource Hint}" />
+            </StackPanel>
+        </DockPanel>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Focusable="False">
+            <Grid>
+                <!-- Work session page -->
+                <StackPanel x:Name="SessionPage">
+                    <Border x:Name="ActiveCard" Style="{StaticResource Card}" Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock Text="Work session running" Style="{StaticResource CardTitle}" />
+                            <TextBlock x:Name="CountdownText" FontSize="40" FontWeight="Light" Margin="0,6,0,0" />
+                            <TextBlock x:Name="CountdownCaption" Style="{StaticResource Hint}" FontSize="13" />
+                            <TextBlock x:Name="SessionEndText" Style="{StaticResource Hint}" Margin="0,10,0,0" />
+                            <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                <Button Content="Stop session" Style="{StaticResource PrimaryButton}"
+                                        Click="StopSession_Click" />
+                                <Button x:Name="PauseButton" Content="Pause" Style="{StaticResource BaseButton}"
+                                        Margin="8,0,0,0" Click="Pause_Click" />
+                                <Button Content="Take a break now" Style="{StaticResource BaseButton}"
+                                        Margin="8,0,0,0" Click="BreakNow_Click" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="StartCard" Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Start a work session" Style="{StaticResource CardTitle}" />
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,0"
+                                       Text="The goose reminds you to take breaks while you work, and lets you know when the session is over." />
+
+                            <TextBlock Text="Remind me to take a break every" Margin="0,16,0,6" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox x:Name="SessionIntervalBox" Width="56" />
+                                <TextBlock Text="minutes" Style="{StaticResource Label}" Margin="8,0,16,0" />
+                                <Button Content="25" Tag="25" Style="{StaticResource ChipButton}" Click="IntervalPreset_Click" />
+                                <Button Content="45" Tag="45" Style="{StaticResource ChipButton}" Click="IntervalPreset_Click" />
+                                <Button Content="60" Tag="60" Style="{StaticResource ChipButton}" Click="IntervalPreset_Click" />
+                                <Button Content="90" Tag="90" Style="{StaticResource ChipButton}" Click="IntervalPreset_Click" />
+                            </StackPanel>
+
+                            <CheckBox x:Name="SessionEndCheck" Content="End the session after" Margin="0,16,0,6" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBox x:Name="SessionHoursBox" Width="40"
+                                         IsEnabled="{Binding IsChecked, ElementName=SessionEndCheck}" />
+                                <TextBlock Text="h" Style="{StaticResource Label}" Margin="6,0,8,0" />
+                                <TextBox x:Name="SessionMinutesBox" Width="40"
+                                         IsEnabled="{Binding IsChecked, ElementName=SessionEndCheck}" />
+                                <TextBlock Text="min" Style="{StaticResource Label}" Margin="6,0,16,0" />
+                                <Button Content="1h" Tag="60" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
+                                <Button Content="2h" Tag="120" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
+                                <Button Content="3h" Tag="180" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
+                                <Button Content="4h" Tag="240" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,6,0,0"
+                                       Text="Leave unchecked to keep the session going until you stop it." />
+
+                            <TextBlock x:Name="SessionError" Foreground="#C62828" TextWrapping="Wrap"
+                                       Margin="0,12,0,0" Visibility="Collapsed" />
+
+                            <Button Content="Start session" Style="{StaticResource PrimaryButton}"
+                                    HorizontalAlignment="Left" Margin="0,16,0,0" Padding="22,8"
+                                    Click="StartSession_Click" />
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock x:Name="AlwaysOnNote" Style="{StaticResource Hint}" Margin="4,0" />
+                </StackPanel>
+
+                <!-- Settings page -->
+                <StackPanel x:Name="SettingsPage" Visibility="Collapsed">
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Always on" Style="{StaticResource CardTitle}" />
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,10"
+                                       Text="Let the goose keep an eye on you even when no work session is running." />
+                            <CheckBox x:Name="AlwaysOnCheck" Content="Remind me outside work sessions too" />
+                            <StackPanel Orientation="Horizontal" Margin="22,8,0,0"
+                                        IsEnabled="{Binding IsChecked, ElementName=AlwaysOnCheck}">
+                                <TextBlock Text="every" Style="{StaticResource Label}" Margin="0,0,8,0" />
+                                <TextBox x:Name="AlwaysOnIntervalBox" Width="56" />
+                                <TextBlock Text="minutes" Style="{StaticResource Label}" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Breaks" Style="{StaticResource CardTitle}" Margin="0,0,0,10" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Text="Break length" Style="{StaticResource Label}" Margin="0,0,12,8" />
+                                <TextBox Grid.Row="0" Grid.Column="1" x:Name="BreakBox" Width="56" Margin="0,0,0,8" />
+                                <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource Hint}" Margin="8,0,0,8"
+                                           VerticalAlignment="Center"
+                                           Text="min · the next reminder starts counting after your break" />
+
+                                <TextBlock Grid.Row="1" Text="Snooze length" Style="{StaticResource Label}" Margin="0,0,12,8" />
+                                <TextBox Grid.Row="1" Grid.Column="1" x:Name="SnoozeBox" Width="56" Margin="0,0,0,8" />
+                                <TextBlock Grid.Row="1" Grid.Column="2" Style="{StaticResource Hint}" Margin="8,0,0,8"
+                                           VerticalAlignment="Center" Text="min" />
+
+                                <TextBlock Grid.Row="2" Text="Goose waits for" Style="{StaticResource Label}" Margin="0,0,12,8" />
+                                <TextBox Grid.Row="2" Grid.Column="1" x:Name="StayBox" Width="56" Margin="0,0,0,8" />
+                                <TextBlock Grid.Row="2" Grid.Column="2" Style="{StaticResource Hint}" Margin="8,0,0,8"
+                                           VerticalAlignment="Center" Text="sec before leaving on its own · 0 = until you answer" />
+
+                                <TextBlock Grid.Row="3" Text="Away counts as break after" Style="{StaticResource Label}" />
+                                <TextBox Grid.Row="3" Grid.Column="1" x:Name="AwayBox" Width="56" />
+                                <TextBlock Grid.Row="3" Grid.Column="2" Style="{StaticResource Hint}" Margin="8,0,0,0"
+                                           VerticalAlignment="Center" Text="min without mouse or keyboard · 0 = off" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="General" Style="{StaticResource CardTitle}" Margin="0,0,0,10" />
+                            <CheckBox x:Name="StartWithWindowsCheck" Content="Start Take a Break Goose when I sign in to Windows" />
+                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                <TextBlock Text="Shortcut to open this window" Style="{StaticResource Label}" />
+                                <TextBox x:Name="HotkeyBox" Width="150" IsReadOnly="True" IsReadOnlyCaretVisible="False"
+                                         Cursor="Arrow" PreviewKeyDown="HotkeyBox_PreviewKeyDown"
+                                         ToolTip="Click here and press the key combination you want, e.g. Ctrl+Alt+G" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="Reset to defaults" Style="{StaticResource ChipButton}"
+                                        Margin="0" Click="ResetMessages_Click" />
+                                <TextBlock Text="Messages" Style="{StaticResource CardTitle}" />
+                            </DockPanel>
+                            <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,8"
+                                       Text="One per line. The goose picks one at random." />
+                            <TextBox x:Name="MessagesBox" AcceptsReturn="True" TextWrapping="Wrap" Height="150"
+                                     VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Settings footer -->
+        <DockPanel x:Name="SettingsFooter" Grid.Row="2" Margin="0,12,0,0" Visibility="Collapsed" LastChildFill="False">
+            <Button DockPanel.Dock="Left" Content="Summon goose now" Style="{StaticResource BaseButton}"
+                    Click="Summon_Click" />
+            <Button DockPanel.Dock="Right" Content="Save" Style="{StaticResource PrimaryButton}" Padding="24,7"
+                    Click="SaveSettings_Click" />
+            <TextBlock x:Name="SettingsStatus" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,12,0"
+                       TextWrapping="Wrap" MaxWidth="260" />
+        </DockPanel>
+    </Grid>
+</Window>
