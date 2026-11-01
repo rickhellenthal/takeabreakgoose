@@ -225,4 +225,8 @@ public partial class SettingsPage : UserControl
     {
         if (_update != null) UpdateChecker.OpenInBrowser(_update.Url);
     }
+
+    private const string KoFiUrl = "https://ko-fi.com/rickhellenthal";
+
+    private void KoFi_Click(object sender, RoutedEventArgs e) => UpdateChecker.OpenInBrowser(KoFiUrl);
 }

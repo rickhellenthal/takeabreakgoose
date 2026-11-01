@@ -13,6 +13,9 @@
   <a href="https://github.com/rickhellenthal/takeabreakgoose/releases/latest">
     <img src="https://img.shields.io/badge/Download_for_Windows-F28C28?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows">
   </a>
+  <a href="https://ko-fi.com/rickhellenthal">
+    <img src="https://img.shields.io/badge/Support_on_Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Support on Ko-fi">
+  </a>
 </p>
 
 - 🪿 **A goose on your screen** walks in on top of all your windows when it's time for a break
@@ -61,6 +64,14 @@ The **Wardrobe** tab shows the goose's outfits. It picks one at random for each 
 - **The shortcut** that opens the app, and **the messages** the goose picks from
 
 Your settings are saved in `%APPDATA%\TakeABreakGoose\settings.json`. At the bottom of the Settings tab you can see which version you have, and whether a newer one is available.
+
+## Support
+
+The goose is free to use. If it helps you like it helps me and you would like to contribute a little, I have a link where you can buy me a coffee ☕
+
+<a href="https://ko-fi.com/N7T029W6PF" target="_blank"><img height="36" style="border:0px;height:36px;" src="https://storage.ko-fi.com/cdn/kofi2.png?v=6" border="0" alt="Buy Me a Coffee at ko-fi.com"></a>
+
+Full disclosure: as you can probably tell, I built this app with the help of [Claude](https://claude.ai), Anthropic's AI assistant.
 
 <details>
 <summary><b>Building from source</b></summary>

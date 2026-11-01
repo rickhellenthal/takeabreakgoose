@@ -119,6 +119,10 @@
                 <!-- Version, and a quiet note when a newer one is out -->
                 <StackPanel HorizontalAlignment="Center" Margin="0,2,0,6">
                     <TextBlock x:Name="VersionText" Style="{StaticResource Hint}" HorizontalAlignment="Center" />
+                    <TextBlock Style="{StaticResource Hint}" HorizontalAlignment="Center" Margin="0,4,0,0">
+                        <Run Text="Enjoying the goose?" />
+                        <Hyperlink Foreground="#5E7773" Click="KoFi_Click">Buy me a coffee</Hyperlink>
+                    </TextBlock>
                     <TextBlock x:Name="UpdateText" Visibility="Collapsed" HorizontalAlignment="Center"
                                FontSize="12" Foreground="#B85F12" Margin="0,4,0,0">
                         <Run x:Name="UpdateRun" />
