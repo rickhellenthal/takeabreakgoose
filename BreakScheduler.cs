@@ -3,8 +3,10 @@ using System.Windows.Threading;
 
 namespace TakeABreakGoose;
 
+/// <param name="BreakMinutes">How long each break lasts in this session.</param>
 /// <param name="StartedAutomatically">Started by the "start a focus session when the app starts" setting.</param>
-public sealed record WorkSession(int IntervalMinutes, DateTime StartedAt, DateTime? EndsAt, bool StartedAutomatically);
+public sealed record WorkSession(
+    int IntervalMinutes, int BreakMinutes, DateTime StartedAt, DateTime? EndsAt, bool StartedAutomatically);
 
 /// <summary>
 /// Decides when the goose should show up. Reminders only come during a focus session;
@@ -38,10 +40,18 @@ public sealed class BreakScheduler
     /// <summary>A break came due during Do not disturb and is waiting for it to be turned off.</summary>
     public bool BreakWaiting { get; private set; }
 
+    /// <summary>
+    /// The session reached its end time during Do not disturb. Do not disturb stays on, and the goose
+    /// signs off as soon as it's turned off.
+    /// </summary>
+    public WorkSession? SignOffWaiting { get; private set; }
+
     /// <summary>Raised every second and whenever the state changes, so UIs can refresh countdowns.</summary>
     public event Action? StateChanged;
     public event Action? BreakDue;
-    public event Action? SessionCompleted;
+
+    /// <summary>A session reached its end time (and Do not disturb isn't keeping the goose away).</summary>
+    public event Action<WorkSession>? SessionCompleted;
 
     public BreakScheduler(GooseSettings settings)
     {
@@ -54,10 +64,14 @@ public sealed class BreakScheduler
     /// <summary>Minutes between reminders right now, or null when the goose should stay quiet.</summary>
     public int? CurrentInterval => Session?.IntervalMinutes;
 
-    public void StartSession(int intervalMinutes, DateTime? endsAt, bool automatically = false)
+    /// <summary>How long a break lasts right now: the session's choice, or the default from the settings.</summary>
+    public int CurrentBreakMinutes => Session?.BreakMinutes ?? _settings.BreakMinutes;
+
+    public void StartSession(int intervalMinutes, int breakMinutes, DateTime? endsAt, bool automatically = false)
     {
-        Session = new WorkSession(intervalMinutes, DateTime.Now, endsAt, automatically);
+        Session = new WorkSession(intervalMinutes, breakMinutes, DateTime.Now, endsAt, automatically);
         IsPaused = false;
+        SignOffWaiting = null; // a new session; the goodbye for the old one isn't needed anymore
         Reschedule();
     }
 
@@ -69,13 +83,23 @@ public sealed class BreakScheduler
         Reschedule();
     }
 
-    /// <summary>Only during a focus session. Turning it off brings a break that's been waiting.</summary>
+    /// <summary>
+    /// Only during a focus session (or while a sign-off is waiting for it). Turning it off brings
+    /// whatever has been waiting: a break, or the goose saying goodbye.
+    /// </summary>
     public void SetDoNotDisturb(bool on)
     {
         if (on == DoNotDisturb || (on && Session == null)) return;
         DoNotDisturb = on;
         StateChanged?.Invoke();
-        if (!on && BreakWaiting)
+        if (on) return;
+
+        if (SignOffWaiting is { } finished)
+        {
+            SignOffWaiting = null;
+            SessionCompleted?.Invoke(finished);
+        }
+        else if (BreakWaiting)
         {
             BreakWaiting = false;
             if (Session != null) BreakDue?.Invoke();
@@ -135,7 +159,7 @@ public sealed class BreakScheduler
         if (startsBreak)
         {
             // The next reminder only starts counting once the user says they're ready to focus again.
-            BreakEndsAt = now.AddMinutes(_settings.BreakMinutes);
+            BreakEndsAt = now.AddMinutes(CurrentBreakMinutes);
             AwaitingReturn = true;
             SetNext(null);
         }
@@ -186,7 +210,8 @@ public sealed class BreakScheduler
         if (IsPaused) return "Reminders paused";
         if (DoNotDisturb)
         {
-            return BreakWaiting ? "Do not disturb · a break is waiting"
+            return SignOffWaiting != null ? "Do not disturb · your session is done"
+                : BreakWaiting ? "Do not disturb · a break is waiting"
                 : NextBreakAt is DateTime due ? $"Do not disturb · next break at {due:HH:mm}"
                 : "Do not disturb";
         }
@@ -210,16 +235,16 @@ public sealed class BreakScheduler
     {
         var now = DateTime.Now;
 
-        if (Session?.EndsAt is DateTime end && now >= end && !GooseVisiting)
+        if (Session is { EndsAt: DateTime end } finished && now >= end && !GooseVisiting)
         {
-            // A session that ends during Do not disturb ends quietly: no "session complete" goose,
-            // and no break that was waiting.
-            bool quietly = DoNotDisturb;
+            // A break that was waiting isn't needed anymore. During Do not disturb, the goose's
+            // goodbye waits until it's turned off; Do not disturb stays on until then.
             Session = null;
             IsPaused = false;
-            DoNotDisturb = false;
             Reschedule();
-            if (!quietly) SessionCompleted?.Invoke();
+            if (DoNotDisturb) SignOffWaiting = finished;
+            else SessionCompleted?.Invoke(finished);
+            StateChanged?.Invoke();
             return;
         }
 

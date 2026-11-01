@@ -36,7 +36,7 @@ To uninstall, go to *Settings → Apps → Installed apps* and remove **Take a B
 
 Open the goose with **Ctrl+Alt+G**, the Start menu, or by clicking its icon in the system tray.
 
-1. **Start a focus session.** Pick how often you want a break and click **Start session**. Want it to stop at a certain point? Click **Set an end time** to end it after a while (like 2 hours) or at a time of day (like 17:00).
+1. **Start a focus session.** Pick how often you want a break and how long your breaks are, then click **Start session**. Want it to stop at a certain point? Click **Set an end time** to end it after a while (like 2 hours) or at a time of day (like 17:00).
 2. **The goose arrives** when it's break time. You can:
    - take the break with **Okay, break time!**
    - **snooze** it for a few minutes
@@ -48,18 +48,18 @@ Open the goose with **Ctrl+Alt+G**, the Start menu, or by clicking its icon in t
 
 In a meeting? Turn on **Do not disturb** in your session (or from the tray icon). Your timer keeps running, but the goose stays away. A break that comes up in the meantime waits until you turn Do not disturb off.
 
-When a session ends, the goose drops by to tell you you're done for now. Outside a focus session it stays quiet.
+When a session reaches its end time, the goose drops by in its party hat to sign off. (In Do not disturb, it waits until you turn that off.) Outside a focus session it stays quiet.
 
 The **Wardrobe** tab shows the goose's outfits. It picks one at random for each visit, or you can send a goose over to show off the outfit of your choice. That's just for fun, so it doesn't affect your session's timer.
 
 ## Settings
 
 - **Start with Windows**, and **start a focus session automatically** when the app starts, so the goose keeps an eye on you without you having to do anything
-- **Break length** and **snooze length**
+- **Default break length** and **snooze length**
 - **Away counts as a break**: time away from your mouse and keyboard counts as a break
 - **The shortcut** that opens the app, and **the messages** the goose picks from
 
-Your settings are saved in `%APPDATA%\TakeABreakGoose\settings.json`.
+Your settings are saved in `%APPDATA%\TakeABreakGoose\settings.json`. At the bottom of the Settings tab you can see which version you have, and whether a newer one is available.
 
 <details>
 <summary><b>Building from source</b></summary>

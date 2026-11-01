@@ -49,6 +49,8 @@ public partial class MainWindow : Window
         LoadSessionForm(host.Settings);
         LoadSettingsForm(host.Settings);
         BuildWardrobe();
+        VersionText.Text = $"Take a Break Goose {UpdateChecker.Display(UpdateChecker.CurrentVersion)}";
+        Loaded += async (_, _) => ShowUpdate(await UpdateChecker.CheckAsync());
 
         _host.Scheduler.StateChanged += RefreshStatus;
         Closed += (_, _) => _host.Scheduler.StateChanged -= RefreshStatus;
@@ -72,6 +74,7 @@ public partial class MainWindow : Window
         SettingsPage.Visibility = Show(SettingsTab.IsChecked == true);
         SettingsFooter.Visibility = Show(SettingsTab.IsChecked == true);
         SettingsStatus.Text = "";
+        PageScroller.ScrollToTop(); // each tab starts at the top, not where the previous one was scrolled to
     }
 
     private static Visibility Show(bool visible) => visible ? Visibility.Visible : Visibility.Collapsed;
@@ -131,6 +134,7 @@ public partial class MainWindow : Window
     // ---- Focus session ----
 
     private RadioButton[] IntervalPresets => new[] { Interval15, Interval30, Interval45, Interval60 };
+    private RadioButton[] BreakPresets => new[] { Break5, Break10, Break15 };
 
     private void LoadSessionForm(GooseSettings settings)
     {
@@ -138,6 +142,7 @@ public partial class MainWindow : Window
         var preset = IntervalPresets.FirstOrDefault(r => (string)r.Tag == interval.ToString());
         (preset ?? IntervalCustom).IsChecked = true;
         SessionIntervalBox.Text = interval.ToString();
+        SelectBreakLength(settings.BreakMinutes);
 
         SetLengthBoxes(settings.LastSessionLengthMinutes);
         SessionEndTimeBox.Text = settings.LastSessionEndTime.ToString(@"hh\:mm");
@@ -198,7 +203,9 @@ public partial class MainWindow : Window
             else if (scheduler.NextBreakAt is DateTime next)
             {
                 CountdownText.Text = FormatCountdown(next - now);
-                CountdownCaption.Text = $"until your next break (every {session.IntervalMinutes} min)";
+                CountdownCaption.Text = session.BreakMinutes > 0
+                    ? $"until your next break (every {session.IntervalMinutes} min, {session.BreakMinutes} min breaks)"
+                    : $"until your next break (every {session.IntervalMinutes} min)";
             }
             else
             {
@@ -231,6 +238,7 @@ public partial class MainWindow : Window
         // The "goose is already on your screen" note only makes sense while it still is.
         if (!_host.GooseOnScreen) WardrobeBusyText.Visibility = Visibility.Collapsed;
 
+        SignOffBanner.Visibility = Show(session == null && scheduler.DoNotDisturb);
         AutoStartNote.Visibility = Show(session == null);
         AutoStartNote.Text = settings.AutoStartSession
             ? $"When the app starts, it starts a focus session by itself (a break every {settings.AutoStartIntervalMinutes} min). You can change this in Settings."
@@ -265,6 +273,22 @@ public partial class MainWindow : Window
         bool custom = IntervalCustom.IsChecked == true;
         CustomIntervalPanel.Visibility = Show(custom);
         if (custom && IsLoaded) SessionIntervalBox.Focus();
+    }
+
+    /// <summary>Starts from the default break length in the settings.</summary>
+    private void SelectBreakLength(int minutes)
+    {
+        var preset = BreakPresets.FirstOrDefault(r => (string)r.Tag == minutes.ToString());
+        (preset ?? BreakCustom).IsChecked = true;
+        SessionBreakBox.Text = minutes.ToString();
+    }
+
+    private void BreakLength_Checked(object sender, RoutedEventArgs e)
+    {
+        if (CustomBreakPanel == null) return; // fires during InitializeComponent
+        bool custom = BreakCustom.IsChecked == true;
+        CustomBreakPanel.Visibility = Show(custom);
+        if (custom && IsLoaded) SessionBreakBox.Focus();
     }
 
     private void EndOptionsToggle_Changed(object sender, RoutedEventArgs e) => UpdateEndOptions();
@@ -349,7 +373,7 @@ public partial class MainWindow : Window
             return;
         }
         var now = DateTime.Now;
-        var end = new SessionPlan(1, mode, length, endTime).EndsAt(now)!.Value;
+        var end = new SessionPlan(1, 0, mode, length, endTime).EndsAt(now)!.Value;
         EndPreview.Text = $"The session ends {DescribeEnd(end, now)}, in {DescribeDuration(end - now)}.";
     }
 
@@ -362,6 +386,11 @@ public partial class MainWindow : Window
         if (preset != null) interval = int.Parse((string)preset.Tag);
         else if (!TryParse(SessionIntervalBox.Text, 1, 600, "The break interval", out interval, ShowSessionError)) return;
 
+        int breakMinutes;
+        var breakPreset = BreakPresets.FirstOrDefault(r => r.IsChecked == true);
+        if (breakPreset != null) breakMinutes = int.Parse((string)breakPreset.Tag);
+        else if (!TryParse(SessionBreakBox.Text, 0, 120, "The break length", out breakMinutes, ShowSessionError)) return;
+
         var (mode, length, endTime, error) = ReadEndChoice();
         if (error != null)
         {
@@ -369,7 +398,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _host.StartSession(new SessionPlan(interval, mode, length, endTime));
+        _host.StartSession(new SessionPlan(interval, breakMinutes, mode, length, endTime));
     }
 
     private void StopSession_Click(object sender, RoutedEventArgs e) => _host.Scheduler.StopSession();
@@ -378,6 +407,28 @@ public partial class MainWindow : Window
         _host.Scheduler.SetPaused(!_host.Scheduler.IsPaused);
 
     private void BreakNow_Click(object sender, RoutedEventArgs e) => _host.SummonBreakGoose();
+
+    private AvailableUpdate? _update;
+
+    private void ShowUpdate(AvailableUpdate? update)
+    {
+        _update = update;
+        if (update == null) return;
+        UpdateRun.Text = $"Version {UpdateChecker.Display(update.Version)} is available.";
+        UpdateText.Visibility = Visibility.Visible;
+        SettingsTab.Content = "Settings •"; // a small hint that there's something new to see there
+    }
+
+    private void DownloadUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        if (_update != null) UpdateChecker.OpenInBrowser(_update.Url);
+    }
+
+    private void EndDoNotDisturb_Click(object sender, RoutedEventArgs e)
+    {
+        _host.SetDoNotDisturb(false);
+        RefreshStatus();
+    }
 
     private void DoNotDisturbSwitch_Changed(object sender, RoutedEventArgs e)
     {
@@ -443,7 +494,7 @@ public partial class MainWindow : Window
     {
         Action<string> fail = message => ShowSettingsStatus(message, error: true);
         if (!TryParse(AutoStartIntervalBox.Text, 1, 24 * 60, "The automatic session interval", out int autoStartInterval, fail)) return;
-        if (!TryParse(BreakBox.Text, 0, 120, "Break length", out int breakMinutes, fail)) return;
+        if (!TryParse(BreakBox.Text, 0, 120, "Default break length", out int breakMinutes, fail)) return;
         if (!TryParse(SnoozeBox.Text, 1, 24 * 60, "Snooze length", out int snooze, fail)) return;
         if (!TryParse(AwayBox.Text, 0, 120, "Away time", out int away, fail)) return;
 
@@ -470,7 +521,11 @@ public partial class MainWindow : Window
 
         string? error = _host.ApplySettings(settings, StartWithWindowsCheck.IsChecked == true);
         if (error != null) fail(error);
-        else ShowSettingsStatus("Saved ✓", error: false);
+        else
+        {
+            ShowSettingsStatus("Saved ✓", error: false);
+            SelectBreakLength(settings.BreakMinutes); // the start card follows the new default
+        }
         RefreshStatus();
     }
 

@@ -63,7 +63,9 @@ public sealed class TrayIcon : IDisposable
         _pauseItem.Text = paused ? "Resume reminders" : "Pause reminders";
         _doNotDisturbItem.Checked = doNotDisturb;
         // Breaks, pausing, Do not disturb and stopping only mean something during a focus session.
-        _breakNowItem.Visible = _pauseItem.Visible = _doNotDisturbItem.Visible = _stopSessionItem.Visible = sessionRunning;
+        // Do not disturb can outlast its session (the goose's goodbye waits for it), so it stays while on.
+        _breakNowItem.Visible = _pauseItem.Visible = _stopSessionItem.Visible = sessionRunning;
+        _doNotDisturbItem.Visible = sessionRunning || doNotDisturb;
         _openItem.ShortcutKeyDisplayString = hotkeyText;
     }
 

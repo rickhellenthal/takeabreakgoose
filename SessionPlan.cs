@@ -5,9 +5,10 @@ namespace TakeABreakGoose;
 public enum SessionEndMode { None, After, At }
 
 /// <summary>What the user chose when starting a focus session.</summary>
+/// <param name="BreakMinutes">How long each break lasts in this session.</param>
 /// <param name="LengthMinutes">Used when ending after a while.</param>
 /// <param name="EndTime">Time of day, used when ending at a clock time.</param>
-public sealed record SessionPlan(int IntervalMinutes, SessionEndMode EndMode, int LengthMinutes, TimeSpan EndTime)
+public sealed record SessionPlan(int IntervalMinutes, int BreakMinutes, SessionEndMode EndMode, int LengthMinutes, TimeSpan EndTime)
 {
     /// <summary>When the session ends, or null if it runs until it's stopped.</summary>
     public DateTime? EndsAt(DateTime now) => EndMode switch

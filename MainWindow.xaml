@@ -210,7 +210,7 @@
                          Style="{StaticResource TabPill}" Checked="Tab_Checked" />
         </StackPanel>
 
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Focusable="False">
+        <ScrollViewer x:Name="PageScroller" Grid.Row="2" VerticalScrollBarVisibility="Auto" Focusable="False">
             <Grid>
                 <!-- Focus session page -->
                 <StackPanel x:Name="SessionPage">
@@ -243,6 +243,19 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- The session ended during Do not disturb: the goose's goodbye is waiting. -->
+                    <Border x:Name="SignOffBanner" Style="{StaticResource Card}" Background="#FAF7F2" Visibility="Collapsed">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="Turn off Do not disturb" Style="{StaticResource BaseButton}"
+                                    VerticalAlignment="Center" Margin="12,0,0,0" Click="EndDoNotDisturb_Click" />
+                            <StackPanel>
+                                <TextBlock Text="Your focus session is done" FontWeight="SemiBold" />
+                                <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,0"
+                                           Text="Do not disturb is still on. The goose will say goodbye when you turn it off." />
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
                     <Border x:Name="StartCard" Style="{StaticResource Card}">
                         <StackPanel>
                             <TextBlock Text="Start a focus session" Style="{StaticResource CardTitle}" />
@@ -266,6 +279,23 @@
                                         Visibility="Collapsed">
                                 <TextBlock Text="Every" Style="{StaticResource Label}" Margin="0,0,8,0" />
                                 <TextBox x:Name="SessionIntervalBox" Width="56" />
+                                <TextBlock Text="minutes" Style="{StaticResource Label}" Margin="8,0,0,0" />
+                            </StackPanel>
+
+                            <TextBlock Text="Each break lasts" Margin="0,16,0,8" />
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton x:Name="Break5" Content="5 min" Tag="5" GroupName="BreakLength"
+                                             Style="{StaticResource ChoiceChip}" Checked="BreakLength_Checked" />
+                                <RadioButton x:Name="Break10" Content="10 min" Tag="10" GroupName="BreakLength"
+                                             Style="{StaticResource ChoiceChip}" Checked="BreakLength_Checked" />
+                                <RadioButton x:Name="Break15" Content="15 min" Tag="15" GroupName="BreakLength"
+                                             Style="{StaticResource ChoiceChip}" Checked="BreakLength_Checked" />
+                                <RadioButton x:Name="BreakCustom" Content="Custom" GroupName="BreakLength"
+                                             Style="{StaticResource ChoiceChip}" Checked="BreakLength_Checked" />
+                            </StackPanel>
+                            <StackPanel x:Name="CustomBreakPanel" Orientation="Horizontal" Margin="0,10,0,0"
+                                        Visibility="Collapsed">
+                                <TextBox x:Name="SessionBreakBox" Width="56" />
                                 <TextBlock Text="minutes" Style="{StaticResource Label}" Margin="8,0,0,0" />
                             </StackPanel>
 
@@ -384,11 +414,11 @@
                                     <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="0" Text="Break length" Style="{StaticResource Label}" Margin="0,0,12,8" />
+                                <TextBlock Grid.Row="0" Text="Default break length" Style="{StaticResource Label}" Margin="0,0,12,8" />
                                 <TextBox Grid.Row="0" Grid.Column="1" x:Name="BreakBox" Width="56" Margin="0,0,0,8" />
                                 <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource Hint}" Margin="8,0,0,8"
                                            VerticalAlignment="Center"
-                                           Text="min · the next reminder starts counting after your break" />
+                                           Text="min · you can pick another length when you start a session" />
 
                                 <TextBlock Grid.Row="1" Text="Snooze length" Style="{StaticResource Label}" Margin="0,0,12,8" />
                                 <TextBox Grid.Row="1" Grid.Column="1" x:Name="SnoozeBox" Width="56" Margin="0,0,0,8" />
@@ -416,6 +446,16 @@
                                      VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top" />
                         </StackPanel>
                     </Border>
+
+                    <!-- Version, and a quiet note when a newer one is out -->
+                    <StackPanel HorizontalAlignment="Center" Margin="0,2,0,6">
+                        <TextBlock x:Name="VersionText" Style="{StaticResource Hint}" HorizontalAlignment="Center" />
+                        <TextBlock x:Name="UpdateText" Visibility="Collapsed" HorizontalAlignment="Center"
+                                   FontSize="12" Foreground="#B85F12" Margin="0,4,0,0">
+                            <Run x:Name="UpdateRun" />
+                            <Hyperlink Foreground="#B85F12" Click="DownloadUpdate_Click">Download</Hyperlink>
+                        </TextBlock>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </ScrollViewer>

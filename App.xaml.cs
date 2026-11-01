@@ -38,10 +38,7 @@ public partial class App : Application, IGooseHost
 
         Scheduler = new BreakScheduler(Settings);
         Scheduler.BreakDue += () => SummonBreakGoose();
-        Scheduler.SessionCompleted += () => SummonGoose(new GooseVisit(
-            "Session complete!",
-            "Your focus session is done. Great job! Time to wrap up and give your brain some rest.",
-            null, "Thanks, goose!", AllowSnooze: false, AllowFinishUp: false, StartsBreak: false));
+        Scheduler.SessionCompleted += SignOff;
         Scheduler.StateChanged += UpdateTray;
 
         _tray = new TrayIcon();
@@ -53,7 +50,7 @@ public partial class App : Application, IGooseHost
         _tray.QuitRequested += Shutdown;
 
         if (Settings.AutoStartSession)
-            Scheduler.StartSession(Settings.AutoStartIntervalMinutes, endsAt: null, automatically: true);
+            Scheduler.StartSession(Settings.AutoStartIntervalMinutes, Settings.BreakMinutes, endsAt: null, automatically: true);
         UpdateTray();
 
         _hotkey = new HotkeyManager();
@@ -92,14 +89,30 @@ public partial class App : Application, IGooseHost
         Settings.LastSessionEndTime = plan.EndTime;
         TrySave();
 
-        Scheduler.StartSession(plan.IntervalMinutes, plan.EndsAt(DateTime.Now));
+        Scheduler.StartSession(plan.IntervalMinutes, plan.BreakMinutes, plan.EndsAt(DateTime.Now));
+    }
+
+    /// <summary>The session reached its end time: the goose comes by, in its party hat, to say goodbye.</summary>
+    private void SignOff(WorkSession session)
+    {
+        var focused = DateTime.Now - session.StartedAt;
+        string duration = focused.TotalHours >= 1
+            ? $"{(int)focused.TotalHours} h {focused.Minutes} min"
+            : $"{Math.Max(1, (int)focused.TotalMinutes)} min";
+        SummonGoose(new GooseVisit(
+            "That's a wrap!",
+            $"That's it for this focus session: {duration} of focus since {session.StartedAt:HH:mm}. "
+            + "Time to wrap up and give your brain some rest.",
+            null, "Bye, goose!", AllowSnooze: false, AllowFinishUp: false, StartsBreak: false,
+            Outfit: GooseOutfit.PartyHat));
     }
 
     public void SummonBreakGoose()
     {
         string message = Settings.Messages[Random.Shared.Next(Settings.Messages.Count)];
-        string? hint = Settings.BreakMinutes > 0
-            ? $"Take {Settings.BreakMinutes} minutes. I'll start counting again after that."
+        int breakMinutes = Scheduler.CurrentBreakMinutes;
+        string? hint = breakMinutes > 0
+            ? $"Take {breakMinutes} minutes. I'll start counting again after that."
             : null;
         SummonGoose(new GooseVisit("HONK!", message, hint, "Okay, break time!",
             AllowSnooze: true, AllowFinishUp: true, StartsBreak: true));
@@ -146,7 +159,7 @@ public partial class App : Application, IGooseHost
         if (int.TryParse(Environment.GetEnvironmentVariable("TAKEABREAKGOOSE_BREAK_SECONDS"), out int seconds))
             return TimeSpan.FromSeconds(seconds);
 #endif
-        return TimeSpan.FromMinutes(Settings.BreakMinutes);
+        return TimeSpan.FromMinutes(Scheduler.CurrentBreakMinutes);
     }
 
     private void SummonGoose(GooseVisit visit)
@@ -160,7 +173,7 @@ public partial class App : Application, IGooseHost
             return;
         }
 
-        bool naps = visit.StartsBreak && Settings.BreakMinutes > 0;
+        bool naps = visit.StartsBreak && Scheduler.CurrentBreakMinutes > 0;
         _gooseJustVisiting = visit.JustVisiting;
         _currentVisit = visit;
         _goose = new GooseWindow(visit, Settings.SnoozeMinutes, naps ? BreakLength() : null);
@@ -212,7 +225,7 @@ public partial class App : Application, IGooseHost
         Scheduler.ApplySettings(Settings);
         // Turning it on shouldn't mean waiting for the next restart to see it work.
         if (autoStartTurnedOn && Scheduler.Session == null)
-            Scheduler.StartSession(Settings.AutoStartIntervalMinutes, endsAt: null, automatically: true);
+            Scheduler.StartSession(Settings.AutoStartIntervalMinutes, Settings.BreakMinutes, endsAt: null, automatically: true);
 
         try
         {
