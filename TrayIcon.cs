@@ -12,13 +12,11 @@ public sealed class TrayIcon : IDisposable
     private readonly Drawing.Icon _gooseIcon;
     private readonly Forms.ToolStripMenuItem _openItem;
     private readonly Forms.ToolStripMenuItem _breakNowItem;
-    private readonly Forms.ToolStripMenuItem _pauseItem;
     private readonly Forms.ToolStripMenuItem _doNotDisturbItem;
     private readonly Forms.ToolStripMenuItem _stopSessionItem;
 
     public event Action? OpenRequested;
     public event Action? SummonRequested;
-    public event Action? PauseToggled;
     public event Action? StopSessionRequested;
     public event Action? DoNotDisturbToggled;
     public event Action? QuitRequested;
@@ -33,8 +31,6 @@ public sealed class TrayIcon : IDisposable
         menu.Items.Add(_openItem);
         _breakNowItem = new Forms.ToolStripMenuItem("Take a break now", null, (_, _) => SummonRequested?.Invoke());
         menu.Items.Add(_breakNowItem);
-        _pauseItem = new Forms.ToolStripMenuItem("Pause reminders", null, (_, _) => PauseToggled?.Invoke());
-        menu.Items.Add(_pauseItem);
         _doNotDisturbItem = new Forms.ToolStripMenuItem("Do not disturb", null, (_, _) => DoNotDisturbToggled?.Invoke());
         menu.Items.Add(_doNotDisturbItem);
         _stopSessionItem = new Forms.ToolStripMenuItem("Stop focus session", null, (_, _) => StopSessionRequested?.Invoke());
@@ -55,16 +51,15 @@ public sealed class TrayIcon : IDisposable
         };
     }
 
-    public void Update(string status, bool paused, bool doNotDisturb, bool sessionRunning, string hotkeyText)
+    public void Update(string status, bool doNotDisturb, bool sessionRunning, string hotkeyText)
     {
         string text = $"Take a Break Goose\n{status}";
         if (text.Length > 63) text = text[..63]; // NotifyIcon.Text is limited to 63 chars
         if (_icon.Text != text) _icon.Text = text;
-        _pauseItem.Text = paused ? "Resume reminders" : "Pause reminders";
         _doNotDisturbItem.Checked = doNotDisturb;
-        // Breaks, pausing, Do not disturb and stopping only mean something during a focus session.
+        // Breaks, Do not disturb and stopping only mean something during a focus session.
         // Do not disturb can outlast its session (the goose's goodbye waits for it), so it stays while on.
-        _breakNowItem.Visible = _pauseItem.Visible = _stopSessionItem.Visible = sessionRunning;
+        _breakNowItem.Visible = _stopSessionItem.Visible = sessionRunning;
         _doNotDisturbItem.Visible = sessionRunning || doNotDisturb;
         _openItem.ShortcutKeyDisplayString = hotkeyText;
     }

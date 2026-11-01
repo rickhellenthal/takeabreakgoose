@@ -16,10 +16,8 @@ public sealed class BreakScheduler
 {
     private readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromSeconds(1) };
     private GooseSettings _settings;
-    private TimeSpan? _remainingWhenPaused;
 
     public WorkSession? Session { get; private set; }
-    public bool IsPaused { get; private set; }
     public bool IsAway { get; private set; }
     public bool GooseVisiting { get; private set; }
     public DateTime? NextBreakAt { get; private set; }
@@ -70,7 +68,6 @@ public sealed class BreakScheduler
     public void StartSession(int intervalMinutes, int breakMinutes, DateTime? endsAt, bool automatically = false)
     {
         Session = new WorkSession(intervalMinutes, breakMinutes, DateTime.Now, endsAt, automatically);
-        IsPaused = false;
         SignOffWaiting = null; // a new session; the goodbye for the old one isn't needed anymore
         Reschedule();
     }
@@ -78,7 +75,6 @@ public sealed class BreakScheduler
     public void StopSession()
     {
         Session = null;
-        IsPaused = false;
         DoNotDisturb = false;
         Reschedule();
     }
@@ -112,24 +108,6 @@ public sealed class BreakScheduler
         GooseVisiting = false;
         NextBreakAt = null;
         BreakWaiting = true;
-        StateChanged?.Invoke();
-    }
-
-    public void SetPaused(bool paused)
-    {
-        if (paused == IsPaused) return;
-        if (paused)
-        {
-            _remainingWhenPaused = NextBreakAt - DateTime.Now;
-            NextBreakAt = null;
-            IsPaused = true;
-        }
-        else
-        {
-            IsPaused = false;
-            NextBreakAt = DateTime.Now + _remainingWhenPaused;
-            _remainingWhenPaused = null;
-        }
         StateChanged?.Invoke();
     }
 
@@ -207,7 +185,6 @@ public sealed class BreakScheduler
     public string Describe()
     {
         if (GooseVisiting) return "The goose is here!";
-        if (IsPaused) return "Reminders paused";
         if (DoNotDisturb)
         {
             return SignOffWaiting != null ? "Do not disturb · your session is done"
@@ -240,7 +217,6 @@ public sealed class BreakScheduler
             // A break that was waiting isn't needed anymore. During Do not disturb, the goose's
             // goodbye waits until it's turned off; Do not disturb stays on until then.
             Session = null;
-            IsPaused = false;
             Reschedule();
             if (DoNotDisturb) SignOffWaiting = finished;
             else SessionCompleted?.Invoke(finished);
@@ -251,7 +227,7 @@ public sealed class BreakScheduler
         if (!AwaitingReturn && BreakEndsAt is DateTime breakEnd && now >= breakEnd) BreakEndsAt = null;
 
         // While waiting for the user to come back from a break, the goose handles that itself.
-        if (_settings.AwayMinutes > 0 && !GooseVisiting && !IsPaused && !AwaitingReturn)
+        if (_settings.AwayMinutes > 0 && !GooseVisiting && !AwaitingReturn)
         {
             bool away = UserActivity.IdleTime() >= TimeSpan.FromMinutes(_settings.AwayMinutes);
             if (IsAway && !away)
@@ -268,7 +244,7 @@ public sealed class BreakScheduler
             IsAway = false;
         }
 
-        if (!IsAway && !IsPaused && !GooseVisiting && !AwaitingReturn && NextBreakAt is DateTime next && now >= next)
+        if (!IsAway && !GooseVisiting && !AwaitingReturn && NextBreakAt is DateTime next && now >= next)
         {
             NextBreakAt = null;
             if (DoNotDisturb) BreakWaiting = true;
@@ -286,17 +262,5 @@ public sealed class BreakScheduler
         StateChanged?.Invoke();
     }
 
-    private void SetNext(DateTime? at)
-    {
-        if (IsPaused)
-        {
-            _remainingWhenPaused = at - DateTime.Now;
-            NextBreakAt = null;
-        }
-        else
-        {
-            NextBreakAt = at;
-        }
-    }
-
+    private void SetNext(DateTime? at) => NextBreakAt = at;
 }

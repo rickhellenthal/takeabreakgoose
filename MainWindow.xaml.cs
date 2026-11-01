@@ -175,11 +175,6 @@ public partial class MainWindow : Window
                 CountdownText.Text = "Honk!";
                 CountdownCaption.Text = "The goose is on your screen right now.";
             }
-            else if (scheduler.IsPaused)
-            {
-                CountdownText.Text = "Paused";
-                CountdownCaption.Text = "No reminders until you resume.";
-            }
             else if (scheduler.AwaitingReturn && !(scheduler.BreakEndsAt > now))
             {
                 CountdownText.Text = "Welcome back";
@@ -219,7 +214,6 @@ public partial class MainWindow : Window
             SessionEndText.Text = session.EndsAt is DateTime end
                 ? $"{started} · ends {DescribeEnd(end, now)} ({FormatCountdown(end - now)} left)"
                 : $"{started} · no end time, stop it whenever you're done.";
-            PauseButton.Content = scheduler.IsPaused ? "Resume" : "Pause";
 
             _showingStatus = true;
             DoNotDisturbSwitch.IsChecked = scheduler.DoNotDisturb;
@@ -403,8 +397,6 @@ public partial class MainWindow : Window
 
     private void StopSession_Click(object sender, RoutedEventArgs e) => _host.Scheduler.StopSession();
 
-    private void Pause_Click(object sender, RoutedEventArgs e) =>
-        _host.Scheduler.SetPaused(!_host.Scheduler.IsPaused);
 
     private void BreakNow_Click(object sender, RoutedEventArgs e) => _host.SummonBreakGoose();
 

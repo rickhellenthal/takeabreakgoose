@@ -44,7 +44,6 @@ public partial class App : Application, IGooseHost
         _tray = new TrayIcon();
         _tray.OpenRequested += ShowMainWindow;
         _tray.SummonRequested += () => SummonBreakGoose();
-        _tray.PauseToggled += () => Scheduler.SetPaused(!Scheduler.IsPaused);
         _tray.StopSessionRequested += Scheduler.StopSession;
         _tray.DoNotDisturbToggled += () => SetDoNotDisturb(!Scheduler.DoNotDisturb);
         _tray.QuitRequested += Shutdown;
@@ -252,6 +251,6 @@ public partial class App : Application, IGooseHost
     }
 
     private void UpdateTray() =>
-        _tray?.Update(Scheduler.Describe(), Scheduler.IsPaused, Scheduler.DoNotDisturb, Scheduler.Session != null,
+        _tray?.Update(Scheduler.Describe(), Scheduler.DoNotDisturb, Scheduler.Session != null,
             Settings.HotkeyText);
 }

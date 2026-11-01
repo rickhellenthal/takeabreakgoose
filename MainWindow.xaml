@@ -235,8 +235,6 @@
                             <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
                                 <Button Content="Stop session" Style="{StaticResource PrimaryButton}"
                                         Click="StopSession_Click" />
-                                <Button x:Name="PauseButton" Content="Pause" Style="{StaticResource BaseButton}"
-                                        Margin="8,0,0,0" Click="Pause_Click" />
                                 <Button Content="Take a break now" Style="{StaticResource BaseButton}"
                                         Margin="8,0,0,0" Click="BreakNow_Click" />
                             </StackPanel>
