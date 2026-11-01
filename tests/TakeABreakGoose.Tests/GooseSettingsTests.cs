@@ -71,6 +71,27 @@ public class GooseSettingsTests
     }
 
     [Fact]
+    public void Old_wordings_of_default_messages_get_the_new_wording()
+    {
+        var settings = new GooseSettings
+        {
+            Messages = new List<string>
+            {
+                "Step away from the keyboard. The bug will still be there in five minutes.",
+                "Step away from the keyboard. My bug will still be there.", // the user's own: left alone
+            },
+        };
+
+        settings.Sanitize();
+
+        Assert.Equal(new[]
+        {
+            "Step away from the screen. Whatever you're working on will still be there in five minutes.",
+            "Step away from the keyboard. My bug will still be there.",
+        }, settings.Messages);
+    }
+
+    [Fact]
     public void A_copy_does_not_share_its_messages_with_the_original()
     {
         var settings = new GooseSettings();

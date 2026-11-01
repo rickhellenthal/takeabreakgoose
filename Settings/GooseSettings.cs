@@ -51,11 +51,19 @@ public sealed class GooseSettings
         "Time to stand up and stretch those legs.",
         "Look at something far away for 20 seconds. Your eyes will thank you.",
         "Hydration check! Go get a glass of water.",
-        "Step away from the keyboard. The bug will still be there in five minutes.",
+        "Step away from the screen. Whatever you're working on will still be there in five minutes.",
         "Shoulders down, jaw unclenched, take a deep breath.",
         "Go for a short walk. Even geese waddle around now and then.",
         "Hyperfocus is a superpower, but even superheroes take breaks.",
         "Have you eaten something today?",
+    };
+
+    // Default messages from older versions that have been reworded since. A saved list still holding
+    // the old wording gets the new one; messages the user edited themselves are left alone.
+    private static readonly Dictionary<string, string> RewordedDefaults = new()
+    {
+        ["Step away from the keyboard. The bug will still be there in five minutes."] =
+            "Step away from the screen. Whatever you're working on will still be there in five minutes.",
     };
 
     public GooseSettings Clone()
@@ -100,6 +108,7 @@ public sealed class GooseSettings
         Messages = (Messages ?? new List<string>())
             .Select(m => m?.Trim() ?? "")
             .Where(m => m.Length > 0)
+            .Select(m => RewordedDefaults.TryGetValue(m, out var reworded) ? reworded : m)
             .ToList();
         if (Messages.Count == 0) Messages = DefaultMessages();
         if (HotkeyKey == Key.None) HotkeyKey = Key.G;
