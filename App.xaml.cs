@@ -51,7 +51,8 @@ public partial class App : Application, IGooseHost
         _tray.QuitRequested += Shutdown;
 
         if (Settings.AutoStartSession)
-            Scheduler.StartSession(Settings.AutoStartIntervalMinutes, Settings.BreakMinutes, endsAt: null, automatically: true);
+            Scheduler.StartSession(Settings.AutoStartIntervalMinutes, TimeSpan.FromSeconds(Settings.LastSessionBreakSeconds),
+                endsAt: null, automatically: true);
         UpdateTray();
 
         CameraActivity.Start();
@@ -95,12 +96,13 @@ public partial class App : Application, IGooseHost
     public void StartSession(SessionPlan plan)
     {
         Settings.LastSessionIntervalMinutes = plan.IntervalMinutes;
+        Settings.LastSessionBreakSeconds = (int)plan.BreakLength.TotalSeconds;
         Settings.LastSessionEndMode = plan.EndMode;
         Settings.LastSessionLengthMinutes = plan.LengthMinutes;
         Settings.LastSessionEndTime = plan.EndTime;
         TrySave();
 
-        Scheduler.StartSession(plan.IntervalMinutes, plan.BreakMinutes, plan.EndsAt(DateTime.Now));
+        Scheduler.StartSession(plan.IntervalMinutes, plan.BreakLength, plan.EndsAt(DateTime.Now));
     }
 
     public void StopSession() => _goose.StopSession();
@@ -130,7 +132,8 @@ public partial class App : Application, IGooseHost
         Scheduler.ApplySettings(Settings);
         // Turning it on shouldn't mean waiting for the next restart to see it work.
         if (autoStartTurnedOn && Scheduler.Session == null)
-            Scheduler.StartSession(Settings.AutoStartIntervalMinutes, Settings.BreakMinutes, endsAt: null, automatically: true);
+            Scheduler.StartSession(Settings.AutoStartIntervalMinutes, TimeSpan.FromSeconds(Settings.LastSessionBreakSeconds),
+                endsAt: null, automatically: true);
 
         try
         {

@@ -23,7 +23,8 @@ public class GooseSettingsTests
 
         Assert.True(settings.AutoStartSession);
         Assert.Equal(30, settings.AutoStartIntervalMinutes);
-        Assert.Equal(10, settings.BreakMinutes);
+        Assert.Equal(10 * 60, settings.LastSessionBreakSeconds); // the old default break length is remembered
+        Assert.Null(settings.BreakMinutes);
         Assert.Null(settings.AlwaysOn);
         Assert.Null(settings.AlwaysOnIntervalMinutes);
     }
@@ -70,11 +71,11 @@ public class GooseSettingsTests
     [Fact]
     public void Hand_edited_values_are_clamped_to_something_sensible()
     {
-        var settings = new GooseSettings { BreakMinutes = -5, SnoozeMinutes = 0, AutoStartIntervalMinutes = 100_000 };
+        var settings = new GooseSettings { LastSessionBreakSeconds = -5, SnoozeMinutes = 0, AutoStartIntervalMinutes = 100_000 };
 
         settings.Sanitize();
 
-        Assert.Equal(0, settings.BreakMinutes);
+        Assert.Equal(0, settings.LastSessionBreakSeconds);
         Assert.Equal(1, settings.SnoozeMinutes);
         Assert.Equal(24 * 60, settings.AutoStartIntervalMinutes);
     }

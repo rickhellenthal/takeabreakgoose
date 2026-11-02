@@ -10,7 +10,7 @@ public class SessionPlanTests
     [Fact]
     public void Without_an_end_time_the_session_runs_until_stopped()
     {
-        var plan = new SessionPlan(30, 5, SessionEndMode.None, 120, new TimeSpan(17, 0, 0));
+        var plan = new SessionPlan(30, TimeSpan.FromMinutes(5), SessionEndMode.None, 120, new TimeSpan(17, 0, 0));
 
         Assert.Null(plan.EndsAt(Morning));
     }
@@ -18,7 +18,7 @@ public class SessionPlanTests
     [Fact]
     public void End_after_adds_the_length_to_now()
     {
-        var plan = new SessionPlan(30, 5, SessionEndMode.After, 150, new TimeSpan(17, 0, 0));
+        var plan = new SessionPlan(30, TimeSpan.FromMinutes(5), SessionEndMode.After, 150, new TimeSpan(17, 0, 0));
 
         Assert.Equal(Morning.AddMinutes(150), plan.EndsAt(Morning));
     }
@@ -26,7 +26,7 @@ public class SessionPlanTests
     [Fact]
     public void End_at_a_time_later_today_is_today()
     {
-        var plan = new SessionPlan(30, 5, SessionEndMode.At, 120, new TimeSpan(17, 0, 0));
+        var plan = new SessionPlan(30, TimeSpan.FromMinutes(5), SessionEndMode.At, 120, new TimeSpan(17, 0, 0));
 
         Assert.Equal(new DateTime(2026, 11, 2, 17, 0, 0), plan.EndsAt(Morning));
     }
@@ -34,7 +34,7 @@ public class SessionPlanTests
     [Fact]
     public void End_at_a_time_that_has_passed_today_is_tomorrow()
     {
-        var plan = new SessionPlan(30, 5, SessionEndMode.At, 120, new TimeSpan(1, 0, 0));
+        var plan = new SessionPlan(30, TimeSpan.FromMinutes(5), SessionEndMode.At, 120, new TimeSpan(1, 0, 0));
 
         Assert.Equal(new DateTime(2026, 11, 3, 1, 0, 0), plan.EndsAt(LateEvening));
     }

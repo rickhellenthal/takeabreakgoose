@@ -11,7 +11,7 @@ internal sealed class SchedulerHarness
     /// <summary>How long the mouse and keyboard haven't been used.</summary>
     public TimeSpan Idle { get; private set; }
 
-    public GooseSettings Settings { get; } = new() { BreakMinutes = 5, SnoozeMinutes = 5 };
+    public GooseSettings Settings { get; } = new() { LastSessionBreakSeconds = 5 * 60, SnoozeMinutes = 5 };
     public BreakScheduler Scheduler { get; }
 
     public int BreaksDue { get; private set; }
@@ -24,9 +24,10 @@ internal sealed class SchedulerHarness
         Scheduler.SessionCompleted += session => CompletedSessions.Add(session);
     }
 
-    /// <summary>Starts a session the way the start card does.</summary>
-    public void StartSession(int intervalMinutes, int breakMinutes = 5, TimeSpan? endsAfter = null) =>
-        Scheduler.StartSession(intervalMinutes, breakMinutes, endsAfter is { } length ? Now + length : null);
+    /// <summary>Starts a session the way the start card does (with breaks in minutes, or an exact <paramref name="breakLength"/>).</summary>
+    public void StartSession(int intervalMinutes, int breakMinutes = 5, TimeSpan? endsAfter = null, TimeSpan? breakLength = null) =>
+        Scheduler.StartSession(intervalMinutes, breakLength ?? Minutes(breakMinutes),
+            endsAfter is { } length ? Now + length : null);
 
     /// <summary>Time passes while the user works at the computer.</summary>
     public void Work(TimeSpan time) => Pass(time, away: false);

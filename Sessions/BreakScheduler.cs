@@ -84,12 +84,19 @@ public sealed class BreakScheduler
     /// <summary>Minutes between reminders right now, or null when the goose should stay quiet.</summary>
     public int? CurrentInterval => Session?.IntervalMinutes;
 
-    /// <summary>How long a break lasts right now: the session's choice, or the default from the settings.</summary>
-    public int CurrentBreakMinutes => Session?.BreakMinutes ?? _settings.BreakMinutes;
+    /// <summary>How long a break lasts right now: the session's choice, or the last one the user picked.</summary>
+    public TimeSpan CurrentBreakLength => Session?.BreakLength ?? TimeSpan.FromSeconds(_settings.LastSessionBreakSeconds);
 
-    public void StartSession(int intervalMinutes, int breakMinutes, DateTime? endsAt, bool automatically = false)
+    /// <summary>
+    /// How long being away counts as a break: the break's length, but at least a minute, so a short
+    /// eye break doesn't turn every pause into one.
+    /// </summary>
+    public static TimeSpan AwayCountsAsBreakAfter(TimeSpan breakLength) =>
+        breakLength > TimeSpan.FromMinutes(1) ? breakLength : TimeSpan.FromMinutes(1);
+
+    public void StartSession(int intervalMinutes, TimeSpan breakLength, DateTime? endsAt, bool automatically = false)
     {
-        Session = new WorkSession(intervalMinutes, breakMinutes, _now(), endsAt, automatically);
+        Session = new WorkSession(intervalMinutes, breakLength, _now(), endsAt, automatically);
         SignOffWaiting = null; // a new session; the goodbye for the old one isn't needed anymore
         _breaks.Clear();
         BreakStartedAt = null;
@@ -167,7 +174,7 @@ public sealed class BreakScheduler
         if (startsBreak)
         {
             // The next reminder only starts counting once the user says they're ready to focus again.
-            BreakEndsAt = now.AddMinutes(CurrentBreakMinutes);
+            BreakEndsAt = now + CurrentBreakLength;
             BreakStartedAt = now;
             AwaitingReturn = true;
             SetNext(null);
@@ -272,11 +279,11 @@ public sealed class BreakScheduler
 
         // Being away from the mouse and keyboard for at least a break's length counts as a break.
         // (While the goose is on screen or the user is on a break, the goose handles that itself.)
-        int breakMinutes = CurrentBreakMinutes;
-        if (Session != null && breakMinutes > 0 && !GooseVisiting && !AwaitingReturn)
+        var breakLength = CurrentBreakLength;
+        if (Session != null && breakLength > TimeSpan.Zero && !GooseVisiting && !AwaitingReturn)
         {
             var idle = _idleTime();
-            bool away = idle >= TimeSpan.FromMinutes(breakMinutes);
+            bool away = idle >= AwayCountsAsBreakAfter(breakLength);
             if (away && !IsAway) _awaySince = now - idle;
             if (IsAway && !away)
             {

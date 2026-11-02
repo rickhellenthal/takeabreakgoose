@@ -50,27 +50,16 @@
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-
-                            <TextBlock Grid.Row="0" Text="Default break length" Style="{StaticResource Label}" Margin="0,0,12,8" />
-                            <TextBox Grid.Row="0" Grid.Column="1" x:Name="BreakBox" Width="56" Margin="0,0,0,8" />
-                            <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource Hint}" Margin="8,0,0,8"
-                                       VerticalAlignment="Center"
-                                       Text="min · you can pick another length when you start a session" />
-
-                            <CheckBox Grid.Row="1" x:Name="AllowSnoozeCheck" Content="Let me snooze for"
+                            <CheckBox x:Name="AllowSnoozeCheck" Content="Let me snooze for"
                                       VerticalAlignment="Center" Margin="0,0,12,0" />
-                            <TextBox Grid.Row="1" Grid.Column="1" x:Name="SnoozeBox" Width="56"
+                            <TextBox Grid.Column="1" x:Name="SnoozeBox" Width="56"
                                      IsEnabled="{Binding IsChecked, ElementName=AllowSnoozeCheck}" />
-                            <TextBlock Grid.Row="1" Grid.Column="2" Style="{StaticResource Hint}" Margin="8,0,0,0"
+                            <TextBlock Grid.Column="2" Style="{StaticResource Hint}" Margin="8,0,0,0"
                                        VerticalAlignment="Center"
                                        Text="min · turn off to hide the Snooze button when it's time for a break" />
                         </Grid>
                         <TextBlock Style="{StaticResource Hint}" Margin="0,12,0,0"
-                                   Text="Away from your computer for at least a break's length? That counts as your break, and the countdown to the next one starts fresh when you're back." />
+                                   Text="Away from your computer for at least as long as your break? That counts as your break, and the countdown to the next one starts fresh when you're back." />
                     </StackPanel>
                 </Border>
 

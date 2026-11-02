@@ -133,8 +133,38 @@ public class BreakSchedulerTests
         _h.BeAway(Minutes(6)); // longer than the default 5, shorter than this session's 10
         _h.ComeBack();
 
-        Assert.Equal(10, _h.Scheduler.CurrentBreakMinutes);
+        Assert.Equal(Minutes(10), _h.Scheduler.CurrentBreakLength);
         Assert.Equal(firstBreak, _h.Scheduler.NextBreakAt);
+    }
+
+    [Fact]
+    public void A_break_can_be_a_few_seconds_long()
+    {
+        _h.StartSession(intervalMinutes: 20, breakLength: TimeSpan.FromSeconds(20));
+        _h.Work(Minutes(20));
+        _h.Scheduler.GooseArrived();
+
+        _h.Scheduler.GooseAnswered(GooseOutcome.Dismissed, startsBreak: true);
+
+        Assert.Equal(_h.Now + TimeSpan.FromSeconds(20), _h.Scheduler.BreakEndsAt);
+    }
+
+    [Fact]
+    public void With_a_short_break_being_away_only_counts_after_a_minute()
+    {
+        _h.StartSession(intervalMinutes: 20, breakLength: TimeSpan.FromSeconds(20));
+        var firstBreak = _h.Scheduler.NextBreakAt;
+        _h.Work(Minutes(5));
+
+        _h.BeAway(TimeSpan.FromSeconds(40)); // longer than the break, but just reading something
+        _h.ComeBack();
+        Assert.Equal(firstBreak, _h.Scheduler.NextBreakAt);
+        Assert.Empty(_h.Scheduler.Breaks);
+
+        _h.BeAway(Minutes(2));
+        _h.ComeBack();
+        Assert.Single(_h.Scheduler.Breaks);
+        Assert.Equal(_h.Now + Minutes(20), _h.Scheduler.NextBreakAt);
     }
 
     // ---- Do not disturb ----

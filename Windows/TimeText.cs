@@ -27,6 +27,23 @@ public static class TimeText
             ? "under a minute"
             : Duration(TimeSpan.FromMinutes(Math.Round(time.TotalMinutes, MidpointRounding.AwayFromZero)));
 
+    /// <summary>A break length, short: "5 min", "20 sec" or "1 min 30 sec".</summary>
+    public static string BreakLength(TimeSpan length)
+    {
+        int minutes = (int)length.TotalMinutes, seconds = length.Seconds;
+        if (minutes == 0) return $"{seconds} sec";
+        return seconds == 0 ? $"{minutes} min" : $"{minutes} min {seconds} sec";
+    }
+
+    /// <summary>A break length, written out: "5 minutes", "20 seconds" or "1 minute and 30 seconds".</summary>
+    public static string BreakLengthInWords(TimeSpan length)
+    {
+        int minutes = (int)length.TotalMinutes, seconds = length.Seconds;
+        string Plural(int n, string unit) => n == 1 ? $"1 {unit}" : $"{n} {unit}s";
+        if (minutes == 0) return Plural(seconds, "second");
+        return seconds == 0 ? Plural(minutes, "minute") : $"{Plural(minutes, "minute")} and {Plural(seconds, "second")}";
+    }
+
     /// <summary>"2 h 14 min", "2 h" or "14 min", rounded up to the next minute.</summary>
     public static string Duration(TimeSpan time)
     {

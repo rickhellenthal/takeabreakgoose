@@ -28,7 +28,6 @@ public partial class MainWindow : Window
         SessionView.Initialize(host);
         WardrobeView.Initialize(host);
         SettingsView.Initialize(host);
-        SettingsView.Saved += SessionView.SelectBreakLength; // the start card follows the new default
         MessagesView.Initialize(host);
         SettingsView.EditMessagesRequested += OpenMessages;
         MessagesView.Saved += SettingsView.ShowMessageCount;

@@ -20,11 +20,9 @@ public sealed class GooseSettings
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? AlwaysOnIntervalMinutes { get; set; }
 
-    /// <summary>
-    /// Default break length for new sessions. The next reminder starts counting after a break, and
-    /// being away from the computer this long counts as one. 0 = no breaks are counted.
-    /// </summary>
-    public int BreakMinutes { get; set; } = 5;
+    // Replaced by remembering the last session's break length. Only read to carry it over.
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? BreakMinutes { get; set; }
 
     /// <summary>The goose offers a Snooze button when it's time for a break.</summary>
     public bool AllowSnooze { get; set; } = true;
@@ -39,6 +37,12 @@ public sealed class GooseSettings
 
     // The last session the user started, used to pre-fill the start form.
     public int LastSessionIntervalMinutes { get; set; } = 45;
+
+    /// <summary>
+    /// How long each break lasts, in seconds; also used for sessions that start automatically.
+    /// 0 = no breaks are counted.
+    /// </summary>
+    public int LastSessionBreakSeconds { get; set; } = 5 * 60;
     public SessionEndMode LastSessionEndMode { get; set; } = SessionEndMode.None;
     public int LastSessionLengthMinutes { get; set; } = 120;
     public TimeSpan LastSessionEndTime { get; set; } = new(17, 0, 0);
@@ -100,9 +104,12 @@ public sealed class GooseSettings
         }
         AlwaysOn = null;
         AlwaysOnIntervalMinutes = null;
+        // The "Default break length" setting from older versions becomes the remembered break length.
+        if (BreakMinutes is int breakMinutes) LastSessionBreakSeconds = breakMinutes * 60;
+        BreakMinutes = null;
 
         AutoStartIntervalMinutes = Math.Clamp(AutoStartIntervalMinutes, 1, 24 * 60);
-        BreakMinutes = Math.Clamp(BreakMinutes, 0, 120);
+        LastSessionBreakSeconds = Math.Clamp(LastSessionBreakSeconds, 0, 120 * 60);
         SnoozeMinutes = Math.Clamp(SnoozeMinutes, 1, 24 * 60);
         LastSessionIntervalMinutes = Math.Clamp(LastSessionIntervalMinutes, 1, 24 * 60);
         LastSessionLengthMinutes = Math.Clamp(LastSessionLengthMinutes, 1, 24 * 60);

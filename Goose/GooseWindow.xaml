@@ -118,12 +118,13 @@
                     <TextBlock x:Name="HintText" TextWrapping="Wrap" FontSize="12" Foreground="#8A8172"
                                Margin="0,6,0,0" />
                     <DockPanel Margin="0,14,0,0" LastChildFill="False">
-                        <Button x:Name="FinishUpButton" DockPanel.Dock="Left" Content="Let me finish up"
-                                Style="{StaticResource LinkBubbleButton}" Margin="0,0,16,0" Click="FinishUp_Click" />
+                        <!-- When it's break time: Snooze is the quiet link, "Let me finish up" the outlined button. -->
+                        <Button x:Name="LinkButton" DockPanel.Dock="Left"
+                                Style="{StaticResource LinkBubbleButton}" Margin="0,0,16,0" Click="Link_Click" />
                         <Button x:Name="DismissButton" DockPanel.Dock="Right"
                                 Style="{StaticResource PrimaryBubbleButton}" Click="Dismiss_Click" />
-                        <Button x:Name="SnoozeButton" DockPanel.Dock="Right" Margin="0,0,8,0"
-                                Style="{StaticResource BubbleButton}" Click="Snooze_Click" />
+                        <Button x:Name="SecondaryButton" DockPanel.Dock="Right" Margin="0,0,8,0"
+                                Style="{StaticResource BubbleButton}" Click="Secondary_Click" />
                     </DockPanel>
                 </StackPanel>
             </Border>

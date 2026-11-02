@@ -35,9 +35,9 @@ public sealed class GooseCoordinator
     {
         var messages = _settings().Messages;
         string message = messages[Random.Shared.Next(messages.Count)];
-        int breakMinutes = _scheduler.CurrentBreakMinutes;
-        string? hint = breakMinutes > 0
-            ? $"Take {breakMinutes} minutes. I'll start counting again after that."
+        var breakLength = _scheduler.CurrentBreakLength;
+        string? hint = breakLength > TimeSpan.Zero
+            ? $"Take {TimeText.BreakLengthInWords(breakLength)}. I'll start counting again after that."
             : null;
         Summon(new GooseVisit("HONK!", message, hint, "Okay, break time!",
             AllowSnooze: _settings().AllowSnooze, AllowFinishUp: true, StartsBreak: true));
@@ -122,7 +122,7 @@ public sealed class GooseCoordinator
         if (int.TryParse(Environment.GetEnvironmentVariable("TAKEABREAKGOOSE_BREAK_SECONDS"), out int seconds))
             return TimeSpan.FromSeconds(seconds);
 #endif
-        return TimeSpan.FromMinutes(_scheduler.CurrentBreakMinutes);
+        return _scheduler.CurrentBreakLength;
     }
 
     private void Summon(GooseVisit visit)
@@ -135,7 +135,7 @@ public sealed class GooseCoordinator
             return;
         }
 
-        bool naps = visit.StartsBreak && _scheduler.CurrentBreakMinutes > 0;
+        bool naps = visit.StartsBreak && _scheduler.CurrentBreakLength > TimeSpan.Zero;
         _currentVisit = visit;
         _goose = new GooseWindow(visit, _settings().SnoozeMinutes, naps ? BreakLength() : null);
         if (!visit.JustVisiting)

@@ -103,9 +103,11 @@ public partial class GooseWindow : Window
         HintText.Text = visit.Hint ?? "";
         HintText.Visibility = visit.Hint == null ? Visibility.Collapsed : Visibility.Visible;
         DismissButton.Content = visit.DismissText;
-        SnoozeButton.Content = $"Snooze {snoozeMinutes} min";
-        SnoozeButton.Visibility = visit.AllowSnooze ? Visibility.Visible : Visibility.Collapsed;
-        FinishUpButton.Visibility = visit.AllowFinishUp ? Visibility.Visible : Visibility.Collapsed;
+        // Finishing up is the better answer than a snooze timer, so it gets the button and snooze the link.
+        SecondaryButton.Content = "Let me finish up";
+        SecondaryButton.Visibility = visit.AllowFinishUp ? Visibility.Visible : Visibility.Collapsed;
+        LinkButton.Content = $"Snooze {snoozeMinutes} min";
+        LinkButton.Visibility = visit.AllowSnooze ? Visibility.Visible : Visibility.Collapsed;
         Figure.Outfit = visit.Outfit ?? GooseOutfits.Random();
 
         _enteredFromLeft = Random.Shared.Next(2) == 0;
@@ -486,10 +488,10 @@ public partial class GooseWindow : Window
         MessageText.Text = message;
         HintText.Text = hint ?? "";
         HintText.Visibility = hint == null ? Visibility.Collapsed : Visibility.Visible;
-        FinishUpButton.Visibility = Visibility.Collapsed;
+        LinkButton.Visibility = Visibility.Collapsed;
         DismissButton.Content = primary;
-        SnoozeButton.Content = secondary;
-        SnoozeButton.Visibility = Visibility.Visible;
+        SecondaryButton.Content = secondary;
+        SecondaryButton.Visibility = Visibility.Visible;
         StartTalking();
     }
 
@@ -545,13 +547,20 @@ public partial class GooseWindow : Window
         return new PathGeometry(new[] { figure });
     }
 
-    private void FinishUp_Click(object sender, RoutedEventArgs e)
+    /// <summary>"Let me finish up": the goose waits at the edge of the screen until it's clicked.</summary>
+    private void FinishUp()
     {
         if (_phase != Phase.Talking) return;
         StopTalking();
         // It only offers this once; when it comes back it's break time.
-        FinishUpButton.Visibility = Visibility.Collapsed;
+        SecondaryButton.Visibility = Visibility.Collapsed;
         _phase = Phase.ToEdge;
+    }
+
+    // The quiet link on the left: only there when it's time for a break, to snooze.
+    private void Link_Click(object sender, RoutedEventArgs e)
+    {
+        if (_question == Question.TakeABreak) Leave(GooseOutcome.Snoozed);
     }
 
     // The primary (orange) button.
@@ -568,11 +577,11 @@ public partial class GooseWindow : Window
     }
 
     // The secondary (outlined) button.
-    private void Snooze_Click(object sender, RoutedEventArgs e)
+    private void Secondary_Click(object sender, RoutedEventArgs e)
     {
         switch (_question)
         {
-            case Question.TakeABreak: Leave(GooseOutcome.Snoozed); break;
+            case Question.TakeABreak: FinishUp(); break;
             case Question.ReadyToFocus: NapLonger(); break;
             case Question.StillOnBreak:
             case Question.EndBreakEarly: AskToEndBreakAnyway(); break;

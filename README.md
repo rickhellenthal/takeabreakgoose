@@ -49,17 +49,17 @@ Open the goose with **Ctrl+Alt+G**, the Start menu, or by clicking its icon in t
        alt="The Take a Break Goose window on the Focus session tab: choose how often to take a break (15, 30, 45 or 60 min, or other), how long each break lasts (5, 10 or 15 min, or other), optionally set an end time, then Start session">
 </p>
 
-1. **Start a focus session.** Pick how often you want a break and how long your breaks are, then click **Start session**. Want it to stop at a certain point? Click **Set an end time** to end it after a while (like 2 hours) or at a time of day (like 17:00).
+1. **Start a focus session.** Pick how often you want a break and how long your breaks are (down to the second, for quick eye breaks), then click **Start session**. The goose remembers your choices for next time. Want it to stop at a certain point? Click **Set an end time** to end it after a while (like 2 hours) or at a time of day (like 17:00).
 2. **The goose arrives** when it's break time. You can:
    - take the break with **Okay, break time!**
-   - **snooze** it for a few minutes (you can turn this off in Settings)
    - say **Let me finish up**: the goose waits at the edge of the screen until you click it
+   - **snooze** it for a few minutes (you can turn this off in Settings)
 
    The goose waits as long as it takes for an answer.
 3. **During your break** the goose naps on the taskbar. Need to cut the break short? Click it. It's not thrilled about being woken up, but it'll let you. Still using your computer instead? The goose half wakes up, and if you keep at it, it asks whether you're actually taking your break.
 4. **When you're back**, the goose wakes up and asks if you're ready to focus. The countdown to your next break only starts once you say so.
 
-Away from your computer for at least a break's length, for example at lunch or while the goose was waiting? That counts as your break. The countdown to the next one starts fresh when you're back.
+Away from your computer for at least a break's length (and at least a minute), for example at lunch or while the goose was waiting? That counts as your break. The countdown to the next one starts fresh when you're back.
 
 In a meeting? The goose stays away during calls by itself: when your camera is in use, or when a meeting app like Teams, Zoom or Google Meet uses your microphone, **Do not disturb** turns on, and it turns off again when the call is over. Voice chat in games and Discord doesn't count, so the goose still comes by while you're gaming. You can turn this off in Settings, or turn Do not disturb on yourself in your session (or from the tray icon).
 
@@ -73,7 +73,7 @@ The **Wardrobe** tab shows the goose's outfits. It picks one at random for each 
 
 - **Start with Windows**, and **start a focus session automatically** when the app starts, so the goose keeps an eye on you without you having to do anything
 - **Do not disturb during calls**, on unless you turn it off
-- **Default break length** and **snooze length**, or turn snoozing off altogether
+- **Snooze length**, or turn snoozing off altogether
 - **The shortcut** that opens the app, and **the messages** the goose picks from
 
 Your settings are saved in `%APPDATA%\TakeABreakGoose\settings.json`. At the bottom of the Settings tab you can see which version you have, and whether a newer one is available.

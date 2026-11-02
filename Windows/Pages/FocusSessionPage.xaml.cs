@@ -39,7 +39,7 @@ public partial class FocusSessionPage : UserControl
         var preset = IntervalPresets.FirstOrDefault(r => (string)r.Tag == interval.ToString());
         (preset ?? IntervalCustom).IsChecked = true;
         SessionIntervalBox.Text = interval.ToString();
-        SelectBreakLength(settings.BreakMinutes);
+        SelectBreakLength(TimeSpan.FromSeconds(settings.LastSessionBreakSeconds));
 
         ResetEndChoice(settings);
         EndOptionsToggle.IsChecked = settings.LastSessionEndMode != SessionEndMode.None;
@@ -62,6 +62,9 @@ public partial class FocusSessionPage : UserControl
         SessionHoursBox.Text = (minutes / 60).ToString();
         SessionMinutesBox.Text = (minutes % 60).ToString();
     }
+
+    /// <summary>Tabbing or clicking into a number box selects the number, so typing replaces it (no "0" + "20" = "020").</summary>
+    private void NumberBox_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) => ((TextBox)sender).SelectAll();
 
     /// <summary>Puts the cursor in the box with its text selected, so typing replaces it.</summary>
     private static void FocusAndSelectAll(TextBox box)
@@ -113,8 +116,8 @@ public partial class FocusSessionPage : UserControl
             else if (scheduler.NextBreakAt is DateTime next)
             {
                 CountdownText.Text = TimeText.Countdown(next - now);
-                CountdownCaption.Text = session.BreakMinutes > 0
-                    ? $"until your next break (every {session.IntervalMinutes} min, {session.BreakMinutes} min breaks)"
+                CountdownCaption.Text = session.BreakLength > TimeSpan.Zero
+                    ? $"until your next break (every {session.IntervalMinutes} min, {TimeText.BreakLength(session.BreakLength)} breaks)"
                     : $"until your next break (every {session.IntervalMinutes} min)";
             }
             else
@@ -236,12 +239,15 @@ public partial class FocusSessionPage : UserControl
         if (custom && IsLoaded) FocusAndSelectAll(SessionIntervalBox);
     }
 
-    /// <summary>Selects a break length; the start card starts from the default in the settings.</summary>
-    public void SelectBreakLength(int minutes)
+    /// <summary>Selects a break length; the start card starts from the one picked last time.</summary>
+    private void SelectBreakLength(TimeSpan length)
     {
-        var preset = BreakPresets.FirstOrDefault(r => (string)r.Tag == minutes.ToString());
+        var preset = length.Seconds == 0
+            ? BreakPresets.FirstOrDefault(r => (string)r.Tag == ((int)length.TotalMinutes).ToString())
+            : null;
         (preset ?? BreakCustom).IsChecked = true;
-        SessionBreakBox.Text = minutes.ToString();
+        SessionBreakBox.Text = ((int)length.TotalMinutes).ToString();
+        SessionBreakSecondsBox.Text = length.Seconds.ToString();
     }
 
     private void BreakLength_Checked(object sender, RoutedEventArgs e)
@@ -357,7 +363,7 @@ public partial class FocusSessionPage : UserControl
             return;
         }
         var now = DateTime.Now;
-        var end = new SessionPlan(1, 0, mode, length, endTime).EndsAt(now)!.Value;
+        var end = new SessionPlan(1, TimeSpan.Zero, mode, length, endTime).EndsAt(now)!.Value;
         EndPreview.Text = $"The session ends {TimeText.End(end, now)}, in {TimeText.Duration(end - now)}.";
     }
 
@@ -370,10 +376,17 @@ public partial class FocusSessionPage : UserControl
         if (preset != null) interval = int.Parse((string)preset.Tag);
         else if (!Ui.TryParseNumber(SessionIntervalBox.Text, 1, 600, "The break interval", out interval, ShowSessionError)) return;
 
-        int breakMinutes;
+        TimeSpan breakLength;
         var breakPreset = BreakPresets.FirstOrDefault(r => r.IsChecked == true);
-        if (breakPreset != null) breakMinutes = int.Parse((string)breakPreset.Tag);
-        else if (!Ui.TryParseNumber(SessionBreakBox.Text, 0, 120, "The break length", out breakMinutes, ShowSessionError)) return;
+        if (breakPreset != null) breakLength = TimeSpan.FromMinutes(int.Parse((string)breakPreset.Tag));
+        else
+        {
+            // An empty box counts as 0, so "20 sec" can be typed without filling in "0 min".
+            static string OrZero(string text) => string.IsNullOrWhiteSpace(text) ? "0" : text;
+            if (!Ui.TryParseNumber(OrZero(SessionBreakBox.Text), 0, 120, "The break's minutes", out int minutes, ShowSessionError)) return;
+            if (!Ui.TryParseNumber(OrZero(SessionBreakSecondsBox.Text), 0, 59, "The break's seconds", out int seconds, ShowSessionError)) return;
+            breakLength = new TimeSpan(0, minutes, seconds);
+        }
 
         var (mode, length, endTime, error) = ReadEndChoice();
         if (error != null)
@@ -382,7 +395,7 @@ public partial class FocusSessionPage : UserControl
             return;
         }
 
-        _host.StartSession(new SessionPlan(interval, breakMinutes, mode, length, endTime));
+        _host.StartSession(new SessionPlan(interval, breakLength, mode, length, endTime));
     }
 
     private void StopSession_Click(object sender, RoutedEventArgs e) => _host.StopSession();

@@ -49,6 +49,18 @@ public class TimeTextTests
     }
 
     [Fact]
+    public void Break_lengths_show_minutes_and_seconds()
+    {
+        Assert.Equal("5 min", TimeText.BreakLength(TimeSpan.FromMinutes(5)));
+        Assert.Equal("20 sec", TimeText.BreakLength(TimeSpan.FromSeconds(20)));
+        Assert.Equal("1 min 30 sec", TimeText.BreakLength(TimeSpan.FromSeconds(90)));
+
+        Assert.Equal("5 minutes", TimeText.BreakLengthInWords(TimeSpan.FromMinutes(5)));
+        Assert.Equal("20 seconds", TimeText.BreakLengthInWords(TimeSpan.FromSeconds(20)));
+        Assert.Equal("1 minute and 1 second", TimeText.BreakLengthInWords(TimeSpan.FromSeconds(61)));
+    }
+
+    [Fact]
     public void End_times_after_midnight_say_tomorrow()
     {
         var now = new DateTime(2026, 11, 2, 23, 0, 0);
