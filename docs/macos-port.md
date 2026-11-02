@@ -104,18 +104,30 @@ another app has it); starting at login from the .app; that a camera and a Zoom, 
 turn Do not disturb on, and that the microphone list needs no permission; the notice's position;
 and opening the app a second time.
 
-## Step 4: packaging and releases
+## Step 4: packaging and releases (done)
 
-- `dotnet publish` for `osx-arm64` and `osx-x64`, self-contained, then `lipo` the app host into one
-  universal binary, in a `Take a Break Goose.app` bundle with `Info.plist` (`LSUIElement`, version,
-  `LSMinimumSystemVersion`), the icon as `.icns`, ad-hoc signed (`codesign --force --deep -s -`),
-  which Apple Silicon Macs require to run it at all.
-- A `.dmg` with the app and a link to Applications (`hdiutil create`).
-- A `macos` job in `.github/workflows/release.yml` on `macos-latest`: runs the core tests, builds the
-  `.dmg` and adds it to the same GitHub release as the Windows installer.
-- A README section on opening an unsigned app on macOS 15: open it once, then System Settings →
-  Privacy & Security → Open Anyway; or in Terminal
-  `xattr -dr com.apple.quarantine "/Applications/Take a Break Goose.app"`.
+- Two downloads, one for Apple Silicon and one for Intel Macs, rather than one universal app. A
+  self-contained .NET app can't simply be merged with `lipo`: Avalonia's and Skia's native libraries
+  are universal already, but the .NET runtime's aren't, and about 100 of the framework's .dlls are
+  precompiled for one processor, so they differ between the two builds too. One universal app would
+  mean both builds in one bundle plus a launcher that picks one, at twice the size.
+- `Mac/package.sh <arm64|x64> [version]` (on a Mac) publishes the app self-contained into a
+  `Take a Break Goose.app` bundle with `Mac/Info.plist` (`LSUIElement`, the version, macOS 12 or
+  later, which is what .NET 8 needs) and `Mac/Assets/goose.icns`. It signs it ad hoc, libraries first
+  (Apple Silicon Macs won't run unsigned code at all), and wraps it in a `.dmg` with a link to
+  Applications: `dist/TakeABreakGoose-x.y.z-mac-apple-silicon.dmg` or `…-mac-intel.dmg`.
+- `goose.icns` comes from the same drawing as the Windows icon: `tools/make-icon.ps1` writes both,
+  the Mac one with the margin macOS icons have.
+- `.github/workflows/release.yml` has a `mac` job: after the Windows job has made the release, it
+  runs the core tests on macOS, builds both `.dmg`s and adds them to the release.
+- `.github/workflows/mac-build.yml` builds the same `.dmg`s from any branch without a release
+  (Actions → Mac build → Run workflow); they're under the run's Artifacts.
+- The README has a download section for Macs, including how to open an app that isn't signed with
+  a Developer ID (Privacy & Security → Open Anyway, or `xattr -dr com.apple.quarantine`).
+
+Checked on Windows: `package.sh` with stand-ins for `codesign` and `hdiutil` (the bundle's layout,
+`Info.plist` and the file names). Still to check: the first real run on GitHub's macOS runner, and
+opening the `.dmg` on a Mac.
 
 ## Testing
 

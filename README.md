@@ -5,13 +5,16 @@
 <h1 align="center">Take a Break Goose</h1>
 
 <p align="center">
-  A friendly goose for Windows that waddles onto your screen to remind you to take a break,<br>
+  A friendly goose for Windows and macOS that waddles onto your screen to remind you to take a break,<br>
   so hyperfocus doesn't burn you out.
 </p>
 
 <p align="center">
   <a href="https://github.com/rickhellenthal/takeabreakgoose/releases/latest">
     <img src="https://img.shields.io/badge/Download_for_Windows-F28C28?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows">
+  </a>
+  <a href="#on-a-mac">
+    <img src="https://img.shields.io/badge/Download_for_macOS-F28C28?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS">
   </a>
   <a href="https://ko-fi.com/rickhellenthal">
     <img src="https://img.shields.io/badge/Support_on_Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Support on Ko-fi">
@@ -31,6 +34,8 @@
 
 ## Download
 
+### On Windows
+
 1. Download **`TakeABreakGoose-Setup-x.y.z.exe`** from the [latest release](https://github.com/rickhellenthal/takeabreakgoose/releases/latest).
 2. Run it. No admin rights needed. You can choose to add a desktop shortcut and to start the goose when your computer starts.
 
@@ -40,9 +45,27 @@ Prefer not to install anything? Download **`TakeABreakGoose-x.y.z-portable.zip`*
 
 To uninstall, go to *Settings → Apps → Installed apps* and remove **Take a Break Goose**.
 
+### On a Mac
+
+1. Check which Mac you have: open the Apple menu  → **About This Mac**. "Chip: Apple M…" is an Apple Silicon Mac, "Processor: Intel…" an Intel Mac.
+2. Download the matching file from the [latest release](https://github.com/rickhellenthal/takeabreakgoose/releases/latest): **`TakeABreakGoose-x.y.z-mac-apple-silicon.dmg`** or **`TakeABreakGoose-x.y.z-mac-intel.dmg`**.
+3. Open it and drag **Take a Break Goose** onto **Applications**.
+4. Open it from Applications. The goose lives in the menu bar at the top of the screen, not in the Dock.
+
+It needs macOS 12 or later.
+
+> **"Take a Break Goose" can't be opened, or "Apple could not verify" it?** The app isn't signed with an Apple Developer ID, so macOS blocks it the first time. Click **Done** (not Move to Trash), then open **System Settings → Privacy & Security**, scroll down to the message about Take a Break Goose and click **Open Anyway**. Confirm with your password, and from then on it opens like any other app.
+>
+> Comfortable with Terminal? This does the same:
+> ```bash
+> xattr -dr com.apple.quarantine "/Applications/Take a Break Goose.app"
+> ```
+
+To uninstall, quit the goose from its menu bar icon and drag **Take a Break Goose** from Applications to the Trash.
+
 ## How it works
 
-Open the goose with **Ctrl+Alt+G**, the Start menu, or by clicking its icon in the system tray.
+Open the goose with **Ctrl+Alt+G**, the Start menu, or by clicking its icon in the system tray. On a Mac: **⌃⌥G** (Control+Option+G), or its icon in the menu bar. There the goose naps just above the Dock instead of on the taskbar.
 
 <p align="center">
   <img src="docs/FocusSession.png" width="420"
