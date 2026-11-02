@@ -13,8 +13,6 @@
     <RootNamespace>TakeABreakGoose</RootNamespace>
     <AssemblyName>TakeABreakGoose</AssemblyName>
     <Product>Take a Break Goose</Product>
-    <!-- The same version as the Windows app; releases set it from the tag. -->
-    <Version>1.7.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>

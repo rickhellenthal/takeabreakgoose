@@ -1,12 +1,23 @@
-# Builds the macOS app without making a release, to try it out. Runs on every push to a branch
-# other than main (GitHub only offers "Run workflow" by hand for workflows that are on main), and
-# from the Actions tab ("Mac build" → Run workflow) once it is. The .dmgs are under the run's Artifacts.
+# Builds the macOS app: one .dmg for Apple Silicon and one for Intel Macs.
+# - The release workflow calls it with the release's tag, and the .dmgs are added to that release.
+# - On every push to a branch other than main it builds them to try out, under the run's Artifacts.
+#   (GitHub only offers "Run workflow" by hand for workflows that are on main; once it is, that
+#   works too: Actions → Mac build → Run workflow.)
 name: Mac build
 
 on:
   push:
     branches-ignore: [main]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      release-tag:
+        description: The release (e.g. v1.8.0) to add the .dmgs to; its version is the app's.
+        type: string
+        required: true
+
+permissions:
+  contents: write
 
 jobs:
   mac:
@@ -14,6 +25,8 @@ jobs:
     strategy:
       matrix:
         arch: [arm64, x64]
+    env:
+      TAG: ${{ inputs.release-tag }}
     steps:
       - uses: actions/checkout@v4
 
@@ -21,14 +34,22 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      # The shared core, on macOS this time. Once is enough.
       - name: Run the tests
         if: matrix.arch == 'arm64'
         run: dotnet test tests/TakeABreakGoose.Tests -c Release
 
+      # A release's version comes from its tag; otherwise from Directory.Build.props.
       - name: Build the .dmg
-        run: Mac/package.sh ${{ matrix.arch }}
+        run: Mac/package.sh ${{ matrix.arch }} ${TAG:+"${TAG#v}"}
 
       - uses: actions/upload-artifact@v4
         with:
           name: mac-${{ matrix.arch }}
           path: dist/*.dmg
+
+      - name: Add it to the GitHub release
+        if: inputs.release-tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" dist/*.dmg

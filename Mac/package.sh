@@ -5,7 +5,7 @@
 #
 # Usage: Mac/package.sh <arm64|x64> [version]
 #   arm64 is for Apple Silicon Macs, x64 for Intel Macs. The version defaults to the one in
-#   Mac/TakeABreakGoose.Mac.csproj. The .dmg ends up in dist/.
+#   Directory.Build.props. The .dmg ends up in dist/.
 set -euo pipefail
 
 # On GitHub Actions, a failure also shows the command and its last output as an annotation on the
@@ -25,7 +25,7 @@ case "$arch" in
 esac
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-version="${2:-$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' "$root/Mac/TakeABreakGoose.Mac.csproj")}"
+version="${2:-$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' "$root/Directory.Build.props")}"
 work="$root/dist/mac-$arch"
 app="$work/Take a Break Goose.app"
 dmg="$root/dist/TakeABreakGoose-$version-mac-$label.dmg"

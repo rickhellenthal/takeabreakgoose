@@ -73,6 +73,9 @@ public sealed class BreakScheduler
         Reschedule();
     }
 
+    /// <summary>The time on the scheduler's clock (a test's own clock in tests).</summary>
+    public DateTime Now => _clock.Now;
+
     /// <summary>Minutes between reminders right now, or null when the goose should stay quiet.</summary>
     public int? CurrentInterval => Session?.IntervalMinutes;
 

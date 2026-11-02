@@ -10,7 +10,6 @@
     <RootNamespace>TakeABreakGoose</RootNamespace>
     <AssemblyName>TakeABreakGoose</AssemblyName>
     <Product>Take a Break Goose</Product>
-    <Version>1.7.0</Version>
     <ApplicationIcon>Assets\goose.ico</ApplicationIcon>
   </PropertyGroup>
 

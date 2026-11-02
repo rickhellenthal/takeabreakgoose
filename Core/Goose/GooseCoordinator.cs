@@ -106,7 +106,7 @@ public sealed class GooseCoordinator
     /// <summary>The session reached its end time: the goose comes by, in its party hat, to say goodbye.</summary>
     private void SignOff(WorkSession session)
     {
-        var focused = DateTime.Now - session.StartedAt;
+        var focused = _scheduler.Now - session.StartedAt;
         string duration = focused.TotalHours >= 1
             ? $"{(int)focused.TotalHours} h {focused.Minutes} min"
             : $"{Math.Max(1, (int)focused.TotalMinutes)} min";

@@ -101,6 +101,7 @@ public class GooseCoordinatorTests
         Goose.Leave();
         Assert.Equal(2, _geese.Count);
         Assert.Equal("That's a wrap!", Goose.Visit.Title);
+        Assert.Contains("30 min of focus since 09:00", Goose.Visit.Message);
         Assert.Equal(GooseOutfit.PartyHat, Goose.Visit.Outfit);
     }
 

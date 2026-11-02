@@ -118,10 +118,11 @@ and opening the app a second time.
   Applications: `dist/TakeABreakGoose-x.y.z-mac-apple-silicon.dmg` or `…-mac-intel.dmg`.
 - `goose.icns` comes from the same drawing as the Windows icon: `tools/make-icon.ps1` writes both,
   the Mac one with the margin macOS icons have.
-- `.github/workflows/release.yml` has a `mac` job: after the Windows job has made the release, it
-  runs the core tests on macOS, builds both `.dmg`s and adds them to the release.
-- `.github/workflows/mac-build.yml` builds the same `.dmg`s from any branch without a release
-  (Actions → Mac build → Run workflow); they're under the run's Artifacts.
+- `.github/workflows/mac-build.yml` runs the core tests on macOS and builds both `.dmg`s. The
+  release workflow calls it once the Windows job has made the release, and it adds them to that
+  release. On a push to any other branch than main it builds them to try out, under the run's
+  Artifacts.
+- Both apps take their version from `Directory.Build.props` (releases set it from the tag).
 - The README has a download section for Macs, including how to open an app that isn't signed with
   a Developer ID (Privacy & Security → Open Anyway, or `xattr -dr com.apple.quarantine`).
 
