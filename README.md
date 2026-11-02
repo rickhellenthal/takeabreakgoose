@@ -63,7 +63,7 @@ The **Wardrobe** tab shows the goose's outfits. It picks one at random for each 
 
 - **Start with Windows**, and **start a focus session automatically** when the app starts, so the goose keeps an eye on you without you having to do anything
 - **Do not disturb during calls**, on unless you turn it off
-- **Default break length** and **snooze length**
+- **Default break length** and **snooze length**, or turn snoozing off altogether
 - **The shortcut** that opens the app, and **the messages** the goose picks from
 
 Your settings are saved in `%APPDATA%\TakeABreakGoose\settings.json`. At the bottom of the Settings tab you can see which version you have, and whether a newer one is available.
