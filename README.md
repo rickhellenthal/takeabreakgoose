@@ -18,6 +18,11 @@
   </a>
 </p>
 
+<p align="center">
+  <img src="docs/GooseWalksIn.gif" width="800"
+       alt="The goose waddles onto the screen and asks you to take a break, with buttons to finish up, snooze or start the break">
+</p>
+
 - 🪿 **A goose on your screen** walks in on top of all your windows when it's time for a break
 - ⏱️ **Focus sessions** with a break every 15, 30, 45 or 60 minutes (or your own number), until you stop or until a time you pick
 - 💤 **Napping goose** sleeps on the taskbar during your break, with a ring showing how much break is left
