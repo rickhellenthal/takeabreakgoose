@@ -42,11 +42,11 @@ Open the goose with **Ctrl+Alt+G**, the Start menu, or by clicking its icon in t
 1. **Start a focus session.** Pick how often you want a break and how long your breaks are, then click **Start session**. Want it to stop at a certain point? Click **Set an end time** to end it after a while (like 2 hours) or at a time of day (like 17:00).
 2. **The goose arrives** when it's break time. You can:
    - take the break with **Okay, break time!**
-   - **snooze** it for a few minutes
+   - **snooze** it for a few minutes (you can turn this off in Settings)
    - say **Let me finish up**: the goose waits at the edge of the screen until you click it
 
    The goose waits as long as it takes for an answer.
-3. **During your break** the goose naps on the taskbar. Need to cut the break short? Click it. It's not thrilled about being woken up, but it'll let you.
+3. **During your break** the goose naps on the taskbar. Need to cut the break short? Click it. It's not thrilled about being woken up, but it'll let you. Still using your computer instead? The goose half wakes up, and if you keep at it, it asks whether you're actually taking your break.
 4. **When you're back**, the goose wakes up and asks if you're ready to focus. The countdown to your next break only starts once you say so.
 
 Away from your computer for at least a break's length, for example at lunch or while the goose was waiting? That counts as your break. The countdown to the next one starts fresh when you're back.

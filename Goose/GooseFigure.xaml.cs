@@ -11,6 +11,7 @@ public partial class GooseFigure : UserControl
 {
     private GooseOutfit _outfit;
     private bool _sleeping;
+    private NapLook _look;
 
     public GooseFigure()
     {
@@ -63,10 +64,14 @@ public partial class GooseFigure : UserControl
             if (value == _sleeping) return;
             _sleeping = value;
 
+            _look = NapLook.Asleep;
             BackLeg.Visibility = FrontLeg.Visibility = Show(!value);
             OpenEye.Visibility = Show(!value);
             ClosedEye.Visibility = Show(value);
+            DrowsyEye.Visibility = UnimpressedEye.Visibility = Visibility.Collapsed;
+            ShowHuh(false);
             Snore.Visibility = Show(value);
+            HeadTilt.BeginAnimation(RotateTransform.AngleProperty, null);
             HeadTilt.Angle = value ? SleepingHeadAngle : 0;
 
             if (value)
@@ -95,9 +100,62 @@ public partial class GooseFigure : UserControl
         }
     }
 
+    /// <summary>
+    /// How the goose looks while sitting down: asleep and snoring, half awake (head lifted a little,
+    /// a sleepy eye and a puzzled "?"), or unimpressed (head up, flat heavy lid). Only while sleeping.
+    /// </summary>
+    public NapLook Look
+    {
+        get => _look;
+        set
+        {
+            if (!_sleeping || value == _look) return;
+            _look = value;
+
+            ClosedEye.Visibility = Show(value == NapLook.Asleep);
+            Snore.Visibility = Show(value == NapLook.Asleep);
+            DrowsyEye.Visibility = Show(value == NapLook.Drowsy);
+            UnimpressedEye.Visibility = Show(value == NapLook.Unimpressed);
+            ShowHuh(value == NapLook.Drowsy);
+
+            // Looking up is a bit quicker than nodding off again.
+            double angle = value switch
+            {
+                NapLook.Drowsy => DrowsyHeadAngle,
+                NapLook.Unimpressed => UnimpressedHeadAngle,
+                _ => SleepingHeadAngle,
+            };
+            var tilt = new DoubleAnimation(angle, TimeSpan.FromSeconds(value == NapLook.Asleep ? 1.0 : 0.6))
+            {
+                EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
+            };
+            HeadTilt.BeginAnimation(RotateTransform.AngleProperty, tilt);
+        }
+    }
+
+    private void ShowHuh(bool show)
+    {
+        Huh.BeginAnimation(OpacityProperty, null);
+        HuhBob.BeginAnimation(TranslateTransform.YProperty, null);
+        Huh.Visibility = Show(show);
+        if (!show) return;
+
+        // Over the head, on the side the goose faces.
+        Huh.Margin = new Thickness(Facing > 0 ? 86 : Width - 86 - 9, 18, 0, 0);
+        Huh.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(400)));
+        HuhBob.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(0, -4, TimeSpan.FromSeconds(0.9))
+        {
+            AutoReverse = true,
+            RepeatBehavior = RepeatBehavior.Forever,
+            EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
+        });
+    }
+
     // How far the body sinks when sitting (the belly then rests on the ground) and how far the head droops.
     private const double SleepingDrop = 17;
     private const double SleepingHeadAngle = 38;
+    private const double DrowsyHeadAngle = 16;
+    private const double UnimpressedHeadAngle = 6;
 
     private void StartSnoring()
     {
@@ -140,3 +198,5 @@ public partial class GooseFigure : UserControl
 
     private static Visibility Show(bool visible) => visible ? Visibility.Visible : Visibility.Collapsed;
 }
+
+public enum NapLook { Asleep, Drowsy, Unimpressed }

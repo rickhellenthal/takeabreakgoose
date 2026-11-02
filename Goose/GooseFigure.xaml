@@ -100,6 +100,23 @@
                     <Ellipse x:Name="OpenEye" Canvas.Left="79" Canvas.Top="11" Width="4" Height="4" Fill="{StaticResource Ink}" />
                     <Path x:Name="ClosedEye" Visibility="Collapsed" Stroke="{StaticResource Ink}" StrokeThickness="1.4"
                           StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M 78,13 Q 81,16 84,13" />
+                    <!-- Half awake: a sleepy lid that droops towards the back of the head. (A lid sloping
+                         down towards the beak looks angry, so the slope makes up for the tilted head.) -->
+                    <Canvas x:Name="DrowsyEye" Visibility="Collapsed">
+                        <Canvas Clip="M 76,14.6 Q 81,12.7 86,11.8 L 86,18 L 76,18 Z">
+                            <Ellipse Canvas.Left="78.8" Canvas.Top="10.8" Width="4.4" Height="4.4" Fill="{StaticResource Ink}" />
+                        </Canvas>
+                        <Path Stroke="{StaticResource Ink}" StrokeThickness="1.2" StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round" Data="M 77.6,14.5 Q 81,12.7 84.4,11.9" />
+                    </Canvas>
+                    <!-- Unimpressed: a flat, heavy lid, half closed -->
+                    <Canvas x:Name="UnimpressedEye" Visibility="Collapsed">
+                        <Canvas Clip="M 76,12.7 L 86,13.5 L 86,18 L 76,18 Z">
+                            <Ellipse Canvas.Left="78.8" Canvas.Top="10.8" Width="4.4" Height="4.4" Fill="{StaticResource Ink}" />
+                        </Canvas>
+                        <Path Stroke="{StaticResource Ink}" StrokeThickness="1.5" StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round" Data="M 77.4,12.6 L 84.6,13.2" />
+                    </Canvas>
 
                     <!-- Outfit: raincoat hood -->
                     <Canvas x:Name="RaincoatHood" Visibility="Collapsed">
@@ -151,5 +168,11 @@
             <TextBlock.RenderTransform><TranslateTransform /></TextBlock.RenderTransform>
         </TextBlock>
     </Canvas>
+
+    <!-- A puzzled question mark over the head while half awake. Not mirrored either. -->
+    <TextBlock x:Name="Huh" Text="?" FontSize="17" FontWeight="Bold" Foreground="{StaticResource Slate}"
+               HorizontalAlignment="Left" VerticalAlignment="Top" Visibility="Collapsed" IsHitTestVisible="False">
+        <TextBlock.RenderTransform><TranslateTransform x:Name="HuhBob" /></TextBlock.RenderTransform>
+    </TextBlock>
     </Grid>
 </UserControl>

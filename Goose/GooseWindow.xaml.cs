@@ -14,14 +14,15 @@ namespace TakeABreakGoose;
 /// shows a break reminder, then walks back out. If the user needs to finish up first,
 /// the goose waits peeking around the screen edge until it's clicked. If the user takes
 /// the break, the goose naps on the taskbar until the break is over and the user is back,
-/// then asks whether they're ready to focus again.
+/// then asks whether they're ready to focus again. If the computer is used during the nap,
+/// the goose half wakes up, and asks whether they're really taking their break if it goes on.
 /// </summary>
 public partial class GooseWindow : Window
 {
     private enum Phase { WalkingIn, Talking, ToEdge, Peeking, Returning, Sleeping, BreakOver, WalkingOut }
 
     /// <summary>What the speech bubble is asking, which decides what its two buttons do.</summary>
-    private enum Question { TakeABreak, ReadyToFocus, EndBreakEarly }
+    private enum Question { TakeABreak, ReadyToFocus, EndBreakEarly, StillOnBreak, EndBreakAnyway }
 
     private static readonly string[] EndBreakEarlyLines =
     {
@@ -31,6 +32,30 @@ public partial class GooseWindow : Window
         "Fine, fine. But don't come crying to me when your focus runs out.",
         "You woke me up for this? Your brain was enjoying that.",
     };
+
+    private static readonly string[] StillOnBreakLines =
+    {
+        "I can hear you clicking. Are you actually taking your break?",
+        "That doesn't sound like a break to me. Go stretch your legs!",
+        "Still at the computer? Your break is waiting for you over there, away from the screen.",
+        "Breaks work better when you get up. Just saying.",
+        "Honk. I can't nap with all that typing going on.",
+    };
+
+    private static readonly string[] EndBreakAnywayLines =
+    {
+        "I'm not mad. I'm just disappointed.",
+        "Wow. Okay. I'll just sit here and remember this.",
+        "Ending your break to keep working? Bold. Your back is going to file a complaint.",
+        "Your break, your call. I'm just a goose who believed in you.",
+        "Fine. But don't come honking to me when your focus runs out.",
+    };
+
+    // Using the computer during the break first half wakes the goose, then it asks.
+    private static readonly TimeSpan GraceAfterNapStarts = TimeSpan.FromSeconds(5);   // time to get up and go
+    private const double UsedForSecondsBeforeAsking = 6;
+    private static readonly TimeSpan IdleBeforeDozingOff = TimeSpan.FromSeconds(4);
+    private static readonly TimeSpan IdleBeforeGivingUpAsking = TimeSpan.FromSeconds(20);
 
     private const double WalkSpeed = 150;   // DIPs per second
     private const double StepRate = 12;     // leg swing speed, radians per second
@@ -51,6 +76,8 @@ public partial class GooseWindow : Window
     private Question _question = Question.TakeABreak;
     private bool _awayLongEnoughForABreak;
     private DateTime _askedAt;
+    private DateTime _watchForUseFrom;
+    private double _usedDuringBreakSeconds;
 
     /// <summary>Raised as soon as the user answers the goose.</summary>
     public event Action<GooseOutcome>? Answered;
@@ -124,7 +151,9 @@ public partial class GooseWindow : Window
     /// <summary>The user is on the break this goose asked for, or is just back from it.</summary>
     public bool OnBreak =>
         _phase is Phase.Sleeping or Phase.BreakOver
-        || (_phase == Phase.Talking && _question is Question.ReadyToFocus or Question.EndBreakEarly);
+        || (_phase == Phase.Talking
+            && _question is Question.ReadyToFocus or Question.EndBreakEarly
+                or Question.StillOnBreak or Question.EndBreakAnyway);
 
     /// <summary>Disappears right away (quick fade), e.g. when the user turns on Do not disturb.</summary>
     public void LeaveNow()
@@ -177,11 +206,16 @@ public partial class GooseWindow : Window
                 break;
 
             case Phase.Talking:
-                // Idle: a gentle head bob while waiting for an answer.
-                Figure.HeadAngle = Math.Sin(now.TotalSeconds * 2.5) * 4;
-                // If the break runs out while the goose asks about ending it early, the question changes.
-                if (_question == Question.EndBreakEarly && DateTime.Now >= _breakEnd) AskIfReady();
+                // Idle: a gentle head bob while waiting for an answer (standing up; sitting, it keeps its pose).
+                if (!Figure.Sleeping) Figure.HeadAngle = Math.Sin(now.TotalSeconds * 2.5) * 4;
+                // If the break runs out while the goose asks about it, the question changes.
+                if (_question is Question.EndBreakEarly or Question.StillOnBreak or Question.EndBreakAnyway
+                    && DateTime.Now >= _breakEnd) AskIfReady();
                 if (_question == Question.TakeABreak) WatchForBreakWhileAway();
+                // No answer because they did get up after all: back to the nap, without a fuss.
+                if (_question is Question.StillOnBreak or Question.EndBreakAnyway
+                    && UserActivity.IdleTime() >= IdleBeforeGivingUpAsking)
+                    ResumeNap();
                 break;
 
             case Phase.ToEdge:
@@ -203,6 +237,7 @@ public partial class GooseWindow : Window
             case Phase.Sleeping:
                 UpdateBreakProgress();
                 if (DateTime.Now >= _breakEnd) BreakIsOver();
+                else WatchForUseDuringBreak(dt);
                 break;
 
             case Phase.BreakOver:
@@ -313,6 +348,7 @@ public partial class GooseWindow : Window
         _breakEnd = _breakStart + length;
         Figure.Sleeping = true;
         Figure.ToolTip = NapToolTip;
+        WatchForUseAfter(GraceAfterNapStarts);
 
         BreakTitle.Text = title;
         UpdateBreakProgress();
@@ -344,9 +380,61 @@ public partial class GooseWindow : Window
 
     private string NapToolTip => $"Napping until {_breakEnd:HH:mm}. Click me if you need to end your break early.";
 
+    private void WatchForUseAfter(TimeSpan grace)
+    {
+        _watchForUseFrom = DateTime.Now + grace;
+        _usedDuringBreakSeconds = 0;
+    }
+
+    /// <summary>
+    /// Mid-nap: using the computer half wakes the goose (head up, one eye open). Keep at it and it
+    /// asks whether you're really taking your break; leave it alone and it dozes off again.
+    /// </summary>
+    private void WatchForUseDuringBreak(double dt)
+    {
+        var now = DateTime.Now;
+        if (now < _watchForUseFrom) return;
+        var idle = UserActivity.IdleTime();
+        if (idle < TimeSpan.FromSeconds(1) && idle < now - _watchForUseFrom)
+        {
+            Figure.Look = NapLook.Drowsy;
+            _usedDuringBreakSeconds += dt;
+            if (_usedDuringBreakSeconds >= UsedForSecondsBeforeAsking) AskIfStillOnBreak();
+        }
+        else if (idle >= IdleBeforeDozingOff)
+        {
+            Figure.Look = NapLook.Asleep;
+            _usedDuringBreakSeconds = 0;
+        }
+    }
+
+    /// <summary>Still sitting, half awake: "are you actually taking your break?"</summary>
+    private void AskIfStillOnBreak()
+    {
+        Figure.Look = NapLook.Drowsy;
+        Figure.ToolTip = null;
+        BreakCard.Visibility = Visibility.Collapsed;
+
+        string message = StillOnBreakLines[Random.Shared.Next(StillOnBreakLines.Length)];
+        // Getting up is the highlighted choice, on purpose.
+        Ask(Question.StillOnBreak, "Psst…", message,
+            hint: $"There's still {FormatTimeLeft(_breakEnd - DateTime.Now)} of your break left.",
+            primary: "I'm going!", secondary: "End my break");
+    }
+
+    /// <summary>They'd rather end the break: the goose checks once more, not hiding what it thinks of that.</summary>
+    private void AskToEndBreakAnyway()
+    {
+        Figure.Look = NapLook.Unimpressed;
+        string message = EndBreakAnywayLines[Random.Shared.Next(EndBreakAnywayLines.Length)];
+        Ask(Question.EndBreakAnyway, "Really?", message, hint: null,
+            primary: "Fine, I'll go", secondary: "Yes, end my break");
+    }
+
     /// <summary>The break time is up; the goose keeps napping until the user is back.</summary>
     private void BreakIsOver()
     {
+        Figure.Look = NapLook.Asleep;
         _phase = Phase.BreakOver;
         Figure.ToolTip = "Break's over. I'll wake up when you're back.";
         BreakRing.Data = RingArc(1, center: 18, radius: 16);
@@ -424,6 +512,7 @@ public partial class GooseWindow : Window
     private void ConfirmReady()
     {
         StopTalking();
+        Figure.Sleeping = false; // it may still be sitting down
         ReadyToFocus?.Invoke();
         _phase = Phase.WalkingOut;
     }
@@ -441,7 +530,9 @@ public partial class GooseWindow : Window
         StopTalking();
         _phase = Phase.Sleeping;
         Figure.Sleeping = true;
+        Figure.Look = NapLook.Asleep; // it may still be sitting there half awake
         Figure.ToolTip = NapToolTip;
+        WatchForUseAfter(GraceAfterNapStarts);
         UpdateBreakProgress();
         BreakCard.Visibility = Visibility.Visible;
     }
@@ -478,6 +569,8 @@ public partial class GooseWindow : Window
             case Question.TakeABreak: Leave(GooseOutcome.Dismissed); break;
             case Question.ReadyToFocus: ConfirmReady(); break;
             case Question.EndBreakEarly: ResumeNap(); break;
+            case Question.StillOnBreak:
+            case Question.EndBreakAnyway: ResumeNap(); break;
         }
     }
 
@@ -488,7 +581,9 @@ public partial class GooseWindow : Window
         {
             case Question.TakeABreak: Leave(GooseOutcome.Snoozed); break;
             case Question.ReadyToFocus: NapLonger(); break;
-            case Question.EndBreakEarly: ConfirmReady(); break;
+            case Question.StillOnBreak: AskToEndBreakAnyway(); break;
+            case Question.EndBreakEarly:
+            case Question.EndBreakAnyway: ConfirmReady(); break;
         }
     }
 
@@ -512,8 +607,8 @@ public partial class GooseWindow : Window
             AskIfReady();
             return;
         }
-        // Poking the goose makes it flap its head indignantly.
-        Figure.Flap();
+        // Poking the goose makes it flap its head indignantly (not while it's sitting with its head in a pose).
+        if (!Figure.Sleeping) Figure.Flap();
     }
 
     private const int GWL_EXSTYLE = -20;
