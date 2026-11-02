@@ -12,7 +12,9 @@
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
                         <TextBlock Text="General" Style="{StaticResource CardTitle}" Margin="0,0,0,10" />
-                        <CheckBox x:Name="StartWithWindowsCheck" Content="Start Take a Break Goose when I sign in to Windows" />
+                        <CheckBox x:Name="StartWithWindowsCheck" Content="Start Take a Break Goose when my computer starts" />
+                        <TextBlock Style="{StaticResource Hint}" Margin="22,2,0,0"
+                                   Text="It starts as soon as you sign in to Windows. It's also listed under Startup apps in Task Manager." />
 
                         <CheckBox x:Name="AutoStartCheck" Content="Start a focus session when the app starts"
                                   Margin="0,10,0,0" />

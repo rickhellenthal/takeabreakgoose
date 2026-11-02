@@ -27,7 +27,7 @@
 ## Download
 
 1. Download **`TakeABreakGoose-Setup-x.y.z.exe`** from the [latest release](https://github.com/rickhellenthal/takeabreakgoose/releases/latest).
-2. Run it. No admin rights needed. You can choose to add a desktop shortcut and to start the goose when you sign in to Windows.
+2. Run it. No admin rights needed. You can choose to add a desktop shortcut and to start the goose when your computer starts.
 
 Prefer not to install anything? Download **`TakeABreakGoose-x.y.z-portable.zip`** instead, unzip it anywhere and run `TakeABreakGoose.exe`.
 

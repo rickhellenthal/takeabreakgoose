@@ -102,35 +102,49 @@
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
 
+                            <!-- The option that isn't picked is greyed out (UpdateEndModeLook), but still works:
+                                 clicking or typing in it picks it. -->
                             <RadioButton x:Name="EndAfterRadio" Grid.Row="0" Content="End after" GroupName="EndMode"
-                                         VerticalContentAlignment="Center" Margin="0,0,14,8"
+                                         VerticalAlignment="Top" VerticalContentAlignment="Center" Margin="0,4,14,10"
                                          Checked="EndOption_Changed" />
-                            <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Margin="0,0,0,8">
-                                <TextBox x:Name="SessionHoursBox" Width="40" GotFocus="EndAfterInput_GotFocus"
-                                         TextChanged="EndOption_Changed" />
-                                <TextBlock Text="h" Style="{StaticResource Label}" Margin="6,0,8,0" />
-                                <TextBox x:Name="SessionMinutesBox" Width="40" GotFocus="EndAfterInput_GotFocus"
-                                         TextChanged="EndOption_Changed" />
-                                <TextBlock Text="min" Style="{StaticResource Label}" Margin="6,0,14,0" />
-                                <Button Content="1h" Tag="60" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
-                                <Button Content="2h" Tag="120" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
-                                <Button Content="3h" Tag="180" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
-                                <Button Content="4h" Tag="240" Style="{StaticResource ChipButton}" Click="LengthPreset_Click" />
+                            <StackPanel x:Name="EndAfterInputs" Grid.Row="0" Grid.Column="1" Margin="0,0,0,10">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="Length60" Content="1 h" Tag="60" GroupName="Length"
+                                                 Style="{StaticResource SmallChoiceChip}" Checked="Length_Checked" Click="EndAfterInput_Picked" />
+                                    <RadioButton x:Name="Length120" Content="2 h" Tag="120" GroupName="Length"
+                                                 Style="{StaticResource SmallChoiceChip}" Checked="Length_Checked" Click="EndAfterInput_Picked" />
+                                    <RadioButton x:Name="Length180" Content="3 h" Tag="180" GroupName="Length"
+                                                 Style="{StaticResource SmallChoiceChip}" Checked="Length_Checked" Click="EndAfterInput_Picked" />
+                                    <RadioButton x:Name="Length240" Content="4 h" Tag="240" GroupName="Length"
+                                                 Style="{StaticResource SmallChoiceChip}" Checked="Length_Checked" Click="EndAfterInput_Picked" />
+                                    <RadioButton x:Name="LengthCustom" Content="Other…" GroupName="Length"
+                                                 Style="{StaticResource SmallOtherChoiceChip}" Checked="Length_Checked" Click="EndAfterInput_Picked" />
+                                </StackPanel>
+                                <StackPanel x:Name="CustomLengthPanel" Orientation="Horizontal" Margin="0,8,0,0"
+                                            Visibility="Collapsed">
+                                    <TextBox x:Name="SessionHoursBox" Width="40" GotFocus="EndAfterInput_Picked"
+                                             TextChanged="EndOption_Changed" />
+                                    <TextBlock Text="h" Style="{StaticResource Label}" Margin="6,0,8,0" />
+                                    <TextBox x:Name="SessionMinutesBox" Width="40" GotFocus="EndAfterInput_Picked"
+                                             TextChanged="EndOption_Changed" />
+                                    <TextBlock Text="min" Style="{StaticResource Label}" Margin="6,0,0,0" />
+                                </StackPanel>
                             </StackPanel>
 
                             <RadioButton x:Name="EndAtRadio" Grid.Row="1" Content="End at" GroupName="EndMode"
                                          VerticalContentAlignment="Center" Margin="0,0,14,0"
                                          Checked="EndOption_Changed" />
-                            <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
-                                <TextBox x:Name="SessionEndTimeBox" Width="64" GotFocus="EndAtInput_GotFocus"
-                                         TextChanged="EndOption_Changed" ToolTip="A time like 17:00" />
-                                <TextBlock Text="your computer's local time" Style="{StaticResource Hint}"
-                                           VerticalAlignment="Center" Margin="10,0,0,0" />
+                            <StackPanel x:Name="EndAtInputs" Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+                                <TextBox x:Name="SessionEndTimeBox" Width="56" GotFocus="EndAtInput_Picked"
+                                         TextChanged="EndOption_Changed" PreviewKeyDown="SessionEndTimeBox_PreviewKeyDown"                                         ToolTip="A time like 17:00, in your computer's local time. Up and Down change it by 5 min, with Shift by 1 min." />
+                                <Button Content="−15 min" Tag="-15" Style="{StaticResource ChipButton}" Margin="8,0,6,0"
+                                        Click="EndTimeStep_Click" />
+                                <Button Content="+15 min" Tag="15" Style="{StaticResource ChipButton}"
+                                        Click="EndTimeStep_Click" />
                             </StackPanel>
 
                             <TextBlock x:Name="EndPreview" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,12,0,0"
-                                       FontSize="12" Foreground="#5E7773" TextWrapping="Wrap" />
-                        </Grid>
+                                       FontSize="12" Foreground="#5E7773" TextWrapping="Wrap" />                        </Grid>
                     </Border>
 
                     <TextBlock x:Name="SessionError" Foreground="#C62828" TextWrapping="Wrap"

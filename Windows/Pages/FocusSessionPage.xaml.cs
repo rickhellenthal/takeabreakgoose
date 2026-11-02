@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace TakeABreakGoose;
 
@@ -10,6 +11,7 @@ public partial class FocusSessionPage : UserControl
 {
     private IGooseHost _host = null!;
     private bool _showingStatus;
+    private bool _loadingForm;
 
     public FocusSessionPage()
     {
@@ -26,27 +28,47 @@ public partial class FocusSessionPage : UserControl
 
     private RadioButton[] IntervalPresets => new[] { Interval15, Interval30, Interval45, Interval60 };
     private RadioButton[] BreakPresets => new[] { Break5, Break10, Break15 };
+    private RadioButton[] LengthPresets => new[] { Length60, Length120, Length180, Length240 };
 
     private void LoadSessionForm(GooseSettings settings)
     {
+        _loadingForm = true;
         int interval = settings.LastSessionIntervalMinutes;
         var preset = IntervalPresets.FirstOrDefault(r => (string)r.Tag == interval.ToString());
         (preset ?? IntervalCustom).IsChecked = true;
         SessionIntervalBox.Text = interval.ToString();
         SelectBreakLength(settings.BreakMinutes);
 
-        SetLengthBoxes(settings.LastSessionLengthMinutes);
-        SessionEndTimeBox.Text = settings.LastSessionEndTime.ToString(@"hh\:mm");
-        (settings.LastSessionEndMode == SessionEndMode.At ? EndAtRadio : EndAfterRadio).IsChecked = true;
+        ResetEndChoice(settings);
         EndOptionsToggle.IsChecked = settings.LastSessionEndMode != SessionEndMode.None;
+        _loadingForm = false;
         UpdateEndOptions();
     }
 
-    private void SetLengthBoxes(int minutes)
+    /// <summary>Puts the end-time choices back to how the last session was started.</summary>
+    private void ResetEndChoice(GooseSettings settings)
     {
+        SelectLength(settings.LastSessionLengthMinutes);
+        SessionEndTimeBox.Text = FormatTimeOfDay(settings.LastSessionEndTime);
+        (settings.LastSessionEndMode == SessionEndMode.At ? EndAtRadio : EndAfterRadio).IsChecked = true;
+    }
+
+    private void SelectLength(int minutes)
+    {
+        var preset = LengthPresets.FirstOrDefault(r => (string)r.Tag == minutes.ToString());
+        (preset ?? LengthCustom).IsChecked = true;
         SessionHoursBox.Text = (minutes / 60).ToString();
         SessionMinutesBox.Text = (minutes % 60).ToString();
     }
+
+    /// <summary>Puts the cursor in the box with its text selected, so typing replaces it.</summary>
+    private static void FocusAndSelectAll(TextBox box)
+    {
+        box.Focus();
+        box.SelectAll();
+    }
+
+    private static string FormatTimeOfDay(TimeSpan time) => time.ToString(@"hh\:mm");
 
     /// <summary>Shows the running session's countdown, or the start card when there's none.</summary>
     public void Refresh()
@@ -141,7 +163,7 @@ public partial class FocusSessionPage : UserControl
         if (CustomIntervalPanel == null) return; // fires during InitializeComponent
         bool custom = IntervalCustom.IsChecked == true;
         CustomIntervalPanel.Visibility = Ui.Show(custom);
-        if (custom && IsLoaded) SessionIntervalBox.Focus();
+        if (custom && IsLoaded) FocusAndSelectAll(SessionIntervalBox);
     }
 
     /// <summary>Selects a break length; the start card starts from the default in the settings.</summary>
@@ -157,29 +179,82 @@ public partial class FocusSessionPage : UserControl
         if (CustomBreakPanel == null) return; // fires during InitializeComponent
         bool custom = BreakCustom.IsChecked == true;
         CustomBreakPanel.Visibility = Ui.Show(custom);
-        if (custom && IsLoaded) SessionBreakBox.Focus();
+        if (custom && IsLoaded) FocusAndSelectAll(SessionBreakBox);
     }
 
-    private void EndOptionsToggle_Changed(object sender, RoutedEventArgs e) => UpdateEndOptions();
+    private void EndOptionsToggle_Changed(object sender, RoutedEventArgs e)
+    {
+        // Opening it starts "End at" from now, not from a time remembered from another day.
+        if (EndOptionsToggle.IsChecked == true && !_loadingForm)
+            SessionEndTimeBox.Text = FormatTimeOfDay(NextQuarterHour(DateTime.Now));
+        // Closing it throws away what was picked, so opening it again starts fresh.
+        else if (EndOptionsToggle.IsChecked != true && _host != null)
+            ResetEndChoice(_host.Settings);
+        UpdateEndOptions();
+    }
+
+    /// <summary>The first quarter hour after now (14:37 → 14:45), so "End at" never means right now or tomorrow.</summary>
+    private static TimeSpan NextQuarterHour(DateTime now)
+    {
+        int minutes = (int)now.TimeOfDay.TotalMinutes + 1;
+        minutes = (minutes + 14) / 15 * 15;
+        return TimeSpan.FromMinutes(minutes % (24 * 60));
+    }
 
     private void UpdateEndOptions()
     {
         bool open = EndOptionsToggle.IsChecked == true;
         EndOptionsPanel.Visibility = Ui.Show(open);
         EndOptionsToggle.Content = open ? "Remove end time ▴" : "Set an end time ▾";
+        UpdateEndModeLook();
         UpdateEndPreview();
     }
 
-    private void EndAfterInput_GotFocus(object sender, RoutedEventArgs e) => EndAfterRadio.IsChecked = true;
-
-    private void EndAtInput_GotFocus(object sender, RoutedEventArgs e) => EndAtRadio.IsChecked = true;
-
-    private void EndOption_Changed(object sender, RoutedEventArgs e) => UpdateEndPreview();
-
-    private void LengthPreset_Click(object sender, RoutedEventArgs e)
+    private void UpdateEndModeLook()
     {
-        EndAfterRadio.IsChecked = true;
-        SetLengthBoxes(int.Parse((string)((Button)sender).Tag));
+        if (EndAtInputs == null) return; // fires during InitializeComponent
+        bool at = EndAtRadio.IsChecked == true;
+        EndAfterRadio.Opacity = EndAfterInputs.Opacity = at ? 0.5 : 1;
+        EndAtRadio.Opacity = EndAtInputs.Opacity = at ? 1 : 0.5;
+    }
+
+    private void EndAfterInput_Picked(object sender, RoutedEventArgs e) => EndAfterRadio.IsChecked = true;
+
+    private void EndAtInput_Picked(object sender, RoutedEventArgs e) => EndAtRadio.IsChecked = true;
+
+    private void EndOption_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateEndModeLook();
+        UpdateEndPreview();
+    }
+
+    private void Length_Checked(object sender, RoutedEventArgs e)
+    {
+        if (CustomLengthPanel == null) return; // fires during InitializeComponent
+        bool custom = LengthCustom.IsChecked == true;
+        CustomLengthPanel.Visibility = Ui.Show(custom);
+        if (custom && IsLoaded && !_loadingForm && EndOptionsToggle.IsChecked == true) FocusAndSelectAll(SessionHoursBox);
+        UpdateEndPreview();
+    }
+
+    private void EndTimeStep_Click(object sender, RoutedEventArgs e) => StepEndTime(int.Parse((string)((Button)sender).Tag));
+
+    /// <summary>Up and Down move the end time by 5 minutes, or by 1 with Shift held.</summary>
+    private void SessionEndTimeBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key is not (Key.Up or Key.Down)) return;
+        int step = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? 1 : 5;
+        StepEndTime(e.Key == Key.Up ? step : -step);
+        SessionEndTimeBox.CaretIndex = SessionEndTimeBox.Text.Length;
+        e.Handled = true;
+    }
+
+    private void StepEndTime(int minutes)
+    {
+        EndAtRadio.IsChecked = true;
+        if (!SessionPlan.TryParseTimeOfDay(SessionEndTimeBox.Text, out var time)) time = NextQuarterHour(DateTime.Now);
+        int total = (int)time.TotalMinutes + minutes;
+        SessionEndTimeBox.Text = FormatTimeOfDay(TimeSpan.FromMinutes((total + 24 * 60) % (24 * 60)));
     }
 
     /// <summary>The end-time choice as typed so far, or an explanation of what's wrong with it.</summary>
@@ -196,6 +271,9 @@ public partial class FocusSessionPage : UserControl
                 return (SessionEndMode.At, length, settings.LastSessionEndTime, "Enter the end time like 17:00.");
             return (SessionEndMode.At, length, endTime, null);
         }
+
+        var preset = LengthPresets.FirstOrDefault(r => r.IsChecked == true);
+        if (preset != null) return (SessionEndMode.After, int.Parse((string)preset.Tag), endTime, null);
 
         if (!int.TryParse(SessionHoursBox.Text.Trim(), out int hours) || hours is < 0 or > 24
             || !int.TryParse(SessionMinutesBox.Text.Trim(), out int minutes) || minutes is < 0 or > 59)

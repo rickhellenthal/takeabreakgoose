@@ -132,11 +132,12 @@
         <Setter Property="FontSize" Value="14" />
         <Setter Property="MinWidth" Value="74" />
         <Setter Property="Margin" Value="0,0,8,0" />
+        <Setter Property="Padding" Value="12,9" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
                     <Border x:Name="Chip" Background="White" BorderBrush="#D6CFC4" BorderThickness="1.5"
-                            CornerRadius="10" Padding="12,9">
+                            CornerRadius="10" Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -162,7 +163,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
                     <Border x:Name="Chip" Background="Transparent" BorderBrush="#E6DFD4" BorderThickness="1.5"
-                            CornerRadius="10" Padding="12,9">
+                            CornerRadius="10" Padding="{TemplateBinding Padding}">
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>
@@ -180,6 +181,21 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- Smaller chips, for choices tucked inside a panel (e.g. how long the session lasts). -->
+    <Style x:Key="SmallChoiceChip" TargetType="RadioButton" BasedOn="{StaticResource ChoiceChip}">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Padding" Value="10,3" />
+        <Setter Property="Margin" Value="0,0,6,0" />
+    </Style>
+
+    <Style x:Key="SmallOtherChoiceChip" TargetType="RadioButton" BasedOn="{StaticResource OtherChoiceChip}">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Padding" Value="10,3" />
+        <Setter Property="Margin" Value="0,0,6,0" />
     </Style>
 
     <!-- A small round button with just an icon, e.g. to remove a message. -->

@@ -36,7 +36,7 @@ CloseApplications=yes
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
-Name: "startup"; Description: "Start {#AppName} when I sign in to Windows"; GroupDescription: "Startup:"
+Name: "startup"; Description: "Start {#AppName} when my computer starts"; GroupDescription: "Startup:"
 
 [Files]
 Source: "..\publish-installer\{#AppExe}"; DestDir: "{app}"; Flags: ignoreversion
@@ -49,8 +49,13 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopico
 ; Same Run entry the app's own "Start with Windows" setting writes (Autostart.cs).
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; \
     ValueName: "TakeABreakGoose"; ValueData: """{app}\{#AppExe}"" --autostart"; Tasks: startup
-; Always remove it on uninstall, also when it was turned on from the app's settings.
+; Undo an earlier "Disable" in Task Manager's Startup apps, or the Run entry above does nothing.
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"; ValueType: none; \
+    ValueName: "TakeABreakGoose"; Flags: deletevalue; Tasks: startup
+; Always remove both on uninstall, also when it was turned on from the app's settings.
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: none; \
+    ValueName: "TakeABreakGoose"; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run"; ValueType: none; \
     ValueName: "TakeABreakGoose"; Flags: uninsdeletevalue
 
 [Run]
