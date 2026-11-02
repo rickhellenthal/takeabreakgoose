@@ -44,6 +44,11 @@ To uninstall, go to *Settings → Apps → Installed apps* and remove **Take a B
 
 Open the goose with **Ctrl+Alt+G**, the Start menu, or by clicking its icon in the system tray.
 
+<p align="center">
+  <img src="docs/FocusSession.png" width="420"
+       alt="The Take a Break Goose window on the Focus session tab: choose how often to take a break (15, 30, 45 or 60 min, or other), how long each break lasts (5, 10 or 15 min, or other), optionally set an end time, then Start session">
+</p>
+
 1. **Start a focus session.** Pick how often you want a break and how long your breaks are, then click **Start session**. Want it to stop at a certain point? Click **Set an end time** to end it after a while (like 2 hours) or at a time of day (like 17:00).
 2. **The goose arrives** when it's break time. You can:
    - take the break with **Okay, break time!**
