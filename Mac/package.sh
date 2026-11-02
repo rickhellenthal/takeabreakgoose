@@ -8,6 +8,14 @@
 #   Mac/TakeABreakGoose.Mac.csproj. The .dmg ends up in dist/.
 set -euo pipefail
 
+# On GitHub Actions, a failure also shows the command and its last output as an annotation on the
+# run's summary page, which (unlike the log) can be read without signing in.
+if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+    log="$(mktemp)"
+    exec > >(tee -a "$log") 2>&1
+    trap 'echo "::error title=package.sh failed at line $LINENO::$BASH_COMMAND%0A$(tail -n 20 "$log" | sed "s/%/%25/g" | awk "{printf \"%s%%0A\", \$0}")"' ERR
+fi
+
 arch="${1:-}"
 case "$arch" in
     arm64) label="apple-silicon" ;;
