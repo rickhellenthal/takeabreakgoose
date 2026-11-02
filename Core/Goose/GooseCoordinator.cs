@@ -12,15 +12,18 @@ public sealed class GooseCoordinator
     private readonly BreakScheduler _scheduler;
     private readonly Func<GooseSettings> _settings;
     private readonly CallDoNotDisturb _call = new();
-    private GooseWindow? _goose;
+    private readonly NewGooseWindow _newGoose;
+    private IGooseWindow? _goose;
     private GooseVisit? _currentVisit;
     private GooseVisit? _pendingVisit;
 
     /// <param name="settings">The current settings (they can change while the app runs).</param>
-    public GooseCoordinator(BreakScheduler scheduler, Func<GooseSettings> settings)
+    /// <param name="newGoose">Makes the window for one visit; each app has its own.</param>
+    public GooseCoordinator(BreakScheduler scheduler, Func<GooseSettings> settings, NewGooseWindow newGoose)
     {
         _scheduler = scheduler;
         _settings = settings;
+        _newGoose = newGoose;
         _scheduler.BreakDue += () => SummonBreakGoose();
         _scheduler.SessionCompleted += SignOff;
     }
@@ -103,7 +106,7 @@ public sealed class GooseCoordinator
     /// <summary>The session reached its end time: the goose comes by, in its party hat, to say goodbye.</summary>
     private void SignOff(WorkSession session)
     {
-        var focused = DateTime.Now - session.StartedAt;
+        var focused = _scheduler.Now - session.StartedAt;
         string duration = focused.TotalHours >= 1
             ? $"{(int)focused.TotalHours} h {focused.Minutes} min"
             : $"{Math.Max(1, (int)focused.TotalMinutes)} min";
@@ -137,7 +140,7 @@ public sealed class GooseCoordinator
 
         bool naps = visit.StartsBreak && _scheduler.CurrentBreakLength > TimeSpan.Zero;
         _currentVisit = visit;
-        _goose = new GooseWindow(visit, _settings().SnoozeMinutes, naps ? BreakLength() : null);
+        _goose = _newGoose(visit, _settings().SnoozeMinutes, naps ? BreakLength() : null);
         if (!visit.JustVisiting)
         {
             _goose.Answered += outcome =>

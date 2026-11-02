@@ -1,0 +1,75 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:core="clr-namespace:TakeABreakGoose;assembly=TakeABreakGoose.Core"
+             x:Class="TakeABreakGoose.MessagesPage">
+    <UserControl.Styles>
+        <Style Selector="Border.MessageRow">
+            <Setter Property="Background" Value="#FAF7F2" />
+            <Setter Property="BorderBrush" Value="#EFE8DC" />
+        </Style>
+        <Style Selector="Border.MessageRow:focus-within">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="BorderBrush" Value="{DynamicResource Accent}" />
+        </Style>
+        <!-- The message's text box blends into its row: no Fluent border or background, also not
+             while hovered or typed in (the row shows the focus). -->
+        <Style Selector="TextBox.InRow /template/ Border#PART_BorderElement, TextBox.InRow:pointerover /template/ Border#PART_BorderElement, TextBox.InRow:focus /template/ Border#PART_BorderElement">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="*,Auto">
+        <Border Classes="Card" Margin="0">
+            <Grid RowDefinitions="Auto,*,Auto">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="Reset to defaults" Classes="ChipButton"
+                            Margin="12,0,0,0" VerticalAlignment="Top" Click="ResetMessages_Click" />
+                    <StackPanel>
+                        <TextBlock Text="Messages" Classes="CardTitle" />
+                        <TextBlock Classes="Hint" Margin="0,2,0,0"
+                                   Text="The goose picks one of these at random when it's time for a break. Click a message to edit it." />
+                    </StackPanel>
+                </DockPanel>
+
+                <ScrollViewer x:Name="Scroller" Grid.Row="1" Margin="0,12,0,0" VerticalScrollBarVisibility="Auto"
+                              Focusable="False">
+                    <ItemsControl x:Name="MessageList" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="core:EditableMessage">
+                                <Border Classes="MessageRow" CornerRadius="8" Padding="6,3,3,3" Margin="0,0,0,6"
+                                        BorderThickness="1">
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Right" Content="✕" Classes="IconButton"
+                                                ToolTip.Tip="Remove this message" Click="RemoveMessage_Click" />
+                                        <TextBox Classes="InRow" Text="{Binding Text}"
+                                                 BorderThickness="0" Background="Transparent" TextWrapping="Wrap"
+                                                 Padding="2,4" VerticalAlignment="Center" />
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <DockPanel Grid.Row="2" Margin="0,6,0,0">
+                    <Button DockPanel.Dock="Right" Content="Add" Classes="BaseButton"
+                            Padding="16,5" Margin="8,0,0,0" Click="AddMessage_Click" />
+                    <Grid>
+                        <TextBox x:Name="NewMessageBox" Padding="6,5" TextChanged="NewMessageBox_TextChanged" />
+                        <TextBlock x:Name="NewMessageHint" Text="Add a message…" Classes="Hint"
+                                   FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center"
+                                   IsHitTestVisible="False" />
+                    </Grid>
+                </DockPanel>
+            </Grid>
+        </Border>
+
+        <DockPanel Grid.Row="1" Margin="0,12,0,0" LastChildFill="False">
+            <Button DockPanel.Dock="Right" Content="Save" Classes="PrimaryButton" Padding="24,7"
+                    Click="Save_Click" />
+            <TextBlock x:Name="Status" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,12,0"
+                       TextWrapping="Wrap" MaxWidth="260" />
+        </DockPanel>
+    </Grid>
+</UserControl>

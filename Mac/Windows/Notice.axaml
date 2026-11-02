@@ -1,0 +1,20 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="TakeABreakGoose.Notice"
+        Title="Take a Break Goose"
+        Width="340" SizeToContent="Height"
+        SystemDecorations="None" Background="Transparent" TransparencyLevelHint="Transparent"
+        Topmost="True" ShowInTaskbar="False" ShowActivated="False" CanResize="False">
+    <!-- The tray balloon's counterpart: a small card under the menu bar that goes away by itself. -->
+    <Border Margin="8" Padding="14,12" CornerRadius="12" Background="#FFFDF8"
+            BorderBrush="#E4D9C4" BorderThickness="1.5" Cursor="Hand">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="14" OffsetX="0" OffsetY="2" Opacity="0.22" Color="#4A3B22" />
+        </Border.Effect>
+        <StackPanel>
+            <TextBlock Text="Take a Break Goose" FontWeight="SemiBold" FontSize="13" Foreground="#D9711A" />
+            <TextBlock x:Name="MessageText" TextWrapping="Wrap" FontSize="13" Foreground="#2B2B2B"
+                       Margin="0,3,0,0" />
+        </StackPanel>
+    </Border>
+</Window>

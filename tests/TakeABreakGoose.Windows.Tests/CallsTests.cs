@@ -1,6 +1,6 @@
 using Xunit;
 
-namespace TakeABreakGoose.Tests;
+namespace TakeABreakGoose.Windows.Tests;
 
 public class CallsTests
 {

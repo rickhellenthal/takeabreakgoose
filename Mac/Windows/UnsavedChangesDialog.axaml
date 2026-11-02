@@ -1,0 +1,19 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="TakeABreakGoose.UnsavedChangesDialog"
+        Title="Unsaved changes" Icon="/Assets/goose.ico"
+        Width="440" SizeToContent="Height" CanResize="False" ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner" Background="#FAF7F2"
+        FontSize="13" Foreground="#222222">
+    <StackPanel Margin="22,18,22,18">
+        <TextBlock Text="Save your changes?" FontSize="16" FontWeight="SemiBold" />
+        <TextBlock x:Name="MessageText" TextWrapping="Wrap"
+                   Foreground="#7A7A7A" Margin="0,4,0,18" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Keep editing" Classes="BaseButton" IsCancel="True" Click="KeepEditing_Click" />
+            <Button Content="Discard" Classes="BaseButton" Margin="8,0,0,0" Click="Discard_Click" />
+            <Button Content="Save" Classes="PrimaryButton" Margin="8,0,0,0" Padding="22,7"
+                    IsDefault="True" Click="Save_Click" />
+        </StackPanel>
+    </StackPanel>
+</Window>

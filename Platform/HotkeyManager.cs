@@ -29,11 +29,14 @@ public sealed class HotkeyManager : IDisposable
         _source.AddHook(WndProc);
     }
 
-    public bool Register(ModifierKeys modifiers, Key key)
+    /// <param name="key">The key's name in WPF's Key enum, as the settings keep it.</param>
+    public bool Register(HotkeyModifiers modifiers, string key)
     {
         Unregister();
-        // WPF's ModifierKeys values match the Win32 MOD_* flags.
-        uint vk = (uint)KeyInterop.VirtualKeyFromKey(key);
+        // A key name that isn't one (a hand-edited settings file) can't be registered.
+        if (!Enum.TryParse(key, out Key wpfKey)) return false;
+        // HotkeyModifiers values match the Win32 MOD_* flags.
+        uint vk = (uint)KeyInterop.VirtualKeyFromKey(wpfKey);
         _registered = RegisterHotKey(_source.Handle, HotkeyId, (uint)modifiers | MOD_NOREPEAT, vk);
         return _registered;
     }

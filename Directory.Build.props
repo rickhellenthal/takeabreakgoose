@@ -1,0 +1,11 @@
+<Project>
+
+  <!--
+    The version of both apps, the Windows one and the Mac one, kept in one place. Releases set it
+    from the tag (-p:Version=...); bump it here for a new release.
+  -->
+  <PropertyGroup>
+    <Version>1.8.0</Version>
+  </PropertyGroup>
+
+</Project>

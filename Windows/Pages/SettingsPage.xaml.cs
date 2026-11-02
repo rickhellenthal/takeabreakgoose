@@ -10,8 +10,8 @@ namespace TakeABreakGoose;
 public partial class SettingsPage : UserControl
 {
     private IGooseHost _host = null!;
-    private ModifierKeys _hotkeyModifiers;
-    private Key _hotkeyKey;
+    private HotkeyModifiers _hotkeyModifiers;
+    private string _hotkeyKey = "";
     private string _savedForm = "";
     private AvailableUpdate? _update;
 
@@ -69,9 +69,10 @@ public partial class SettingsPage : UserControl
             return;
         }
 
-        _hotkeyModifiers = modifiers;
-        _hotkeyKey = key;
-        HotkeyBox.Text = GooseSettings.FormatHotkey(modifiers, key);
+        // WPF's ModifierKeys have the same values as HotkeyModifiers.
+        _hotkeyModifiers = (HotkeyModifiers)modifiers;
+        _hotkeyKey = key.ToString();
+        HotkeyBox.Text = GooseSettings.FormatHotkey(_hotkeyModifiers, _hotkeyKey);
         SettingsStatus.Text = "";
     }
 

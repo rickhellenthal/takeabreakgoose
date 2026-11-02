@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
@@ -17,6 +18,10 @@ public partial class App : Application, IGooseHost
     private GooseCoordinator _goose = null!;
     private MainWindow? _mainWindow;
     private DispatcherTimer? _callCheck;
+    private DispatcherTimer? _schedulerTick;
+
+    private readonly SettingsStore _settingsStore = new(Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TakeABreakGoose"));
 
     public GooseSettings Settings { get; private set; } = new();
     public BreakScheduler Scheduler { get; private set; } = null!;
@@ -36,12 +41,16 @@ public partial class App : Application, IGooseHost
             return;
         }
 
-        Settings = SettingsStore.Load();
+        Settings = _settingsStore.Load();
         TrySave(); // writes back settings carried over from older versions
 
-        Scheduler = new BreakScheduler(Settings);
+        Scheduler = new BreakScheduler(Settings, SystemClock.Instance, UserActivity.Instance);
+        _schedulerTick = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _schedulerTick.Tick += (_, _) => Scheduler.Tick();
+        _schedulerTick.Start();
         Scheduler.StateChanged += UpdateTray;
-        _goose = new GooseCoordinator(Scheduler, () => Settings);
+        _goose = new GooseCoordinator(Scheduler, () => Settings,
+            (visit, snoozeMinutes, breakLength) => new GooseWindow(visit, snoozeMinutes, breakLength));
 
         _tray = new TrayIcon();
         _tray.OpenRequested += ShowMainWindow;
@@ -80,6 +89,7 @@ public partial class App : Application, IGooseHost
     protected override void OnExit(ExitEventArgs e)
     {
         _callCheck?.Stop();
+        _schedulerTick?.Stop();
         CameraActivity.Stop();
         _hotkey?.Dispose();
         _tray?.Dispose();
@@ -138,7 +148,7 @@ public partial class App : Application, IGooseHost
         try
         {
             if (startWithWindows != Autostart.IsEnabled) Autostart.SetEnabled(startWithWindows);
-            SettingsStore.Save(Settings);
+            _settingsStore.Save(Settings);
         }
         catch (Exception ex)
         {
@@ -174,7 +184,7 @@ public partial class App : Application, IGooseHost
     {
         try
         {
-            SettingsStore.Save(Settings);
+            _settingsStore.Save(Settings);
         }
         catch (Exception)
         {

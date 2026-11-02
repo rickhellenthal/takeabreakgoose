@@ -1,9 +1,12 @@
-# Renders the app icon (goose.ico) from the vector drawing below, in all the sizes Windows uses.
-# Usage: powershell -File tools\make-icon.ps1 [-OutPath Assets\goose.ico] [-PngPath docs\icon.png] [-PreviewPath preview.png]
+# Renders the app icon (goose.ico) from the vector drawing below, in all the sizes Windows uses,
+# and the macOS app's icon (goose.icns) in all the sizes macOS uses.
+# Usage: powershell -File tools\make-icon.ps1 [-OutPath Assets\goose.ico] [-PngPath docs\icon.png]
+#        [-IcnsPath Mac\Assets\goose.icns] [-PreviewPath preview.png]
 param(
     [string]$OutPath = (Join-Path $PSScriptRoot '..\Assets\goose.ico'),
     # A 256x256 PNG of the same icon, used by the README.
     [string]$PngPath = (Join-Path $PSScriptRoot '..\docs\icon.png'),
+    [string]$IcnsPath = (Join-Path $PSScriptRoot '..\Mac\Assets\goose.icns'),
     [string]$PreviewPath
 )
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
@@ -25,16 +28,20 @@ $xaml = @'
 </Canvas>
 '@
 
-function Render-Png([int]$size) {
+# $padding: the share of the size left empty on each side.
+function Render-Png([int]$size, [double]$padding = 0) {
     $drawing = [System.Windows.Markup.XamlReader]::Parse($xaml)
     $box = New-Object System.Windows.Controls.Viewbox
-    $box.Width = $size; $box.Height = $size
+    $inner = $size * (1 - 2 * $padding)
+    $box.Width = $inner; $box.Height = $inner
     $box.Child = $drawing
-    $box.Measure([System.Windows.Size]::new($size, $size))
-    $box.Arrange([System.Windows.Rect]::new(0, 0, $size, $size))
-    $box.UpdateLayout()
+    $frame = New-Object System.Windows.Controls.Grid
+    $frame.Children.Add($box) | Out-Null
+    $frame.Measure([System.Windows.Size]::new($size, $size))
+    $frame.Arrange([System.Windows.Rect]::new(0, 0, $size, $size))
+    $frame.UpdateLayout()
     $bitmap = New-Object System.Windows.Media.Imaging.RenderTargetBitmap $size, $size, 96, 96, ([System.Windows.Media.PixelFormats]::Pbgra32)
-    $bitmap.Render($box)
+    $bitmap.Render($frame)
     $encoder = New-Object System.Windows.Media.Imaging.PngBitmapEncoder
     $encoder.Frames.Add([System.Windows.Media.Imaging.BitmapFrame]::Create($bitmap))
     $stream = New-Object System.IO.MemoryStream
@@ -59,6 +66,26 @@ for ($i = 0; $i -lt $sizes.Count; $i++) {
 }
 foreach ($image in $images) { $writer.Write($image) }
 $writer.Dispose()
+
+if ($IcnsPath) {
+    # macOS icons leave room around the drawing (824 of 1024 pixels on Apple's grid), so the goose
+    # isn't bigger than the icons next to it in Finder and the Dock.
+    # An .icns file is a header and, per size, a four-letter type, a length and a PNG, all big-endian.
+    $icnsSizes = [ordered]@{ icp4 = 16; icp5 = 32; ic11 = 32; ic12 = 64; ic07 = 128; ic13 = 256; ic08 = 256; ic14 = 512; ic09 = 512; ic10 = 1024 }
+    $entries = foreach ($type in $icnsSizes.Keys) { , @($type, (Render-Png $icnsSizes[$type] 0.1)) }
+    function BigEndian([UInt32]$value) { $bytes = [BitConverter]::GetBytes($value); [Array]::Reverse($bytes); , $bytes }
+    $total = 8; foreach ($entry in $entries) { $total += 8 + $entry[1].Length }
+    New-Item -ItemType Directory -Force (Split-Path $IcnsPath) | Out-Null
+    $icns = [System.IO.File]::Create([System.IO.Path]::GetFullPath($IcnsPath))
+    $writer = New-Object System.IO.BinaryWriter $icns
+    $writer.Write([Text.Encoding]::ASCII.GetBytes('icns')); $writer.Write((BigEndian $total))
+    foreach ($entry in $entries) {
+        $writer.Write([Text.Encoding]::ASCII.GetBytes($entry[0]))
+        $writer.Write((BigEndian (8 + $entry[1].Length)))
+        $writer.Write($entry[1])
+    }
+    $writer.Dispose()
+}
 
 if ($PngPath) {
     New-Item -ItemType Directory -Force (Split-Path $PngPath) | Out-Null

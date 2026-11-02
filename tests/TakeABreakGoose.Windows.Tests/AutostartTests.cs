@@ -1,7 +1,7 @@
 using Microsoft.Win32;
 using Xunit;
 
-namespace TakeABreakGoose.Tests;
+namespace TakeABreakGoose.Windows.Tests;
 
 /// <summary>
 /// Starting with Windows, against a scratch registry key (under HKCU\Software\TakeABreakGoose.Tests)

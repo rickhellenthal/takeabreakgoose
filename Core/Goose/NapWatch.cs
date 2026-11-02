@@ -9,7 +9,7 @@ public enum NapWatchState { Asleep, Stirring, ShouldAsk }
 /// makes the goose stir (half wake up); keep at it and it's time to ask whether you're really taking
 /// your break; leave it alone for a moment and the goose dozes off again.
 /// </summary>
-internal sealed class NapWatch
+public sealed class NapWatch
 {
     /// <summary>Time to get up and go after the nap starts (or resumes), before anything counts.</summary>
     public static readonly TimeSpan Grace = TimeSpan.FromSeconds(5);

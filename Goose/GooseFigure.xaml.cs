@@ -213,5 +213,3 @@ public partial class GooseFigure : UserControl
 
     private static Visibility Show(bool visible) => visible ? Visibility.Visible : Visibility.Collapsed;
 }
-
-public enum NapLook { Asleep, Drowsy, Unimpressed }
