@@ -39,6 +39,16 @@ public class GooseSettingsTests
     }
 
     [Fact]
+    public void Settings_from_older_versions_keep_the_snooze_button()
+    {
+        var settings = SettingsStore.Parse("""{ "SnoozeMinutes": 10 }""");
+        settings.Sanitize();
+
+        Assert.True(settings.AllowSnooze);
+        Assert.Equal(10, settings.SnoozeMinutes);
+    }
+
+    [Fact]
     public void Settings_from_older_versions_get_do_not_disturb_during_video_calls()
     {
         var settings = SettingsStore.Parse("""{ "BreakMinutes": 10 }""");

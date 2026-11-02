@@ -39,6 +39,7 @@ public partial class SettingsPage : UserControl
         AutoStartCheck.IsChecked = settings.AutoStartSession;
         AutoStartIntervalBox.Text = settings.AutoStartIntervalMinutes.ToString();
         BreakBox.Text = settings.BreakMinutes.ToString();
+        AllowSnoozeCheck.IsChecked = settings.AllowSnooze;
         SnoozeBox.Text = settings.SnoozeMinutes.ToString();
         StartWithWindowsCheck.IsChecked = Autostart.IsEnabled;
         CallDoNotDisturbCheck.IsChecked = settings.DoNotDisturbDuringCalls;
@@ -97,12 +98,16 @@ public partial class SettingsPage : UserControl
         Action<string> fail = message => ShowStatus(message, error: true);
         if (!Ui.TryParseNumber(AutoStartIntervalBox.Text, 1, 24 * 60, "The automatic session interval", out int autoStartInterval, fail)) return false;
         if (!Ui.TryParseNumber(BreakBox.Text, 0, 120, "Default break length", out int breakMinutes, fail)) return false;
-        if (!Ui.TryParseNumber(SnoozeBox.Text, 1, 24 * 60, "Snooze length", out int snooze, fail)) return false;
+        // A greyed-out box can't be fixed, so it only needs to make sense while snoozing is on.
+        int snooze = _host.Settings.SnoozeMinutes;
+        if (AllowSnoozeCheck.IsChecked == true
+            && !Ui.TryParseNumber(SnoozeBox.Text, 1, 24 * 60, "Snooze length", out snooze, fail)) return false;
 
         var settings = _host.Settings.Clone();
         settings.AutoStartSession = AutoStartCheck.IsChecked == true;
         settings.AutoStartIntervalMinutes = autoStartInterval;
         settings.BreakMinutes = breakMinutes;
+        settings.AllowSnooze = AllowSnoozeCheck.IsChecked == true;
         settings.SnoozeMinutes = snooze;
         settings.DoNotDisturbDuringCalls = CallDoNotDisturbCheck.IsChecked == true;
         settings.HotkeyModifiers = _hotkeyModifiers;
@@ -130,7 +135,7 @@ public partial class SettingsPage : UserControl
 
     /// <summary>Everything the form shows, to tell whether anything changed since loading or saving.</summary>
     private string FormState() => string.Join("\u001f",
-        AutoStartCheck.IsChecked, AutoStartIntervalBox.Text, BreakBox.Text, SnoozeBox.Text,
+        AutoStartCheck.IsChecked, AutoStartIntervalBox.Text, BreakBox.Text, AllowSnoozeCheck.IsChecked, SnoozeBox.Text,
         StartWithWindowsCheck.IsChecked, CallDoNotDisturbCheck.IsChecked, HotkeyBox.Text);
 
     private bool HasUnsavedChanges => FormState() != _savedForm;

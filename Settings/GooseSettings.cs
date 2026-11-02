@@ -26,6 +26,9 @@ public sealed class GooseSettings
     /// </summary>
     public int BreakMinutes { get; set; } = 5;
 
+    /// <summary>The goose offers a Snooze button when it's time for a break.</summary>
+    public bool AllowSnooze { get; set; } = true;
+
     public int SnoozeMinutes { get; set; } = 5;
 
     /// <summary>Turn Do not disturb on during a focus session while the user is in a call (see <see cref="Calls"/>).</summary>

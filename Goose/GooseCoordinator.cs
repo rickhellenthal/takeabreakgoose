@@ -40,7 +40,7 @@ public sealed class GooseCoordinator
             ? $"Take {breakMinutes} minutes. I'll start counting again after that."
             : null;
         Summon(new GooseVisit("HONK!", message, hint, "Okay, break time!",
-            AllowSnooze: true, AllowFinishUp: true, StartsBreak: true));
+            AllowSnooze: _settings().AllowSnooze, AllowFinishUp: true, StartsBreak: true));
     }
 
     /// <summary>Sends a goose over just to show off an outfit. Returns false if a goose is already on screen.</summary>
