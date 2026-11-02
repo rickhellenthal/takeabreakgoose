@@ -6,6 +6,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Threading;
 
 namespace TakeABreakGoose;
 
@@ -19,6 +20,7 @@ public partial class GooseWindow : Window, IGooseWindow, IGooseView
     private readonly Rect _area = SystemParameters.WorkArea;
     private readonly Stopwatch _clock = new();
     private readonly GooseBehavior _goose;
+    private readonly DispatcherTimer _frames;
 
     /// <param name="breakLength">If set, the goose naps for this long when the user takes the break.</param>
     public GooseWindow(GooseVisit visit, int snoozeMinutes, TimeSpan? breakLength)
@@ -29,14 +31,20 @@ public partial class GooseWindow : Window, IGooseWindow, IGooseView
         _goose = new GooseBehavior(this, new GooseStage(_area.Left, _area.Right, Width, Figure.Width, GooseFigure.BeakTipX),
             visit, snoozeMinutes, breakLength, SystemClock.Instance, UserActivity.Instance, Random.Shared);
 
+        // Frames run at input priority rather than on CompositionTarget.Rendering: redrawing this
+        // transparent window every frame is slow enough that render-priority frames would hold back
+        // clicks in the app's other window until the goose stops walking.
+        _frames = new DispatcherTimer(TimeSpan.FromMilliseconds(16), DispatcherPriority.Input,
+            (_, _) => _goose.NextFrame(_clock.Elapsed), Dispatcher);
+        _frames.Stop();
         Loaded += (_, _) =>
         {
             _clock.Start();
-            CompositionTarget.Rendering += OnRendering;
+            _frames.Start();
         };
         Closed += (_, _) =>
         {
-            CompositionTarget.Rendering -= OnRendering;
+            _frames.Stop();
             _goose.WindowClosed();
         };
     }
@@ -87,8 +95,6 @@ public partial class GooseWindow : Window, IGooseWindow, IGooseView
         int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
         SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW);
     }
-
-    private void OnRendering(object? sender, EventArgs e) => _goose.NextFrame(_clock.Elapsed);
 
     int IGooseView.Facing { set => Figure.Facing = value; }
 
@@ -173,7 +179,7 @@ public partial class GooseWindow : Window, IGooseWindow, IGooseView
 
     void IGooseView.FadeOutAndClose()
     {
-        CompositionTarget.Rendering -= OnRendering;
+        _frames.Stop();
         var fade = new DoubleAnimation(0, TimeSpan.FromMilliseconds(250));
         fade.Completed += (_, _) => Close();
         BeginAnimation(OpacityProperty, fade);
@@ -181,7 +187,7 @@ public partial class GooseWindow : Window, IGooseWindow, IGooseView
 
     void IGooseView.CloseWindow()
     {
-        CompositionTarget.Rendering -= OnRendering;
+        _frames.Stop();
         Close();
     }
 
