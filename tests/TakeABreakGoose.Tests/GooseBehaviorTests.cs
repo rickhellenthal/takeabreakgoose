@@ -204,13 +204,125 @@ public class GooseBehaviorTests
 
         g.WalkIn();
         Assert.Equal(GooseQuestion.TakeABreak, g.Goose.Question);
-        // The same question, but it doesn't offer to wait again.
+        // The same question, and it offers to wait again.
         Assert.Equal(new SpeechBubble("HONK!", "All finished up and saved? Then you're ready for your break!",
-            "Take 5 minutes.", "Okay, break time!", null, "Snooze 5 min"), g.View.Bubble);
+            "Take 5 minutes.", "Okay, break time!", "Let me finish up", "Snooze 5 min"), g.View.Bubble);
 
         g.Goose.PrimaryClicked();
         Assert.Equal(new[] { GooseOutcome.Dismissed }, g.Answers);
         Assert.Equal(GoosePhase.Sleeping, g.Goose.Phase);
+    }
+
+    [Fact]
+    public void A_forgotten_goose_at_the_edge_comes_back_to_ask_by_itself()
+    {
+        var g = new GooseHarness();
+        g.WalkIn();
+        g.Goose.SecondaryClicked();
+        g.WorkUntil(() => g.Goose.Phase == GoosePhase.Peeking);
+
+        g.Work(GooseBehavior.FinishUpReminder - TimeSpan.FromSeconds(1));
+        Assert.Equal(GoosePhase.Peeking, g.Goose.Phase);
+
+        g.Work(TimeSpan.FromSeconds(1));
+        Assert.Equal(GoosePhase.Returning, g.Goose.Phase);
+        Assert.Null(g.View.ToolTip);
+        Assert.True(g.Goose.StillAskingForBreak);
+
+        g.WalkIn();
+        Assert.Equal(GooseQuestion.TakeABreak, g.Goose.Question);
+        Assert.Equal(new SpeechBubble("HONK!", "Done finishing up? Your break is waiting for you!",
+            "Take 5 minutes.", "Okay, break time!", "Let me finish up", "Snooze 5 min"), g.View.Bubble);
+        Assert.Empty(g.Answers);
+
+        // Ignored at the computer, it keeps asking: that's no reason to start a break.
+        g.Work(TimeSpan.FromMinutes(10));
+        Assert.Equal(GoosePhase.Talking, g.Goose.Phase);
+        Assert.Equal(GooseQuestion.TakeABreak, g.Goose.Question);
+        Assert.Empty(g.Answers);
+        Assert.Empty(g.BreaksWhileAway);
+    }
+
+    [Fact]
+    public void Finishing_up_again_peeks_again_and_the_reminder_starts_over()
+    {
+        var g = new GooseHarness();
+        g.WalkIn();
+        g.Goose.SecondaryClicked();
+        g.WorkUntil(() => g.Goose.Phase == GoosePhase.Peeking);
+        g.Work(GooseBehavior.FinishUpReminder);
+        g.WalkIn();
+        Assert.Equal("Let me finish up", g.View.Bubble!.SecondaryButton);
+
+        // Still not done: it goes back to the edge, and waits the whole reminder time again.
+        g.Goose.SecondaryClicked();
+        Assert.Equal(GoosePhase.ToEdge, g.Goose.Phase);
+        Assert.Empty(g.Answers);
+        g.WorkUntil(() => g.Goose.Phase == GoosePhase.Peeking);
+        Assert.Equal("Click me when you're ready for your break", g.View.ToolTip);
+        g.Work(GooseBehavior.FinishUpReminder - TimeSpan.FromSeconds(1));
+        Assert.Equal(GoosePhase.Peeking, g.Goose.Phase);
+
+        // Leaving now still counts as the break.
+        var leftAt = g.Now;
+        g.BeAway(BreakLength + TimeSpan.FromSeconds(1));
+        g.ComeBack();
+        Assert.Equal(new[] { leftAt }, g.BreaksWhileAway);
+        Assert.Equal(GooseQuestion.ReadyToFocus, g.Goose.Question);
+        Assert.Empty(g.Answers);
+    }
+
+    [Fact]
+    public void Leaving_while_it_waits_at_the_edge_counts_as_the_break()
+    {
+        var g = new GooseHarness();
+        g.WalkIn();
+        g.Goose.SecondaryClicked();
+        g.WorkUntil(() => g.Goose.Phase == GoosePhase.Peeking);
+        g.Work(TimeSpan.FromSeconds(30));
+        var leftAt = g.Now;
+
+        // Gone longer than the reminder: it comes back to ask while nobody's there, and keeps counting.
+        g.BeAway(BreakLength + TimeSpan.FromSeconds(1));
+        Assert.Equal(GoosePhase.Talking, g.Goose.Phase);
+        Assert.Equal(GooseQuestion.TakeABreak, g.Goose.Question);
+        Assert.Empty(g.BreaksWhileAway);
+
+        g.ComeBack();
+        Assert.Equal(new[] { leftAt }, g.BreaksWhileAway);
+        Assert.Equal(GooseQuestion.ReadyToFocus, g.Goose.Question);
+        Assert.Equal("Looks like you already took a break while I waited. Ready to focus again?", g.View.Bubble!.Message);
+        Assert.Empty(g.Answers);
+        Assert.True(g.Goose.OnBreak);
+    }
+
+    [Fact]
+    public void Back_from_a_short_break_while_it_peeks_it_walks_over_to_ask_if_ready()
+    {
+        var g = new GooseHarness(breakLength: TimeSpan.FromMinutes(1));
+        g.WalkIn();
+        g.Goose.SecondaryClicked();
+        g.WorkUntil(() => g.Goose.Phase == GoosePhase.Peeking);
+        var leftAt = g.Now;
+
+        g.BeAway(TimeSpan.FromMinutes(1) + TimeSpan.FromSeconds(1));
+        Assert.Equal(GoosePhase.Peeking, g.Goose.Phase); // waits until they're back
+
+        g.ComeBack();
+        Assert.Equal(new[] { leftAt }, g.BreaksWhileAway);
+        Assert.Equal(GoosePhase.Returning, g.Goose.Phase);
+        Assert.Null(g.View.Bubble); // asks once it's back where it asks, not from the edge
+        Assert.Null(g.View.ToolTip);
+        Assert.True(g.Goose.OnBreak);
+        Assert.False(g.Goose.StillAskingForBreak);
+
+        g.WalkIn();
+        Assert.Equal(GooseQuestion.ReadyToFocus, g.Goose.Question);
+        Assert.Equal("Looks like you already took a break while I waited. Ready to focus again?", g.View.Bubble!.Message);
+
+        g.Goose.PrimaryClicked();
+        Assert.Equal(1, g.ReadyToFocusCount);
+        Assert.Empty(g.Answers);
     }
 
     [Fact]
@@ -542,12 +654,14 @@ public class GooseBehaviorTests
         private TimeSpan _sinceShown;
 
         /// <param name="naps">Whether the goose naps during the break (it has a break length).</param>
-        public GooseHarness(GooseVisit? visit = null, bool naps = true, bool fromRight = false, TimeSpan idleAtStart = default)
+        /// <param name="breakLength">How long the break is, if not <see cref="BreakLength"/>.</param>
+        public GooseHarness(GooseVisit? visit = null, bool naps = true, bool fromRight = false, TimeSpan idleAtStart = default,
+            TimeSpan? breakLength = null)
         {
             Idle = idleAtStart;
             View = new FakeView();
             Goose = new GooseBehavior(View, new GooseStage(0, AreaWidth, WindowWidth, FigureWidth, BeakTipX),
-                visit ?? BreakVisit, 5, naps ? BreakLength : null, this, this, new FakeRandom(fromRight));
+                visit ?? BreakVisit, 5, naps ? breakLength ?? BreakLength : null, this, this, new FakeRandom(fromRight));
             View.OnClosed = Goose.WindowClosed;
             Goose.Answered += Answers.Add;
             Goose.BreakExtended += BreakExtensions.Add;

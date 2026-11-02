@@ -48,6 +48,12 @@ public sealed class GooseBehavior
     private const double StepRate = 12;     // leg swing speed, radians per second
     private const double PeekVisible = 40;  // how much of the goose shows while peeking
     private const double PeekHoverVisible = 58;
+
+    /// <summary>
+    /// How long the goose peeks after "Let me finish up" before it comes back to ask again, in case
+    /// the user forgot about it.
+    /// </summary>
+    public static readonly TimeSpan FinishUpReminder = TimeSpan.FromMinutes(2);
     private const double HuffyHeadAngle = -14;
 
     private readonly IGooseView _view;
@@ -68,6 +74,7 @@ public sealed class GooseBehavior
     private bool _awayLongEnoughForABreak;
     private DateTime _awaySince;
     private DateTime _askedAt;
+    private DateTime _peekingSince;
     private readonly NapWatch _napWatch;
 
     /// <summary>Raised as soon as the user answers the goose.</summary>
@@ -145,15 +152,18 @@ public sealed class GooseBehavior
 
     /// <summary>The goose came to ask for a break and the user hasn't taken it yet (including "let me finish up").</summary>
     public bool StillAskingForBreak =>
-        Phase is GoosePhase.WalkingIn or GoosePhase.ToEdge or GoosePhase.Peeking or GoosePhase.Returning
-        || (Phase == GoosePhase.Talking && Question == GooseQuestion.TakeABreak);
+        Question == GooseQuestion.TakeABreak
+        && Phase is GoosePhase.WalkingIn or GoosePhase.Talking or GoosePhase.ToEdge or GoosePhase.Peeking
+            or GoosePhase.Returning;
 
     /// <summary>The user is on the break this goose asked for, or is just back from it.</summary>
     public bool OnBreak =>
         Phase is GoosePhase.Sleeping or GoosePhase.BreakOver
         || (Phase == GoosePhase.Talking
             && Question is GooseQuestion.ReadyToFocus or GooseQuestion.EndBreakEarly
-                or GooseQuestion.StillOnBreak or GooseQuestion.EndBreakAnyway);
+                or GooseQuestion.StillOnBreak or GooseQuestion.EndBreakAnyway)
+        // Back from a break taken while it peeked, walking over to ask whether they're ready.
+        || (Phase == GoosePhase.Returning && Question == GooseQuestion.ReadyToFocus);
 
     /// <summary>Disappears right away (quick fade), e.g. when the user turns on Do not disturb.</summary>
     public void LeaveNow()
@@ -210,9 +220,12 @@ public sealed class GooseBehavior
                 if (WalkTowards(PeekLeft(PeekVisible), dt))
                 {
                     Phase = GoosePhase.Peeking;
+                    _peekingSince = _clock.Now;
                     _view.Facing = InwardDirection;
                     _view.FigureToolTip = "Click me when you're ready for your break";
                 }
+                // Time away while it waits counts too, as while it asks.
+                else WatchForBreakWhileAway();
                 break;
 
             case GoosePhase.Peeking:
@@ -220,6 +233,10 @@ public sealed class GooseBehavior
                 double peekLeft = PeekLeft(IsCursorNearPeek() ? PeekHoverVisible : PeekVisible);
                 Left += (peekLeft - Left) * Math.Min(1, dt * 10);
                 _view.HeadAngle = Math.Sin(now.TotalSeconds * 1.6) * 6;
+                WatchForBreakWhileAway();
+                // Forgotten about? Then it comes back to ask by itself.
+                if (Phase == GoosePhase.Peeking && _clock.Now - _peekingSince >= FinishUpReminder)
+                    ComeBack("Done finishing up? Your break is waiting for you!");
                 break;
 
             case GoosePhase.Sleeping:
@@ -291,9 +308,15 @@ public sealed class GooseBehavior
     /// <summary>Shows the speech bubble. The goose waits as long as it takes for an answer.</summary>
     private void StartTalking()
     {
+        // Back from finishing up, it asks the same question again: time away since it first asked still
+        // counts, and so does having been away long enough already.
+        bool askingAgain = Phase == GoosePhase.Returning && Question == GooseQuestion.TakeABreak;
         Phase = GoosePhase.Talking;
-        _askedAt = _clock.Now;
-        _awayLongEnoughForABreak = false;
+        if (!askingAgain)
+        {
+            _askedAt = _clock.Now;
+            _awayLongEnoughForABreak = false;
+        }
         _view.Facing = InwardDirection;
         _view.ShowBubble(_bubble);
     }
@@ -411,7 +434,8 @@ public sealed class GooseBehavior
     }
 
     /// <summary>
-    /// While the goose asks the user to take a break: if they were away from the mouse and keyboard
+    /// While the goose asks the user to take a break (or waits at the edge while they finish up, which
+    /// they may have forgotten about): if they were away from the mouse and keyboard
     /// for at least a break's length, they've had their break, so once they're back the goose
     /// skips ahead to asking whether they're ready to focus. Only time since the goose asked counts;
     /// sitting still before it showed up (reading, watching a video) isn't a break.
@@ -455,7 +479,16 @@ public sealed class GooseBehavior
     {
         Question = question;
         _bubble = new SpeechBubble(title, message, hint, primary, secondary, LinkButton: null);
-        StartTalking();
+        // At the screen edge (finishing up), it walks back to where it asks first.
+        if (Phase is GoosePhase.ToEdge or GoosePhase.Peeking)
+        {
+            _view.FigureToolTip = null;
+            Phase = GoosePhase.Returning;
+        }
+        else
+        {
+            StartTalking();
+        }
     }
 
     /// <summary>The user is back (or cut the break short) and ready to focus: off the goose goes.</summary>
@@ -498,8 +531,9 @@ public sealed class GooseBehavior
     {
         if (Phase != GoosePhase.Talking) return;
         StopTalking();
-        // It only offers this once; when it comes back it's break time.
-        _bubble = _bubble with { SecondaryButton = null };
+        // It offers this every time it asks: when it comes back (by itself after a while, or clicked)
+        // the user may still be in the middle of something. The time away since it first asked keeps
+        // counting, and the reminder starts over once it peeks again.
         Phase = GoosePhase.ToEdge;
     }
 
@@ -536,14 +570,20 @@ public sealed class GooseBehavior
     }
 
     /// <summary>The goose itself was clicked.</summary>
+    /// <summary>From peeking at the edge, back to where it asks, to ask again whether it's break time.</summary>
+    private void ComeBack(string message)
+    {
+        _view.FigureToolTip = null;
+        _bubble = _bubble with { Message = message };
+        Phase = GoosePhase.Returning;
+    }
+
     public void FigureClicked()
     {
         if (Phase == GoosePhase.Peeking)
         {
             // The user is done finishing up: come back and ask again.
-            _view.FigureToolTip = null;
-            _bubble = _bubble with { Message = "All finished up and saved? Then you're ready for your break!" };
-            Phase = GoosePhase.Returning;
+            ComeBack("All finished up and saved? Then you're ready for your break!");
             return;
         }
         if (Phase == GoosePhase.Sleeping)
