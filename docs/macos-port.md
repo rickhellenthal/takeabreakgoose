@@ -62,33 +62,47 @@ takes focus from the app you're in (if it does, the window needs a non-activatin
 with the Objective-C runtime); that animations keep their speed next to full-screen apps; and how
 the system font changes the bubble's text wrapping.
 
-## Step 3: the macOS platform layer
+## Step 3: the macOS platform layer (done)
 
-- **Menu bar**: started in step 2. Still to do: a template (monochrome) icon, the shortcut next to
-  "Open", and notifications instead of the tray's balloons. No Dock icon: `LSUIElement` in
-  `Info.plist`.
-- **Global shortcut**: Carbon `RegisterEventHotKey` (needs no Accessibility permission, unlike an
-  event tap). The Windows key in the settings means Command.
-- **Idle time**: done in step 2 (`CGEventSourceSecondsSinceLastEventType`, behind `IUserActivity`).
-- **Start at login**: `SMAppService.mainApp` (macOS 13+). On older versions the option is hidden.
-- **Napping above the Dock**: the visible frame of the screen (`NSScreen.visibleFrame`) tells where
-  the Dock is: bottom, left or right. When it auto-hides, nap on the screen's bottom edge.
-- **Settings** in `~/Library/Application Support/TakeABreakGoose`: done in step 2.
-- **Single instance**: a lock file in the settings folder; a second start tells the first one to
-  open its window, and quits.
-- **Calls**:
-  - Camera in use: CoreMediaIO, `kCMIODevicePropertyDeviceIsRunningSomewhere` on each video device,
-    watched with a property listener.
-  - Who uses the microphone: on macOS 14.2+, Core Audio's process objects
-    (`kAudioHardwarePropertyProcessObjectList`, then `kAudioProcessPropertyIsRunningInput` and
-    `kAudioProcessPropertyBundleID` on each). Meeting apps are matched by bundle ID (zoom.us,
-    Microsoft Teams, Webex, Slack, browsers), a list of its own next to the Windows one.
+All in `Mac/Platform/`, through `[LibraryImport]` to the system frameworks and `objc_msgSend` for
+the Objective-C APIs (`ObjC.cs`). On Windows each of these does nothing, so the app can still be
+tried out there.
+
+- **Menu bar** (`MenuBarIcon.cs`): the same menu as the tray icon, with the shortcut shown next to
+  "Open". No Dock icon (`ShowInDock = false` now, `LSUIElement` once it's an .app).
+- **Messages** (`Windows/Notice.axaml`): what the tray shows as a balloon on Windows (the shortcut
+  is taken, the first call that keeps the goose away) is a small card under the menu bar that goes
+  away by itself. macOS's own notifications would need a signed app and the user's permission.
+- **Global shortcut** (`HotkeyManager.cs`): Carbon's `RegisterEventHotKey`, which needs no
+  Accessibility permission. The key names from the settings map to macOS key codes; the Windows
+  key in the settings means Command. Since macOS 15 a shortcut needs Control or Command, so the
+  Settings page asks for one of those.
+- **Idle time** (`UserActivity.cs`): `CGEventSourceSecondsSinceLastEventType`.
+- **Start at login** (`LoginItem.cs`): `SMAppService.mainAppService` (macOS 13+). Hidden on older
+  versions and when the app isn't run from its .app bundle. A login item can't be told apart from
+  opening the app by hand, so the Mac app always opens its window when it starts (the Windows app
+  stays in the tray when Windows starts it).
+- **Napping above the Dock**: the screen's working area leaves out the menu bar and the Dock,
+  wherever the Dock is, so the goose naps just above (or beside) it. With the Dock hidden, it naps on
+  the bottom edge.
+- **Settings** in `~/Library/Application Support/TakeABreakGoose`.
+- **One copy at a time** (`SingleInstance.cs`): opening the app again from Finder brings the running
+  copy forward, which then opens its window (Avalonia's Reopen activation). A copy started another
+  way (`open -n`, Terminal) finds the lock file in the settings folder taken, asks the first copy to
+  open its window through a local pipe, and quits.
+- **Calls** (`Calls.cs`), checked every 2 seconds like on Windows:
+  - `CameraActivity.cs`: CoreMediaIO's `DeviceIsRunningSomewhere` on each video device.
+  - `MicrophoneActivity.cs`: on macOS 14.2+, Core Audio's process objects: which processes are
+    recording, and their bundle IDs. Meeting apps are matched by bundle ID (Zoom, Teams, Webex, Slack,
+    FaceTime, the browsers and their helper processes, WebKit's media process for Safari).
   - Before 14.2 only the camera counts. As on Windows, missing a call means the goose shows up as
     usual, which is better than it quietly staying away for hours.
   - None of this needs a permission prompt: it reads whether devices are in use, not what they record.
 
-Native calls go through `[LibraryImport]` to the system frameworks and `objc_msgSend` for the
-Objective-C APIs, kept in `Mac/Platform/`, like `Platform/` in the Windows app.
+Still to check on a real Mac: the shortcut (and that it's refused, not silently ignored, when
+another app has it); starting at login from the .app; that a camera and a Zoom, Teams or Meet call
+turn Do not disturb on, and that the microphone list needs no permission; the notice's position;
+and opening the app a second time.
 
 ## Step 4: packaging and releases
 

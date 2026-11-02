@@ -26,7 +26,7 @@
                         <TextBlock Text="General" Classes="CardTitle" Margin="0,0,0,10" />
                         <CheckBox x:Name="StartAtLoginCheck" Content="Start Take a Break Goose when I log in" />
                         <!-- Indented to line up with the check box's text (Fluent's box is wider than WPF's). -->
-                        <TextBlock Classes="Hint" Margin="28,2,0,0"
+                        <TextBlock x:Name="StartAtLoginHint" Classes="Hint" Margin="28,2,0,0"
                                    Text="It starts as soon as you log in to your Mac. It's also listed under Login Items in System Settings." />
 
                         <CheckBox x:Name="AutoStartCheck" Content="Start a focus session when the app starts"

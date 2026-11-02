@@ -9,21 +9,24 @@ using Avalonia.Threading;
 namespace TakeABreakGoose;
 
 /// <summary>
-/// Starts the app and wires it together: settings, the scheduler, the goose, the menu bar icon and
-/// the app window, like App.xaml.cs in the Windows app. What the Mac app doesn't have yet (the
-/// global shortcut, call detection, starting at login, one copy at a time) comes in step 3 of
-/// docs/macos-port.md.
+/// Starts the app and wires it together: settings, the scheduler, the goose, the menu bar icon,
+/// the global shortcut and the app window, like App.xaml.cs in the Windows app.
 /// </summary>
 public partial class App : Application, IGooseHost
 {
     private MenuBarIcon? _menuBar;
+    private HotkeyManager? _hotkey;
     private GooseCoordinator _goose = null!;
     private MainWindow? _mainWindow;
     private DispatcherTimer? _schedulerTick;
+    private DispatcherTimer? _callCheck;
     private SettingsStore _settingsStore = null!;
 
     public GooseSettings Settings { get; private set; } = new();
     public BreakScheduler Scheduler { get; private set; } = null!;
+
+    /// <summary>This copy of the app, which Program made sure is the only one.</summary>
+    public static SingleInstance? SingleInstance { get; set; }
 
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
@@ -31,6 +34,14 @@ public partial class App : Application, IGooseHost
     {
         base.OnFrameworkInitializationCompleted();
         if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop) return;
+
+        if (SingleInstance != null) SingleInstance.OpenRequested += ShowMainWindow;
+        // Opening the app again from Finder or Launchpad brings this copy forward: show its window.
+        if (TryGetFeature(typeof(IActivatableLifetime)) is IActivatableLifetime activatable)
+            activatable.Activated += (_, e) =>
+            {
+                if (e.Kind == ActivationKind.Reopen) ShowMainWindow();
+            };
 
         _settingsStore = new SettingsStore(SettingsFolder());
         Settings = _settingsStore.Load();
@@ -56,18 +67,33 @@ public partial class App : Application, IGooseHost
                 endsAt: null, automatically: true);
         UpdateMenuBar();
 
+        _callCheck = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        _callCheck.Tick += (_, _) => _goose.CheckForCall(Calls.InProgress());
+        _callCheck.Start();
+        _goose.CallStarted += ExplainCallsOnce;
+
+        _hotkey = new HotkeyManager();
+        _hotkey.Pressed += ShowMainWindow;
+        bool hotkeyOk = _hotkey.Register(Settings.HotkeyModifiers, Settings.HotkeyKey);
+
         desktop.Exit += (_, _) =>
         {
+            _callCheck.Stop();
             _schedulerTick.Stop();
+            _hotkey.Dispose();
             _menuBar.Dispose();
         };
 
+        // A login item can't be told apart from being opened by hand, so the window always opens;
+        // closing it leaves the goose in the menu bar.
         ShowMainWindow();
+        if (!hotkeyOk)
+            Notice.Show($"{HotkeyText.Mac(Settings.HotkeyModifiers, Settings.HotkeyKey)} is already used by another app. Open the goose from the menu bar to pick another shortcut.");
         if (Array.IndexOf(desktop.Args ?? Array.Empty<string>(), "--summon") >= 0) _goose.SummonBreakGoose();
     }
 
     /// <summary>~/Library/Application Support/TakeABreakGoose, where Mac apps keep their settings.</summary>
-    private static string SettingsFolder()
+    public static string SettingsFolder()
     {
         if (OperatingSystem.IsMacOS())
         {
@@ -106,6 +132,14 @@ public partial class App : Application, IGooseHost
 
     public string? ApplySettings(GooseSettings newSettings, bool startAtLogin)
     {
+        bool hotkeyChanged = newSettings.HotkeyModifiers != Settings.HotkeyModifiers
+                             || newSettings.HotkeyKey != Settings.HotkeyKey;
+        if (hotkeyChanged && _hotkey != null && !_hotkey.Register(newSettings.HotkeyModifiers, newSettings.HotkeyKey))
+        {
+            _hotkey.Register(Settings.HotkeyModifiers, Settings.HotkeyKey);
+            return $"{HotkeyText.Mac(newSettings.HotkeyModifiers, newSettings.HotkeyKey)} is already used by another app. Pick a different shortcut.";
+        }
+
         bool autoStartTurnedOn = newSettings.AutoStartSession && !Settings.AutoStartSession;
         Settings = newSettings;
         Scheduler.ApplySettings(Settings);
@@ -140,6 +174,15 @@ public partial class App : Application, IGooseHost
         _mainWindow.Activate();
     }
 
+    /// <summary>The first time a call keeps the goose away, says so, so a skipped break isn't a mystery.</summary>
+    private void ExplainCallsOnce()
+    {
+        if (Settings.CallNoticeShown) return;
+        Settings.CallNoticeShown = true;
+        TrySave();
+        Notice.Show("You're in a call, so the goose stays away until it's over. You can turn this off in Settings.");
+    }
+
     private void TrySave()
     {
         try
@@ -154,5 +197,5 @@ public partial class App : Application, IGooseHost
 
     private void UpdateMenuBar() =>
         _menuBar?.Update(Scheduler.Describe(_goose.DoNotDisturbForCall), Scheduler.DoNotDisturb,
-            _goose.DoNotDisturbForCall, Scheduler.Session != null);
+            _goose.DoNotDisturbForCall, Scheduler.Session != null, Settings.HotkeyModifiers, Settings.HotkeyKey);
 }

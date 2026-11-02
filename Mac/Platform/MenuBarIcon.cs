@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Platform;
 
 namespace TakeABreakGoose;
@@ -9,6 +10,7 @@ namespace TakeABreakGoose;
 public sealed class MenuBarIcon : IDisposable
 {
     private readonly TrayIcon _icon;
+    private readonly NativeMenuItem _openItem;
     private readonly NativeMenuItem _breakNowItem;
     private readonly NativeMenuItem _doNotDisturbItem;
     private readonly NativeMenuItem _stopSessionItem;
@@ -21,7 +23,7 @@ public sealed class MenuBarIcon : IDisposable
 
     public MenuBarIcon()
     {
-        var openItem = new NativeMenuItem("Open Take a Break Goose");
+        var openItem = _openItem = new NativeMenuItem("Open Take a Break Goose");
         openItem.Click += (_, _) => OpenRequested?.Invoke();
         _breakNowItem = new NativeMenuItem("Take a break now");
         _breakNowItem.Click += (_, _) => SummonRequested?.Invoke();
@@ -49,7 +51,9 @@ public sealed class MenuBarIcon : IDisposable
     }
 
     /// <param name="inCall">Do not disturb is on because the user is in a call.</param>
-    public void Update(string status, bool doNotDisturb, bool inCall, bool sessionRunning)
+    /// <param name="hotkeyKey">The global shortcut, shown next to Open.</param>
+    public void Update(string status, bool doNotDisturb, bool inCall, bool sessionRunning,
+        HotkeyModifiers hotkeyModifiers, string hotkeyKey)
     {
         _icon.ToolTipText = $"Take a Break Goose\n{status}";
         _doNotDisturbItem.IsChecked = doNotDisturb;
@@ -58,6 +62,8 @@ public sealed class MenuBarIcon : IDisposable
         // Do not disturb can outlast its session (the goose's goodbye waits for it), so it stays while on.
         _breakNowItem.IsVisible = _stopSessionItem.IsVisible = sessionRunning;
         _doNotDisturbItem.IsVisible = sessionRunning || doNotDisturb;
+        // HotkeyModifiers have the same values as Avalonia's KeyModifiers.
+        _openItem.Gesture = Enum.TryParse(hotkeyKey, out Key key) ? new KeyGesture(key, (KeyModifiers)hotkeyModifiers) : null;
     }
 
     public void Dispose() => _icon.Dispose();

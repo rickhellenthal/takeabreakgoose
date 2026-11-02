@@ -42,6 +42,8 @@ public partial class SettingsPage : UserControl
         AllowSnoozeCheck.IsChecked = settings.AllowSnooze;
         SnoozeBox.Text = settings.SnoozeMinutes.ToString();
         StartAtLoginCheck.IsChecked = LoginItem.IsEnabled;
+        // Older macOS, or the app run from a build folder rather than its .app: nothing to turn on.
+        StartAtLoginCheck.IsVisible = StartAtLoginHint.IsVisible = LoginItem.IsAvailable;
         CallDoNotDisturbCheck.IsChecked = settings.DoNotDisturbDuringCalls;
         _hotkeyModifiers = settings.HotkeyModifiers;
         _hotkeyKey = settings.HotkeyKey;
@@ -63,9 +65,11 @@ public partial class SettingsPage : UserControl
         }
 
         KeyModifiers modifiers = e.KeyModifiers;
-        if ((modifiers & (KeyModifiers.Control | KeyModifiers.Alt | KeyModifiers.Meta)) == 0)
+        // Option alone isn't enough: it types special characters, and since macOS 15 a shortcut with
+        // only Option can't be registered.
+        if ((modifiers & (KeyModifiers.Control | KeyModifiers.Meta)) == 0)
         {
-            ShowStatus("The shortcut needs Control, Option or Command, so it doesn't clash with normal typing.", error: true);
+            ShowStatus("The shortcut needs Control or Command, so it doesn't clash with normal typing.", error: true);
             return;
         }
 
