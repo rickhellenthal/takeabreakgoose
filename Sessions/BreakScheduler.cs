@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Windows.Threading;
 
 namespace TakeABreakGoose;
@@ -41,6 +42,18 @@ public sealed class BreakScheduler
     /// </summary>
     public WorkSession? SignOffWaiting { get; private set; }
 
+    private readonly List<BreakRecord> _breaks = new();
+    private DateTime _awaySince;
+
+    /// <summary>The breaks taken during the current session (or the one that just ended), oldest first.</summary>
+    public IReadOnlyList<BreakRecord> Breaks => _breaks;
+
+    /// <summary>When the break the user is on right now started, or null when they're not on one.</summary>
+    public DateTime? BreakStartedAt { get; private set; }
+
+    /// <summary>While away long enough for it to count as a break: when the user left.</summary>
+    public DateTime? AwaySince => IsAway ? _awaySince : null;
+
     /// <summary>Raised every second and whenever the state changes, so UIs can refresh countdowns.</summary>
     public event Action? StateChanged;
     public event Action? BreakDue;
@@ -78,6 +91,8 @@ public sealed class BreakScheduler
     {
         Session = new WorkSession(intervalMinutes, breakMinutes, _now(), endsAt, automatically);
         SignOffWaiting = null; // a new session; the goodbye for the old one isn't needed anymore
+        _breaks.Clear();
+        BreakStartedAt = null;
         Reschedule();
     }
 
@@ -89,6 +104,8 @@ public sealed class BreakScheduler
         GooseVisiting = false;
         AwaitingReturn = false;
         BreakEndsAt = null;
+        BreakStartedAt = null;
+        _breaks.Clear();
         Reschedule();
     }
 
@@ -151,6 +168,7 @@ public sealed class BreakScheduler
         {
             // The next reminder only starts counting once the user says they're ready to focus again.
             BreakEndsAt = now.AddMinutes(CurrentBreakMinutes);
+            BreakStartedAt = now;
             AwaitingReturn = true;
             SetNext(null);
         }
@@ -169,8 +187,11 @@ public sealed class BreakScheduler
     /// The user was away long enough for a break while the goose waited for an answer: that counts
     /// as the break, and the goose now asks whether they're ready to focus.
     /// </summary>
-    public void BreakTakenWhileAway()
+    /// <param name="awaySince">When the user left the computer.</param>
+    public void BreakTakenWhileAway(DateTime awaySince)
     {
+        _breaks.Add(new BreakRecord(awaySince, _now(), BreakKind.Away));
+        BreakStartedAt = null;
         GooseVisiting = false;
         AwaitingReturn = true;
         BreakEndsAt = null;
@@ -188,6 +209,13 @@ public sealed class BreakScheduler
     /// <summary>The user is back from their break and ready to focus: start counting towards the next one.</summary>
     public void ReadyToFocus()
     {
+        var now = _now();
+        if (BreakStartedAt is DateTime start)
+        {
+            var kind = BreakEndsAt is DateTime end && now < end ? BreakKind.EndedEarly : BreakKind.Taken;
+            _breaks.Add(new BreakRecord(start, now, kind));
+            BreakStartedAt = null;
+        }
         AwaitingReturn = false;
         BreakEndsAt = null;
         SetNext(CurrentInterval is int interval ? _now().AddMinutes(interval) : null);
@@ -247,10 +275,13 @@ public sealed class BreakScheduler
         int breakMinutes = CurrentBreakMinutes;
         if (Session != null && breakMinutes > 0 && !GooseVisiting && !AwaitingReturn)
         {
-            bool away = _idleTime() >= TimeSpan.FromMinutes(breakMinutes);
+            var idle = _idleTime();
+            bool away = idle >= TimeSpan.FromMinutes(breakMinutes);
+            if (away && !IsAway) _awaySince = now - idle;
             if (IsAway && !away)
             {
                 // Welcome back: the time away counted as a break, so start a fresh interval.
+                _breaks.Add(new BreakRecord(_awaySince, now, BreakKind.Away));
                 IsAway = false;
                 Reschedule();
                 return;

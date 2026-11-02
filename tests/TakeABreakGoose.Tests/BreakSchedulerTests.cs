@@ -83,7 +83,7 @@ public class BreakSchedulerTests
         _h.Work(Minutes(30));
         _h.Scheduler.GooseArrived();
 
-        _h.Scheduler.BreakTakenWhileAway();
+        _h.Scheduler.BreakTakenWhileAway(_h.Now - Minutes(6));
         Assert.True(_h.Scheduler.AwaitingReturn);
         Assert.Null(_h.Scheduler.NextBreakAt);
         Assert.Equal("Break's over, waiting for you", _h.Scheduler.Describe());

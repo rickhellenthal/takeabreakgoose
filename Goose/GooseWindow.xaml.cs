@@ -69,6 +69,7 @@ public partial class GooseWindow : Window
     private DateTime _breakEnd;
     private Question _question = Question.TakeABreak;
     private bool _awayLongEnoughForABreak;
+    private DateTime _awaySince;
     private DateTime _askedAt;
     private readonly NapWatch _napWatch = new(DateTime.Now);
 
@@ -83,9 +84,9 @@ public partial class GooseWindow : Window
 
     /// <summary>
     /// Raised when the user was away for at least a break's length while the goose asked them to
-    /// take one, so that time counts as the break.
+    /// take one, so that time counts as the break. Comes with when they left the computer.
     /// </summary>
-    public event Action? TookBreakWhileAway;
+    public event Action<DateTime>? TookBreakWhileAway;
 
     /// <summary>Raised once the goose has left the screen.</summary>
     public event Action? Finished;
@@ -451,13 +452,14 @@ public partial class GooseWindow : Window
         var awayWhileAsking = idle < sinceAsked ? idle : sinceAsked;
         if (awayWhileAsking >= length)
         {
+            if (!_awayLongEnoughForABreak) _awaySince = DateTime.Now - awayWhileAsking;
             _awayLongEnoughForABreak = true;
         }
         else if (_awayLongEnoughForABreak && idle < TimeSpan.FromSeconds(2))
         {
             _awayLongEnoughForABreak = false;
             StopTalking();
-            TookBreakWhileAway?.Invoke();
+            TookBreakWhileAway?.Invoke(_awaySince);
             AskIfReady("Looks like you already took a break while I waited. Ready to focus again?");
         }
     }

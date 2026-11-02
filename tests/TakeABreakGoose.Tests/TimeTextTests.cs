@@ -40,6 +40,15 @@ public class TimeTextTests
     }
 
     [Fact]
+    public void Lengths_round_to_the_nearest_minute()
+    {
+        Assert.Equal("under a minute", TimeText.Length(TimeSpan.FromSeconds(20)));
+        Assert.Equal("1 min", TimeText.Length(TimeSpan.FromSeconds(80)));
+        Assert.Equal("2 min", TimeText.Length(TimeSpan.FromSeconds(90)));
+        Assert.Equal("1 h 5 min", TimeText.Length(TimeSpan.FromMinutes(65.2)));
+    }
+
+    [Fact]
     public void End_times_after_midnight_say_tomorrow()
     {
         var now = new DateTime(2026, 11, 2, 23, 0, 0);

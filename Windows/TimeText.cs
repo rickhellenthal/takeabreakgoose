@@ -18,6 +18,15 @@ public static class TimeText
     public static string End(DateTime end, DateTime now) =>
         end.Date > now.Date ? $"tomorrow at {end:HH:mm}" : $"at {end:HH:mm}";
 
+    /// <summary>
+    /// How long something took: "under a minute", or "14 min" / "1 h 5 min" rounded to the nearest
+    /// minute, so it matches the clock times shown next to it.
+    /// </summary>
+    public static string Length(TimeSpan time) =>
+        time < TimeSpan.FromSeconds(30)
+            ? "under a minute"
+            : Duration(TimeSpan.FromMinutes(Math.Round(time.TotalMinutes, MidpointRounding.AwayFromZero)));
+
     /// <summary>"2 h 14 min", "2 h" or "14 min", rounded up to the next minute.</summary>
     public static string Duration(TimeSpan time)
     {

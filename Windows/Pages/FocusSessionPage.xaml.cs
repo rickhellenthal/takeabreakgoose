@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace TakeABreakGoose;
 
@@ -128,6 +130,8 @@ public partial class FocusSessionPage : UserControl
                 ? $"{started} · ends {TimeText.End(end, now)} ({TimeText.Countdown(end - now)} left)"
                 : $"{started} · no end time, stop it whenever you're done.";
 
+            ShowBreakHistory(scheduler, now);
+
             _showingStatus = true;
             DoNotDisturbSwitch.IsChecked = scheduler.DoNotDisturb;
             _showingStatus = false;
@@ -157,6 +161,72 @@ public partial class FocusSessionPage : UserControl
             ? $"When the app starts, it starts a focus session by itself (a break every {settings.AutoStartIntervalMinutes} min). You can change this in Settings."
             : "Outside a focus session the goose stays quiet. Want it to start one by itself? You can turn that on in Settings.";
     }
+
+    // ---- Break history ----
+
+    private string _shownBreaks = "";
+
+    /// <summary>The breaks of the running session, newest first, with the one in progress on top.</summary>
+    private void ShowBreakHistory(BreakScheduler scheduler, DateTime now)
+    {
+        var rows = new List<(string Times, string Note, string Length, bool Now)>();
+        if (scheduler.BreakStartedAt is DateTime onBreakSince)
+            rows.Add(($"{onBreakSince:HH:mm} – now", "On your break", SoFar(now - onBreakSince), true));
+        else if (scheduler.AwaySince is DateTime awaySince)
+            rows.Add(($"{awaySince:HH:mm} – now", "Away from the computer", SoFar(now - awaySince), true));
+        foreach (var record in scheduler.Breaks.Reverse())
+            rows.Add(($"{record.Start:HH:mm} – {record.End:HH:mm}", BreakNote(record.Kind), TimeText.Length(record.Length), false));
+
+        var done = scheduler.Breaks;
+        var total = done.Aggregate(TimeSpan.Zero, (sum, b) => sum + b.Length);
+        BreaksSummary.Text = done.Count == 0 ? ""
+            : $"{done.Count} {(done.Count == 1 ? "break" : "breaks")} · {TimeText.Length(total)} in total";
+        BreaksFooter.Visibility = Ui.Show(rows.Count > 0);
+
+        // Only rebuild the list when something in it changed (this runs every second).
+        string shown = string.Join("|", rows);
+        if (shown == _shownBreaks) return;
+        _shownBreaks = shown;
+        BreakList.Children.Clear();
+        foreach (var row in rows) BreakList.Children.Add(BreakRow(row.Times, row.Note, row.Length, row.Now));
+    }
+
+    private static string SoFar(TimeSpan time) =>
+        time < TimeSpan.FromSeconds(30) ? "just started" : $"{TimeText.Length(time)} so far";
+
+    private static string BreakNote(BreakKind kind) => kind switch
+    {
+        BreakKind.EndedEarly => "Ended early",
+        BreakKind.Away => "Away from the computer",
+        _ => "Napped with the goose",
+    };
+
+    /// <summary>One break; the one in progress looks like a selected chip (orange border and text).</summary>
+    private static Border BreakRow(string times, string note, string length, bool inProgress)
+    {
+        var lengthText = new TextBlock { Text = length, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center };
+        if (inProgress) lengthText.Foreground = Color("#B85F12");
+        DockPanel.SetDock(lengthText, Dock.Right);
+        var details = new StackPanel();
+        details.Children.Add(new TextBlock { Text = times });
+        details.Children.Add(new TextBlock { Text = note, Style = (Style)Application.Current.FindResource("Hint") });
+        var row = new DockPanel();
+        row.Children.Add(lengthText);
+        row.Children.Add(details);
+        return new Border
+        {
+            Background = Color(inProgress ? "#FDEBD8" : "White"),
+            // Every row has the border's room, so the rows don't shift when a break ends.
+            BorderBrush = inProgress ? (Brush)Application.Current.FindResource("Accent") : Brushes.Transparent,
+            BorderThickness = new Thickness(1.5),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(12, 7, 12, 7),
+            Margin = new Thickness(0, 0, 0, 4),
+            Child = row,
+        };
+    }
+
+    private static Brush Color(string hex) => (Brush)new BrushConverter().ConvertFrom(hex)!;
 
     private void Interval_Checked(object sender, RoutedEventArgs e)
     {
