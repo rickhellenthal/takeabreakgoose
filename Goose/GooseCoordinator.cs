@@ -111,7 +111,7 @@ public sealed class GooseCoordinator
             "That's a wrap!",
             $"That's it for this focus session: {duration} of focus since {session.StartedAt:HH:mm}. "
             + "Time to wrap up and give your brain some rest.",
-            null, "Bye, goose!", AllowSnooze: false, AllowFinishUp: false, StartsBreak: false,
+            SessionSummary.Breaks(_scheduler.Breaks), "Bye, goose!", AllowSnooze: false, AllowFinishUp: false, StartsBreak: false,
             Outfit: GooseOutfit.PartyHat));
     }
 
