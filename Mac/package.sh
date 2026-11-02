@@ -13,7 +13,8 @@ set -euo pipefail
 if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
     log="$(mktemp)"
     exec > >(tee -a "$log") 2>&1
-    trap 'echo "::error title=package.sh failed at line $LINENO::$BASH_COMMAND%0A$(tail -n 20 "$log" | sed "s/%/%25/g" | awk "{printf \"%s%%0A\", \$0}")"' ERR
+    # The pause lets the failed command's last output reach the log first.
+    trap 'sleep 1; echo "::error title=package.sh failed at line $LINENO::$BASH_COMMAND%0A$(tail -n 20 "$log" | sed "s/%/%25/g" | awk "{printf \"%s%%0A\", \$0}")"' ERR
 fi
 
 arch="${1:-}"
@@ -42,9 +43,10 @@ sed "s/{{VERSION}}/$version/g" "$root/Mac/Info.plist" > "$app/Contents/Info.plis
 cp "$root/Mac/Assets/goose.icns" "$app/Contents/Resources/goose.icns"
 
 # Ad hoc signing: no Apple Developer ID, so macOS still asks before opening it the first time
-# (see the README), but it runs. The libraries first, then the bundle around them.
-find "$app/Contents/MacOS" -type f \( -name "*.dylib" -o -name "createdump" \) \
-    -exec codesign --force --sign - {} \;
+# (see the README), but it runs. Every file next to the executable first, then the bundle around
+# them: macOS counts everything in Contents/MacOS as code, .NET's .dll files too, and won't sign a
+# bundle with unsigned code in it.
+find "$app/Contents/MacOS" -type f ! -name "TakeABreakGoose" -exec codesign --force --sign - {} +
 codesign --force --sign - "$app"
 codesign --verify --strict "$app"
 
