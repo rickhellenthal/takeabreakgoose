@@ -12,6 +12,7 @@ public partial class GooseFigure : UserControl
     private GooseOutfit _outfit;
     private bool _sleeping;
     private NapLook _look;
+    private bool _huffy;
 
     public GooseFigure()
     {
@@ -65,6 +66,7 @@ public partial class GooseFigure : UserControl
             _sleeping = value;
 
             _look = NapLook.Asleep;
+            _huffy = false;
             BackLeg.Visibility = FrontLeg.Visibility = Show(!value);
             OpenEye.Visibility = Show(!value);
             ClosedEye.Visibility = Show(value);
@@ -130,6 +132,19 @@ public partial class GooseFigure : UserControl
                 EasingFunction = new SineEase { EasingMode = EasingMode.EaseInOut },
             };
             HeadTilt.BeginAnimation(RotateTransform.AngleProperty, tilt);
+        }
+    }
+
+    /// <summary>Standing up: the unimpressed eye instead of the open one. The head angle is up to the caller.</summary>
+    public bool Huffy
+    {
+        get => _huffy;
+        set
+        {
+            if (_sleeping || value == _huffy) return;
+            _huffy = value;
+            OpenEye.Visibility = Show(!value);
+            UnimpressedEye.Visibility = Show(value);
         }
     }
 

@@ -207,7 +207,8 @@ public partial class GooseWindow : Window
 
             case Phase.Talking:
                 // Idle: a gentle head bob while waiting for an answer (standing up; sitting, it keeps its pose).
-                if (!Figure.Sleeping) Figure.HeadAngle = Math.Sin(now.TotalSeconds * 2.5) * 4;
+                if (!Figure.Sleeping)
+                    Figure.HeadAngle = (Figure.Huffy ? HuffyHeadAngle / 2 : 0) + Math.Sin(now.TotalSeconds * 2.5) * 4;
                 // If the break runs out while the goose asks about it, the question changes.
                 if (_question is Question.EndBreakEarly or Question.StillOnBreak or Question.EndBreakAnyway
                     && DateTime.Now >= _breakEnd) AskIfReady();
@@ -425,7 +426,9 @@ public partial class GooseWindow : Window
     /// <summary>They'd rather end the break: the goose checks once more, not hiding what it thinks of that.</summary>
     private void AskToEndBreakAnyway()
     {
-        Figure.Look = NapLook.Unimpressed;
+        // Sitting (it caught you working) or standing (you woke it up), it's not impressed either way.
+        if (Figure.Sleeping) Figure.Look = NapLook.Unimpressed;
+        else Figure.Huffy = true;
         string message = EndBreakAnywayLines[Random.Shared.Next(EndBreakAnywayLines.Length)];
         Ask(Question.EndBreakAnyway, "Really?", message, hint: null,
             primary: "Fine, I'll go", secondary: "Yes, end my break");
@@ -446,6 +449,7 @@ public partial class GooseWindow : Window
     private void AskIfReady(string message = "Break's over. Ready to focus again?")
     {
         Figure.Sleeping = false;
+        Figure.Huffy = false; // the break ran out while it was sulking: all is forgiven
         Figure.ToolTip = null;
         BreakCard.Visibility = Visibility.Collapsed;
 
@@ -509,13 +513,21 @@ public partial class GooseWindow : Window
     }
 
     /// <summary>The user is back (or cut the break short) and ready to focus: off the goose goes.</summary>
-    private void ConfirmReady()
+    private void ConfirmReady(bool endedEarly = false)
     {
         StopTalking();
         Figure.Sleeping = false; // it may still be sitting down
+        if (endedEarly)
+        {
+            // Off it goes in a huff: beak in the air, not looking back.
+            Figure.Huffy = true;
+            Figure.HeadAngle = HuffyHeadAngle;
+        }
         ReadyToFocus?.Invoke();
         _phase = Phase.WalkingOut;
     }
+
+    private const double HuffyHeadAngle = -14;
 
     private void NapLonger()
     {
@@ -581,9 +593,9 @@ public partial class GooseWindow : Window
         {
             case Question.TakeABreak: Leave(GooseOutcome.Snoozed); break;
             case Question.ReadyToFocus: NapLonger(); break;
-            case Question.StillOnBreak: AskToEndBreakAnyway(); break;
-            case Question.EndBreakEarly:
-            case Question.EndBreakAnyway: ConfirmReady(); break;
+            case Question.StillOnBreak:
+            case Question.EndBreakEarly: AskToEndBreakAnyway(); break;
+            case Question.EndBreakAnyway: ConfirmReady(endedEarly: true); break;
         }
     }
 
