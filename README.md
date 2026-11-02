@@ -49,16 +49,20 @@ To uninstall, go to *Settings → Apps → Installed apps* and remove **Take a B
 
 1. Check which Mac you have: open the Apple menu  → **About This Mac**. "Chip: Apple M…" is an Apple Silicon Mac, "Processor: Intel…" an Intel Mac.
 2. Download the matching file from the [latest release](https://github.com/rickhellenthal/takeabreakgoose/releases/latest): **`TakeABreakGoose-x.y.z-mac-apple-silicon.dmg`** or **`TakeABreakGoose-x.y.z-mac-intel.dmg`**.
-3. Open it and drag **Take a Break Goose** onto **Applications**.
+3. Open it and drag **Take a Break Goose** onto **Applications**. Don't open the app from the disk image itself: macOS won't let you there (see below).
 4. Open it from Applications. The goose lives in the menu bar at the top of the screen, not in the Dock.
 
 It needs macOS 12 or later.
 
-> **"Take a Break Goose" can't be opened, or "Apple could not verify" it?** The app isn't signed with an Apple Developer ID, so macOS blocks it the first time. Click **Done** (not Move to Trash), then open **System Settings → Privacy & Security**, scroll down to the message about Take a Break Goose and click **Open Anyway**. Confirm with your password, and from then on it opens like any other app.
+> **"Take a Break Goose" can't be opened, or "Apple could not verify" it?** The app isn't signed with an Apple Developer ID, so macOS blocks it the first time. If there's a **Done** button, click it (not Move to Trash), then open **System Settings → Privacy & Security**, scroll down to the message about Take a Break Goose and click **Open Anyway**. Confirm with your password, and from then on it opens like any other app.
 >
-> Comfortable with Terminal? This does the same:
+> No Open Anyway there, or only an **OK** button? That happens when the app is opened from the disk image, and on recent macOS versions. Open **Terminal** (⌘ Space, type Terminal) and paste this, with the disk image still open. It copies the app to Applications, tells macOS you trust it, and opens it:
 > ```bash
-> xattr -dr com.apple.quarantine "/Applications/Take a Break Goose.app"
+> cd ~; ditto "/Volumes/Take a Break Goose/Take a Break Goose.app" "/Applications/Take a Break Goose.app" && xattr -dr com.apple.quarantine "/Applications/Take a Break Goose.app" && open "/Applications/Take a Break Goose.app"
+> ```
+> Already copied it to Applications yourself? Then this is enough:
+> ```bash
+> xattr -dr com.apple.quarantine "/Applications/Take a Break Goose.app" && open "/Applications/Take a Break Goose.app"
 > ```
 
 To uninstall, quit the goose from its menu bar icon and drag **Take a Break Goose** from Applications to the Trash.

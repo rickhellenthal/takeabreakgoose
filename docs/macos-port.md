@@ -125,9 +125,11 @@ and opening the app a second time.
 - The README has a download section for Macs, including how to open an app that isn't signed with
   a Developer ID (Privacy & Security → Open Anyway, or `xattr -dr com.apple.quarantine`).
 
-Checked on Windows: `package.sh` with stand-ins for `codesign` and `hdiutil` (the bundle's layout,
-`Info.plist` and the file names). Still to check: the first real run on GitHub's macOS runner, and
-opening the `.dmg` on a Mac.
+Checked: the Mac build on GitHub's macOS runner (the core tests, signing every file and the
+bundle), and the Apple Silicon `.dmg` on a MacBook Pro with macOS 26.6. Opened straight from the
+disk image, macOS refuses it with only an OK button ("operation not permitted": Gatekeeper, with
+no Open Anyway); copied to Applications with the quarantine mark removed, it runs. The README
+says so. Not checked yet: the Intel `.dmg`.
 
 ## Testing
 
