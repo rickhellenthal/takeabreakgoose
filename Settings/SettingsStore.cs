@@ -38,8 +38,11 @@ public static class SettingsStore
     public static void Save(GooseSettings settings)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-        File.WriteAllText(FilePath, JsonSerializer.Serialize(settings, JsonOptions));
+        File.WriteAllText(FilePath, Serialize(settings));
     }
+
+    /// <summary>The settings as the file's JSON.</summary>
+    public static string Serialize(GooseSettings settings) => JsonSerializer.Serialize(settings, JsonOptions);
 
     /// <summary>Settings from the file's JSON, before sanitizing.</summary>
     public static GooseSettings Parse(string json) =>

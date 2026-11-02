@@ -186,19 +186,11 @@ public partial class FocusSessionPage : UserControl
     {
         // Opening it starts "End at" from now, not from a time remembered from another day.
         if (EndOptionsToggle.IsChecked == true && !_loadingForm)
-            SessionEndTimeBox.Text = FormatTimeOfDay(NextQuarterHour(DateTime.Now));
+            SessionEndTimeBox.Text = FormatTimeOfDay(SessionPlan.NextQuarterHour(DateTime.Now));
         // Closing it throws away what was picked, so opening it again starts fresh.
         else if (EndOptionsToggle.IsChecked != true && _host != null)
             ResetEndChoice(_host.Settings);
         UpdateEndOptions();
-    }
-
-    /// <summary>The first quarter hour after now (14:37 → 14:45), so "End at" never means right now or tomorrow.</summary>
-    private static TimeSpan NextQuarterHour(DateTime now)
-    {
-        int minutes = (int)now.TimeOfDay.TotalMinutes + 1;
-        minutes = (minutes + 14) / 15 * 15;
-        return TimeSpan.FromMinutes(minutes % (24 * 60));
     }
 
     private void UpdateEndOptions()
@@ -252,9 +244,8 @@ public partial class FocusSessionPage : UserControl
     private void StepEndTime(int minutes)
     {
         EndAtRadio.IsChecked = true;
-        if (!SessionPlan.TryParseTimeOfDay(SessionEndTimeBox.Text, out var time)) time = NextQuarterHour(DateTime.Now);
-        int total = (int)time.TotalMinutes + minutes;
-        SessionEndTimeBox.Text = FormatTimeOfDay(TimeSpan.FromMinutes((total + 24 * 60) % (24 * 60)));
+        if (!SessionPlan.TryParseTimeOfDay(SessionEndTimeBox.Text, out var time)) time = SessionPlan.NextQuarterHour(DateTime.Now);
+        SessionEndTimeBox.Text = FormatTimeOfDay(SessionPlan.AddToTimeOfDay(time, minutes));
     }
 
     /// <summary>The end-time choice as typed so far, or an explanation of what's wrong with it.</summary>

@@ -13,34 +13,33 @@ public static class Autostart
     private const string StartupApprovedKey = @"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run";
     private const string ValueName = "TakeABreakGoose";
 
-    public static bool IsEnabled
+    public static bool IsEnabled => IsEnabledIn(Registry.CurrentUser);
+
+    public static void SetEnabled(bool enabled) => SetEnabledIn(Registry.CurrentUser, enabled, Environment.ProcessPath);
+
+    // The same, for any registry root, so the tests can use a scratch key instead of the real one.
+    internal static bool IsEnabledIn(RegistryKey user)
     {
-        get
-        {
-            using var key = Registry.CurrentUser.OpenSubKey(RunKey);
-            return key?.GetValue(ValueName) != null && !DisabledInTaskManager;
-        }
+        using var key = user.OpenSubKey(RunKey);
+        return key?.GetValue(ValueName) != null && !DisabledInTaskManager(user);
     }
 
-    public static void SetEnabled(bool enabled)
+    internal static void SetEnabledIn(RegistryKey user, bool enabled, string? exePath)
     {
-        using (var key = Registry.CurrentUser.CreateSubKey(RunKey))
+        using (var key = user.CreateSubKey(RunKey))
         {
-            if (enabled) key.SetValue(ValueName, $"\"{Environment.ProcessPath}\" {Argument}");
+            if (enabled) key.SetValue(ValueName, $"\"{exePath}\" {Argument}");
             else key.DeleteValue(ValueName, throwOnMissingValue: false);
         }
         // No value means "enabled" to Windows, so this also undoes an earlier "Disable" in Task Manager.
-        using var approved = Registry.CurrentUser.OpenSubKey(StartupApprovedKey, writable: true);
+        using var approved = user.OpenSubKey(StartupApprovedKey, writable: true);
         approved?.DeleteValue(ValueName, throwOnMissingValue: false);
     }
 
     /// <summary>The first byte of the value is odd (e.g. 03) when the app is disabled, even (02) when enabled.</summary>
-    private static bool DisabledInTaskManager
+    private static bool DisabledInTaskManager(RegistryKey user)
     {
-        get
-        {
-            using var key = Registry.CurrentUser.OpenSubKey(StartupApprovedKey);
-            return key?.GetValue(ValueName) is byte[] { Length: > 0 } state && (state[0] & 1) == 1;
-        }
+        using var key = user.OpenSubKey(StartupApprovedKey);
+        return key?.GetValue(ValueName) is byte[] { Length: > 0 } state && (state[0] & 1) == 1;
     }
 }

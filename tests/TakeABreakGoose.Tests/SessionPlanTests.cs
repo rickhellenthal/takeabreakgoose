@@ -40,6 +40,40 @@ public class SessionPlanTests
     }
 
     [Theory]
+    [InlineData(14, 37, 0, "14:45")]
+    [InlineData(14, 30, 30, "14:45")]   // half past is already gone
+    [InlineData(14, 45, 0, "15:00")]   // never right now
+    [InlineData(0, 0, 0, "00:15")]
+    [InlineData(23, 50, 0, "00:00")]   // midnight, which is tomorrow
+    public void Opening_the_end_time_suggests_the_next_quarter_hour(int hour, int minute, int second, string expected)
+    {
+        var now = new DateTime(2026, 11, 2, hour, minute, second);
+
+        Assert.Equal(TimeSpan.Parse(expected), SessionPlan.NextQuarterHour(now));
+    }
+
+    [Fact]
+    public void The_suggested_end_time_is_always_in_the_future_today_or_just_after_midnight()
+    {
+        for (var now = Morning.Date; now < Morning.Date.AddDays(1); now = now.AddSeconds(30))
+        {
+            var end = SessionPlan.NextOccurrence(SessionPlan.NextQuarterHour(now), now);
+            Assert.InRange(end - now, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(16));
+        }
+    }
+
+    [Theory]
+    [InlineData("17:00", 15, "17:15")]
+    [InlineData("17:00", -15, "16:45")]
+    [InlineData("12:00", -1, "11:59")]
+    [InlineData("23:50", 15, "00:05")]
+    [InlineData("00:05", -15, "23:50")]
+    public void Stepping_the_end_time_goes_round_the_clock(string time, int minutes, string expected)
+    {
+        Assert.Equal(TimeSpan.Parse(expected), SessionPlan.AddToTimeOfDay(TimeSpan.Parse(time), minutes));
+    }
+
+    [Theory]
     [InlineData("17:00", 17, 0)]
     [InlineData("17.00", 17, 0)]
     [InlineData("1700", 17, 0)]

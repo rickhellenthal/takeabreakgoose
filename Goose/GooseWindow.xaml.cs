@@ -51,12 +51,6 @@ public partial class GooseWindow : Window
         "Fine. But don't come honking to me when your focus runs out.",
     };
 
-    // Using the computer during the break first half wakes the goose, then it asks.
-    private static readonly TimeSpan GraceAfterNapStarts = TimeSpan.FromSeconds(5);   // time to get up and go
-    private const double UsedForSecondsBeforeAsking = 6;
-    private static readonly TimeSpan IdleBeforeDozingOff = TimeSpan.FromSeconds(4);
-    private static readonly TimeSpan IdleBeforeGivingUpAsking = TimeSpan.FromSeconds(20);
-
     private const double WalkSpeed = 150;   // DIPs per second
     private const double StepRate = 12;     // leg swing speed, radians per second
     private const double PeekVisible = 40;  // how much of the goose shows while peeking
@@ -76,8 +70,7 @@ public partial class GooseWindow : Window
     private Question _question = Question.TakeABreak;
     private bool _awayLongEnoughForABreak;
     private DateTime _askedAt;
-    private DateTime _watchForUseFrom;
-    private double _usedDuringBreakSeconds;
+    private readonly NapWatch _napWatch = new(DateTime.Now);
 
     /// <summary>Raised as soon as the user answers the goose.</summary>
     public event Action<GooseOutcome>? Answered;
@@ -215,7 +208,7 @@ public partial class GooseWindow : Window
                 if (_question == Question.TakeABreak) WatchForBreakWhileAway();
                 // No answer because they did get up after all: back to the nap, without a fuss.
                 if (_question is Question.StillOnBreak or Question.EndBreakAnyway
-                    && UserActivity.IdleTime() >= IdleBeforeGivingUpAsking)
+                    && NapWatch.GaveUpAsking(UserActivity.IdleTime()))
                     ResumeNap();
                 break;
 
@@ -349,7 +342,7 @@ public partial class GooseWindow : Window
         _breakEnd = _breakStart + length;
         Figure.Sleeping = true;
         Figure.ToolTip = NapToolTip;
-        WatchForUseAfter(GraceAfterNapStarts);
+        _napWatch.Restart(DateTime.Now);
 
         BreakTitle.Text = title;
         UpdateBreakProgress();
@@ -381,31 +374,17 @@ public partial class GooseWindow : Window
 
     private string NapToolTip => $"Napping until {_breakEnd:HH:mm}. Click me if you need to end your break early.";
 
-    private void WatchForUseAfter(TimeSpan grace)
-    {
-        _watchForUseFrom = DateTime.Now + grace;
-        _usedDuringBreakSeconds = 0;
-    }
-
     /// <summary>
     /// Mid-nap: using the computer half wakes the goose (head up, one eye open). Keep at it and it
     /// asks whether you're really taking your break; leave it alone and it dozes off again.
     /// </summary>
     private void WatchForUseDuringBreak(double dt)
     {
-        var now = DateTime.Now;
-        if (now < _watchForUseFrom) return;
-        var idle = UserActivity.IdleTime();
-        if (idle < TimeSpan.FromSeconds(1) && idle < now - _watchForUseFrom)
+        switch (_napWatch.Update(DateTime.Now, UserActivity.IdleTime(), TimeSpan.FromSeconds(dt)))
         {
-            Figure.Look = NapLook.Drowsy;
-            _usedDuringBreakSeconds += dt;
-            if (_usedDuringBreakSeconds >= UsedForSecondsBeforeAsking) AskIfStillOnBreak();
-        }
-        else if (idle >= IdleBeforeDozingOff)
-        {
-            Figure.Look = NapLook.Asleep;
-            _usedDuringBreakSeconds = 0;
+            case NapWatchState.Asleep: Figure.Look = NapLook.Asleep; break;
+            case NapWatchState.Stirring: Figure.Look = NapLook.Drowsy; break;
+            case NapWatchState.ShouldAsk: AskIfStillOnBreak(); break;
         }
     }
 
@@ -544,7 +523,7 @@ public partial class GooseWindow : Window
         Figure.Sleeping = true;
         Figure.Look = NapLook.Asleep; // it may still be sitting there half awake
         Figure.ToolTip = NapToolTip;
-        WatchForUseAfter(GraceAfterNapStarts);
+        _napWatch.Restart(DateTime.Now);
         UpdateBreakProgress();
         BreakCard.Visibility = Visibility.Visible;
     }
