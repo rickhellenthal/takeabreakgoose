@@ -5,8 +5,11 @@ using System.Text.Json.Serialization;
 
 namespace TakeABreakGoose;
 
-/// <summary>Reads and writes the settings file in %APPDATA%\TakeABreakGoose.</summary>
-public static class SettingsStore
+/// <summary>
+/// Reads and writes settings.json in the app's settings folder, which each platform picks
+/// (%APPDATA%\TakeABreakGoose on Windows).
+/// </summary>
+public sealed class SettingsStore
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -14,12 +17,14 @@ public static class SettingsStore
         Converters = { new JsonStringEnumConverter() },
     };
 
-    public static string FilePath { get; } = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "TakeABreakGoose",
-        "settings.json");
+    public SettingsStore(string folder)
+    {
+        FilePath = Path.Combine(folder, "settings.json");
+    }
 
-    public static GooseSettings Load()
+    public string FilePath { get; }
+
+    public GooseSettings Load()
     {
         GooseSettings settings;
         try
@@ -35,7 +40,7 @@ public static class SettingsStore
         return settings;
     }
 
-    public static void Save(GooseSettings settings)
+    public void Save(GooseSettings settings)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
         File.WriteAllText(FilePath, Serialize(settings));

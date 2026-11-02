@@ -1,0 +1,41 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TakeABreakGoose"
+        x:Class="TakeABreakGoose.MainWindow"
+        Title="Take a Break Goose"
+        Width="540" Height="640" MinHeight="420" CanResize="True"
+        WindowStartupLocation="CenterScreen" Icon="/Assets/goose.ico"
+        FontSize="13" Background="#FAF7F2" Foreground="#222222">
+    <!-- The styles live in Styles.axaml; each tab is its own page in Pages/. -->
+    <Grid Margin="20,18,20,16" RowDefinitions="Auto,Auto,*">
+        <!-- Header -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,14">
+            <Image x:Name="HeaderIcon" Width="42" Height="42" DockPanel.Dock="Left" />
+            <StackPanel Margin="12,0" VerticalAlignment="Center">
+                <TextBlock Text="Take a Break Goose" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock x:Name="HeaderStatus" Classes="Hint" />
+            </StackPanel>
+        </DockPanel>
+
+        <Grid Grid.Row="1" Margin="0,0,0,14">
+            <StackPanel x:Name="Tabs" Orientation="Horizontal">
+                <RadioButton x:Name="SessionTab" Content="Focus session" GroupName="Tabs"
+                             Classes="TabPill" IsChecked="True" IsCheckedChanged="Tab_Checked" />
+                <RadioButton x:Name="WardrobeTab" Content="Wardrobe" GroupName="Tabs"
+                             Classes="TabPill" IsCheckedChanged="Tab_Checked" />
+                <RadioButton x:Name="SettingsTab" Content="Settings" GroupName="Tabs"
+                             Classes="TabPill" IsCheckedChanged="Tab_Checked" />
+            </StackPanel>
+            <!-- Instead of the tabs while a page within Settings is open. -->
+            <Button x:Name="BackButton" Content="←  Settings" Classes="BackButton"
+                    HorizontalAlignment="Left" IsVisible="False" Click="Back_Click" />
+        </Grid>
+
+        <Grid Grid.Row="2">
+            <local:FocusSessionPage x:Name="SessionView" />
+            <local:WardrobePage x:Name="WardrobeView" IsVisible="False" />
+            <local:SettingsPage x:Name="SettingsView" IsVisible="False" />
+            <local:MessagesPage x:Name="MessagesView" IsVisible="False" />
+        </Grid>
+    </Grid>
+</Window>

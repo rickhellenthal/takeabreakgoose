@@ -4,9 +4,11 @@ using System.Runtime.InteropServices;
 namespace TakeABreakGoose;
 
 /// <summary>Tells how long ago the user last used the mouse or keyboard.</summary>
-public static class UserActivity
+public sealed class UserActivity : IUserActivity
 {
-    public static TimeSpan IdleTime()
+    public static readonly UserActivity Instance = new();
+
+    public TimeSpan IdleTime()
     {
         var info = new LASTINPUTINFO { cbSize = (uint)Marshal.SizeOf<LASTINPUTINFO>() };
         if (!GetLastInputInfo(ref info)) return TimeSpan.Zero;

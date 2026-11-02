@@ -2,9 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
-using System.Windows.Input;
 
 namespace TakeABreakGoose;
+
+/// <summary>
+/// The modifier keys of the global shortcut. The names and values are those of WPF's ModifierKeys
+/// (and of the Win32 MOD_* flags), so settings files stay the same; on macOS, Windows means Command.
+/// </summary>
+[Flags]
+public enum HotkeyModifiers
+{
+    None = 0,
+    Alt = 1,
+    Control = 2,
+    Shift = 4,
+    Windows = 8,
+}
 
 public sealed class GooseSettings
 {
@@ -29,7 +42,7 @@ public sealed class GooseSettings
 
     public int SnoozeMinutes { get; set; } = 5;
 
-    /// <summary>Turn Do not disturb on during a focus session while the user is in a call (see <see cref="Calls"/>).</summary>
+    /// <summary>Turn Do not disturb on during a focus session while the user is in a call (see Calls in the app).</summary>
     public bool DoNotDisturbDuringCalls { get; set; } = true;
 
     /// <summary>The user has been told, once, that the goose stays away during calls.</summary>
@@ -47,9 +60,15 @@ public sealed class GooseSettings
     public int LastSessionLengthMinutes { get; set; } = 120;
     public TimeSpan LastSessionEndTime { get; set; } = new(17, 0, 0);
 
-    public ModifierKeys HotkeyModifiers { get; set; } = ModifierKeys.Control | ModifierKeys.Alt;
+    public HotkeyModifiers HotkeyModifiers { get; set; } = HotkeyModifiers.Control | HotkeyModifiers.Alt;
 
-    public Key HotkeyKey { get; set; } = Key.G;
+    /// <summary>
+    /// The shortcut's key, by its name in WPF's Key enum ("G", "D5", "F1"), which Avalonia's Key
+    /// shares, so each app can turn it into its own key.
+    /// </summary>
+    public string HotkeyKey { get; set; } = DefaultHotkeyKey;
+
+    private const string DefaultHotkeyKey = "G";
 
     public List<string> Messages { get; set; } = DefaultMessages();
 
@@ -82,14 +101,15 @@ public sealed class GooseSettings
 
     public string HotkeyText => FormatHotkey(HotkeyModifiers, HotkeyKey);
 
-    public static string FormatHotkey(ModifierKeys modifiers, Key key)
+    public static string FormatHotkey(HotkeyModifiers modifiers, string key)
     {
         var parts = new List<string>();
-        if (modifiers.HasFlag(ModifierKeys.Control)) parts.Add("Ctrl");
-        if (modifiers.HasFlag(ModifierKeys.Alt)) parts.Add("Alt");
-        if (modifiers.HasFlag(ModifierKeys.Shift)) parts.Add("Shift");
-        if (modifiers.HasFlag(ModifierKeys.Windows)) parts.Add("Win");
-        parts.Add(key is >= Key.D0 and <= Key.D9 ? ((int)(key - Key.D0)).ToString() : key.ToString());
+        if (modifiers.HasFlag(HotkeyModifiers.Control)) parts.Add("Ctrl");
+        if (modifiers.HasFlag(HotkeyModifiers.Alt)) parts.Add("Alt");
+        if (modifiers.HasFlag(HotkeyModifiers.Shift)) parts.Add("Shift");
+        if (modifiers.HasFlag(HotkeyModifiers.Windows)) parts.Add("Win");
+        // The number keys are called D0 to D9.
+        parts.Add(key is ['D', >= '0' and <= '9'] ? key[1..] : key);
         return string.Join("+", parts);
     }
 
@@ -121,7 +141,7 @@ public sealed class GooseSettings
             .Select(m => RewordedDefaults.TryGetValue(m, out var reworded) ? reworded : m)
             .ToList();
         if (Messages.Count == 0) Messages = DefaultMessages();
-        if (HotkeyKey == Key.None) HotkeyKey = Key.G;
-        if (HotkeyModifiers == ModifierKeys.None) HotkeyModifiers = ModifierKeys.Control | ModifierKeys.Alt;
+        if (string.IsNullOrWhiteSpace(HotkeyKey) || HotkeyKey == "None") HotkeyKey = DefaultHotkeyKey;
+        if (HotkeyModifiers == HotkeyModifiers.None) HotkeyModifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt;
     }
 }

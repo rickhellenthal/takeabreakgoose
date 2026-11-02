@@ -1,7 +1,7 @@
 namespace TakeABreakGoose;
 
 /// <summary>
-/// Turns Do not disturb on during a call (see <see cref="Calls"/>), and off again when the call is over.
+/// Turns Do not disturb on during a call (the app's Calls tells when that is), and off again when the call is over.
 /// </summary>
 public sealed class CallDoNotDisturb
 {

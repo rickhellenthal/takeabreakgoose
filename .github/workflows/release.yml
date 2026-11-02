@@ -29,6 +29,9 @@ jobs:
       - name: Run the tests
         run: dotnet test tests/TakeABreakGoose.Tests -c Release
 
+      - name: Run the Windows tests
+        run: dotnet test tests/TakeABreakGoose.Windows.Tests -c Release
+
       # Self-contained, so friends don't need to install .NET first.
       - name: Publish the app
         shell: pwsh

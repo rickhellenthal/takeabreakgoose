@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    What the goose does, without any windows: focus sessions and breaks, settings, and the texts
+    the goose says. Plain .NET with no WPF or WinForms, so the Windows app and a macOS app can share it.
+    What it needs from the computer (the clock, the mouse and keyboard) comes in through Platform/.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>TakeABreakGoose</RootNamespace>
+    <AssemblyName>TakeABreakGoose.Core</AssemblyName>
+    <Product>Take a Break Goose</Product>
+  </PropertyGroup>
+
+</Project>

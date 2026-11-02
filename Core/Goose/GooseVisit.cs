@@ -12,6 +12,3 @@ public sealed record GooseVisit(
     bool StartsBreak,
     GooseOutfit? Outfit = null,
     bool JustVisiting = false);
-
-/// <summary>How the user answered a break reminder.</summary>
-public enum GooseOutcome { Dismissed, Snoozed }

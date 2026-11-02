@@ -1,0 +1,112 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TakeABreakGoose.SettingsPage">
+    <UserControl.Styles>
+        <!-- A text link, like WPF's Hyperlink (Avalonia's text has no clickable inlines). -->
+        <Style Selector="Button.Link">
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <ControlTemplate TargetType="Button">
+                    <TextBlock Foreground="{TemplateBinding Foreground}" Background="Transparent"
+                               TextDecorations="Underline"
+                               Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}" />
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="Button.Link:pressed">
+            <Setter Property="RenderTransform" Value="{x:Null}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="*,Auto">
+        <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" Focusable="False">
+            <StackPanel>
+                <Border Classes="Card">
+                    <StackPanel>
+                        <TextBlock Text="General" Classes="CardTitle" Margin="0,0,0,10" />
+                        <CheckBox x:Name="StartAtLoginCheck" Content="Start Take a Break Goose when I log in" />
+                        <!-- Indented to line up with the check box's text (Fluent's box is wider than WPF's). -->
+                        <TextBlock Classes="Hint" Margin="28,2,0,0"
+                                   Text="It starts as soon as you log in to your Mac. It's also listed under Login Items in System Settings." />
+
+                        <CheckBox x:Name="AutoStartCheck" Content="Start a focus session when the app starts"
+                                  Margin="0,10,0,0" />
+                        <StackPanel Orientation="Horizontal" Margin="28,8,0,0"
+                                    IsEnabled="{Binding #AutoStartCheck.IsChecked}">
+                            <TextBlock Text="with a break every" Classes="Label" Margin="0,0,8,0" />
+                            <TextBox x:Name="AutoStartIntervalBox" Width="56" />
+                            <TextBlock Text="minutes, until you stop it" Classes="Label" Margin="8,0,0,0" />
+                        </StackPanel>
+                        <TextBlock Classes="Hint" Margin="28,6,0,0"
+                                   Text="Together with the option above, the goose keeps an eye on you from the moment you log in, without you having to start a session." />
+
+                        <CheckBox x:Name="CallDoNotDisturbCheck" Content="Turn on Do not disturb during calls"
+                                  Margin="0,14,0,0" />
+                        <TextBlock Classes="Hint" Margin="28,6,0,0"
+                                   Text="The goose notices a call when your camera is in use, or when a meeting app like Teams, Zoom or Google Meet uses your microphone. Voice chat in games and Discord doesn't count. Do not disturb turns off again when the call is over." />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                            <TextBlock Text="Shortcut to open this window" Classes="Label" />
+                            <TextBox x:Name="HotkeyBox" Width="150" IsReadOnly="True" CaretBrush="Transparent"
+                                     Cursor="Arrow"
+                                     ToolTip.Tip="Click here and press the key combination you want, e.g. ⌃⌥G" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="Card">
+                    <StackPanel>
+                        <TextBlock Text="Breaks" Classes="CardTitle" Margin="0,0,0,10" />
+                        <Grid ColumnDefinitions="Auto,Auto,*">
+                            <CheckBox x:Name="AllowSnoozeCheck" Content="Let me snooze for"
+                                      VerticalAlignment="Center" Margin="0,0,12,0" />
+                            <TextBox Grid.Column="1" x:Name="SnoozeBox" Width="56"
+                                     IsEnabled="{Binding #AllowSnoozeCheck.IsChecked}" />
+                            <TextBlock Grid.Column="2" Classes="Hint" Margin="8,0,0,0"
+                                       VerticalAlignment="Center"
+                                       Text="min · turn off to hide the Snooze button when it's time for a break" />
+                        </Grid>
+                        <TextBlock Classes="Hint" Margin="0,12,0,0"
+                                   Text="Away from your computer for at least as long as your break? That counts as your break, and the countdown to the next one starts fresh when you're back." />
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="Card">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Edit messages" Classes="BaseButton"
+                                VerticalAlignment="Center" Margin="12,0,0,0" Click="EditMessages_Click" />
+                        <StackPanel>
+                            <TextBlock Text="Messages" Classes="CardTitle" />
+                            <TextBlock Classes="Hint" Margin="0,2,0,0"
+                                       Text="The goose picks one of these at random when it's time for a break." />
+                            <TextBlock x:Name="MessageCountText" Margin="0,6,0,0" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- Version, and a quiet note when a newer one is out -->
+                <StackPanel HorizontalAlignment="Center" Margin="0,2,0,6">
+                    <TextBlock x:Name="VersionText" Classes="Hint" HorizontalAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,0">
+                        <TextBlock Classes="Hint" Text="Enjoying the goose?" />
+                        <Button Classes="Link" Content="Buy me a coffee" FontSize="12" Foreground="#5E7773" Margin="4,0,0,0"
+                                Click="KoFi_Click" />
+                    </StackPanel>
+                    <StackPanel x:Name="UpdateText" IsVisible="False" Orientation="Horizontal"
+                                HorizontalAlignment="Center" Margin="0,4,0,0">
+                        <TextBlock x:Name="UpdateRun" FontSize="12" Foreground="#B85F12" />
+                        <Button Classes="Link" Content="Download" FontSize="12" Foreground="#B85F12"
+                                Margin="4,0,0,0" Click="DownloadUpdate_Click" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <DockPanel Grid.Row="1" Margin="0,12,0,0" LastChildFill="False">
+            <Button DockPanel.Dock="Right" Content="Save" Classes="PrimaryButton" Padding="24,7"
+                    Click="SaveSettings_Click" />
+            <TextBlock x:Name="SettingsStatus" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,12,0"
+                       TextWrapping="Wrap" MaxWidth="260" />
+        </DockPanel>
+    </Grid>
+</UserControl>

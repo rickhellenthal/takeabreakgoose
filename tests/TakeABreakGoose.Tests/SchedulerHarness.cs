@@ -4,7 +4,7 @@ namespace TakeABreakGoose.Tests;
 /// A scheduler on a fake clock: tests let time pass second by second, with the user either at the
 /// computer or away from it, and see what the scheduler does.
 /// </summary>
-internal sealed class SchedulerHarness
+internal sealed class SchedulerHarness : IClock, IUserActivity
 {
     public DateTime Now { get; private set; } = new(2026, 11, 2, 9, 0, 0);
 
@@ -19,7 +19,7 @@ internal sealed class SchedulerHarness
 
     public SchedulerHarness()
     {
-        Scheduler = new BreakScheduler(Settings, () => Now, () => Idle);
+        Scheduler = new BreakScheduler(Settings, this, this);
         Scheduler.BreakDue += () => BreaksDue++;
         Scheduler.SessionCompleted += session => CompletedSessions.Add(session);
     }
@@ -52,6 +52,8 @@ internal sealed class SchedulerHarness
             Scheduler.Tick();
         }
     }
+
+    TimeSpan IUserActivity.IdleTime() => Idle;
 
     public static TimeSpan Minutes(double minutes) => TimeSpan.FromMinutes(minutes);
 }

@@ -27,5 +27,6 @@ public interface IGooseHost
     bool DoNotDisturbForCall { get; }
 
     /// <summary>Applies and saves new settings; returns an error message, or null on success.</summary>
-    string? ApplySettings(GooseSettings settings, bool startWithWindows);
+    /// <param name="startAtLogin">Start the app when the user signs in to the computer.</param>
+    string? ApplySettings(GooseSettings settings, bool startAtLogin);
 }

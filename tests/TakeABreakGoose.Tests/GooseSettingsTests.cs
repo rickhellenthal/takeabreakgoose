@@ -61,6 +61,41 @@ public class GooseSettingsTests
     }
 
     [Fact]
+    public void The_shortcut_from_older_versions_is_read_as_it_was_saved()
+    {
+        // Written by 1.7.0, when the settings still used WPF's ModifierKeys and Key.
+        var settings = SettingsStore.Parse("""{ "HotkeyModifiers": "Alt, Control, Shift", "HotkeyKey": "D5" }""");
+        settings.Sanitize();
+
+        Assert.Equal(HotkeyModifiers.Control | HotkeyModifiers.Alt | HotkeyModifiers.Shift, settings.HotkeyModifiers);
+        Assert.Equal("D5", settings.HotkeyKey);
+        Assert.Equal("Ctrl+Alt+Shift+5", settings.HotkeyText);
+    }
+
+    [Fact]
+    public void The_shortcut_is_saved_the_way_older_versions_saved_it()
+    {
+        var settings = new GooseSettings { HotkeyModifiers = HotkeyModifiers.Windows | HotkeyModifiers.Alt, HotkeyKey = "F1" };
+
+        string json = SettingsStore.Serialize(settings);
+
+        Assert.Contains("\"HotkeyModifiers\": \"Alt, Windows\"", json);
+        Assert.Contains("\"HotkeyKey\": \"F1\"", json);
+    }
+
+    [Theory]
+    [InlineData("""{ }""")]
+    [InlineData("""{ "HotkeyModifiers": "None", "HotkeyKey": "None" }""")]
+    [InlineData("""{ "HotkeyKey": "" }""")]
+    public void Without_a_shortcut_it_is_ctrl_alt_g(string json)
+    {
+        var settings = SettingsStore.Parse(json);
+        settings.Sanitize();
+
+        Assert.Equal("Ctrl+Alt+G", settings.HotkeyText);
+    }
+
+    [Fact]
     public void Settings_from_older_versions_get_do_not_disturb_during_video_calls()
     {
         var settings = SettingsStore.Parse("""{ "BreakMinutes": 10 }""");

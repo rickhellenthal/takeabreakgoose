@@ -17,7 +17,7 @@ namespace TakeABreakGoose;
 /// then asks whether they're ready to focus again. If the computer is used during the nap,
 /// the goose half wakes up, and asks whether they're really taking their break if it goes on.
 /// </summary>
-public partial class GooseWindow : Window
+public partial class GooseWindow : Window, IGooseWindow
 {
     private enum Phase { WalkingIn, Talking, ToEdge, Peeking, Returning, Sleeping, BreakOver, WalkingOut }
 
@@ -211,7 +211,7 @@ public partial class GooseWindow : Window
                 if (_question == Question.TakeABreak) WatchForBreakWhileAway();
                 // No answer because they did get up after all: back to the nap, without a fuss.
                 if (_question is Question.StillOnBreak or Question.EndBreakAnyway
-                    && NapWatch.GaveUpAsking(UserActivity.IdleTime()))
+                    && NapWatch.GaveUpAsking(UserActivity.Instance.IdleTime()))
                     ResumeNap();
                 break;
 
@@ -239,7 +239,7 @@ public partial class GooseWindow : Window
 
             case Phase.BreakOver:
                 // Keep napping until the computer is used again after the break ended.
-                if (UserActivity.IdleTime() < DateTime.Now - _breakEnd) AskIfReady();
+                if (UserActivity.Instance.IdleTime() < DateTime.Now - _breakEnd) AskIfReady();
                 break;
 
             case Phase.WalkingOut:
@@ -383,7 +383,7 @@ public partial class GooseWindow : Window
     /// </summary>
     private void WatchForUseDuringBreak(double dt)
     {
-        switch (_napWatch.Update(DateTime.Now, UserActivity.IdleTime(), TimeSpan.FromSeconds(dt)))
+        switch (_napWatch.Update(DateTime.Now, UserActivity.Instance.IdleTime(), TimeSpan.FromSeconds(dt)))
         {
             case NapWatchState.Asleep: Figure.Look = NapLook.Asleep; break;
             case NapWatchState.Stirring: Figure.Look = NapLook.Drowsy; break;
@@ -449,7 +449,7 @@ public partial class GooseWindow : Window
     private void WatchForBreakWhileAway()
     {
         if (_breakLength is not { } length || length <= TimeSpan.Zero) return;
-        var idle = UserActivity.IdleTime();
+        var idle = UserActivity.Instance.IdleTime();
         var sinceAsked = DateTime.Now - _askedAt;
         var awayWhileAsking = idle < sinceAsked ? idle : sinceAsked;
         if (awayWhileAsking >= length)
