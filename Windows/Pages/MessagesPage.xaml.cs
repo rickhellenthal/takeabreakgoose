@@ -53,11 +53,10 @@ public partial class MessagesPage : UserControl
 
     private void ResetMessages_Click(object sender, RoutedEventArgs e)
     {
-        var defaults = GooseSettings.DefaultMessages();
+        var defaults = GooseSettings.DefaultMessages(_host.Settings.Language);
         bool alreadyDefault = _messages.Select(m => m.Text.Trim()).SequenceEqual(defaults);
-        if (!alreadyDefault && !ConfirmDialog.Ask(Window.GetWindow(this)!, "Reset messages", "Reset the messages?",
-                $"This replaces your list with the goose's {defaults.Count} default messages. "
-                + "Your own messages will be gone after you save.", "Reset"))
+        if (!alreadyDefault && !ConfirmDialog.Ask(Window.GetWindow(this)!, Strings.MessagesResetTitle, Strings.MessagesResetHeading,
+                string.Format(Strings.MessagesResetMessage, defaults.Count), Strings.MessagesResetConfirm))
         {
             return;
         }
@@ -105,7 +104,7 @@ public partial class MessagesPage : UserControl
         var messages = CurrentMessages();
         if (messages.Count == 0)
         {
-            ShowStatus("Give the goose at least one message to say.", error: true);
+            ShowStatus(Strings.MessagesAtLeastOne, error: true);
             return false;
         }
 
@@ -119,7 +118,7 @@ public partial class MessagesPage : UserControl
         }
         AddNewMessage(); // a message typed in the "Add a message" box is in the list now
         _saved = messages;
-        ShowStatus("Saved ✓", error: false);
+        ShowStatus(Strings.Saved, error: false);
         Saved?.Invoke(messages.Count);
         return true;
     }
@@ -137,7 +136,7 @@ public partial class MessagesPage : UserControl
     public bool ResolveUnsavedChanges()
     {
         if (CurrentMessages().SequenceEqual(_saved)) return true;
-        switch (UnsavedChangesDialog.Ask(Window.GetWindow(this)!, "You changed the messages but didn't save them yet."))
+        switch (UnsavedChangesDialog.Ask(Window.GetWindow(this)!, Strings.MessagesUnsaved))
         {
             case UnsavedChangesChoice.Save:
                 return TrySave();

@@ -231,29 +231,29 @@ public sealed class BreakScheduler
     /// <param name="inCall">Do not disturb is on because the user is in a call.</param>
     public string Describe(bool inCall = false)
     {
-        if (GooseVisiting) return "The goose is here!";
+        if (GooseVisiting) return Strings.StatusGooseHere;
         if (DoNotDisturb)
         {
-            string reason = inCall ? "In a call" : "Do not disturb";
-            return SignOffWaiting != null ? $"{reason} · your session is done"
-                : BreakWaiting ? $"{reason} · a break is waiting"
-                : NextBreakAt is DateTime due ? $"{reason} · next break at {due:HH:mm}"
+            string reason = inCall ? Strings.StatusInACall : Strings.StatusDoNotDisturb;
+            return SignOffWaiting != null ? string.Format(Strings.StatusSessionDone, reason)
+                : BreakWaiting ? string.Format(Strings.StatusBreakWaiting, reason)
+                : NextBreakAt is DateTime due ? string.Format(Strings.StatusNextBreakAt, reason, due)
                 : reason;
         }
         if (AwaitingReturn)
         {
             return BreakEndsAt is DateTime end && end > _clock.Now
-                ? $"On a break until {end:HH:mm}"
-                : "Break's over, waiting for you";
+                ? string.Format(Strings.StatusOnBreakUntil, end)
+                : Strings.StatusBreakOverWaiting;
         }
-        if (IsAway) return "Away from the keyboard";
-        if (BreakEndsAt is DateTime breakEnd) return $"On a break until {breakEnd:HH:mm}";
+        if (IsAway) return Strings.StatusAway;
+        if (BreakEndsAt is DateTime breakEnd) return string.Format(Strings.StatusOnBreakUntil, breakEnd);
         if (NextBreakAt is DateTime next)
         {
-            string mode = Session != null ? "Focus session" : "Snoozed";
-            return $"{mode} · next break at {next:HH:mm}";
+            string mode = Session != null ? Strings.StatusFocusSession : Strings.StatusSnoozed;
+            return string.Format(Strings.StatusNextBreakAt, mode, next);
         }
-        return "No focus session running";
+        return Strings.StatusNoSession;
     }
 
     /// <summary>Checks the clock and the user's activity; the app calls this every second.</summary>

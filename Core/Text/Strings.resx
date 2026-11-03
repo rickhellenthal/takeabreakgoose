@@ -1,0 +1,797 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    The app's texts in English, the default language. Strings.nl.resx has the same names in Dutch.
+    Placeholders like {0} are filled in by the code; {0:HH:mm} is a time like 17:00.
+    See docs/development.md for how to add or change a text.
+  -->
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- The goose: break reminders -->
+  <data name="GooseHonk" xml:space="preserve">
+    <value>HONK!</value>
+  </data>
+  <data name="GooseBreakTime" xml:space="preserve">
+    <value>Okay, break time!</value>
+  </data>
+  <data name="GooseBreakHint" xml:space="preserve">
+    <value>Take {0}. I'll start counting again after that.</value>
+    <comment>{0} is the break length in words, like "5 minutes".</comment>
+  </data>
+  <data name="GooseFinishUp" xml:space="preserve">
+    <value>Let me finish up</value>
+  </data>
+  <data name="GooseSnooze" xml:space="preserve">
+    <value>Snooze {0} min</value>
+  </data>
+  <data name="GoosePeekToolTip" xml:space="preserve">
+    <value>Click me when you're ready for your break</value>
+  </data>
+  <data name="GooseDoneFinishingUp" xml:space="preserve">
+    <value>Done finishing up? Your break is waiting for you!</value>
+  </data>
+  <data name="GooseAllFinishedUp" xml:space="preserve">
+    <value>All finished up and saved? Then you're ready for your break!</value>
+  </data>
+
+  <!-- The goose: napping -->
+  <data name="GooseEnjoyYourBreak" xml:space="preserve">
+    <value>Enjoy your break</value>
+  </data>
+  <data name="GooseNappingDuringBreak" xml:space="preserve">
+    <value>Napping during your break</value>
+  </data>
+  <data name="GooseTimeLeft" xml:space="preserve">
+    <value>{0} left</value>
+    <comment>{0} is a countdown like 4:59.</comment>
+  </data>
+  <data name="GooseNapToolTip" xml:space="preserve">
+    <value>Napping until {0:HH:mm}. Click me if you need to end your break early.</value>
+  </data>
+  <data name="GooseBreakLeftHint" xml:space="preserve">
+    <value>There's still {0} of your break left.</value>
+    <comment>{0} is a countdown like 4:59.</comment>
+  </data>
+  <data name="GoosePsst" xml:space="preserve">
+    <value>Psst…</value>
+  </data>
+  <data name="GooseImGoing" xml:space="preserve">
+    <value>I'm going!</value>
+  </data>
+  <data name="GooseEndMyBreak" xml:space="preserve">
+    <value>End my break</value>
+  </data>
+  <data name="GooseReally" xml:space="preserve">
+    <value>Really?</value>
+  </data>
+  <data name="GooseFineIllGo" xml:space="preserve">
+    <value>Fine, I'll go</value>
+  </data>
+  <data name="GooseYesEndMyBreak" xml:space="preserve">
+    <value>Yes, end my break</value>
+  </data>
+  <data name="GooseBreakOverToolTip" xml:space="preserve">
+    <value>Break's over. I'll wake up when you're back.</value>
+  </data>
+  <data name="GooseWaitingForYou" xml:space="preserve">
+    <value>Waiting for you to come back</value>
+  </data>
+  <data name="GooseBreakOver" xml:space="preserve">
+    <value>Break's over</value>
+  </data>
+  <data name="GooseReadyAgain" xml:space="preserve">
+    <value>Break's over. Ready to focus again?</value>
+  </data>
+  <data name="GooseWelcomeBack" xml:space="preserve">
+    <value>Welcome back!</value>
+  </data>
+  <data name="GooseReadyToFocus" xml:space="preserve">
+    <value>Ready to focus</value>
+  </data>
+  <data name="GooseMoreMinutes" xml:space="preserve">
+    <value>{0} more minutes</value>
+  </data>
+  <data name="GooseBreakWhileAway" xml:space="preserve">
+    <value>Looks like you already took a break while I waited. Ready to focus again?</value>
+  </data>
+  <data name="GooseWokenUp" xml:space="preserve">
+    <value>Hey! I was napping…</value>
+  </data>
+  <data name="GooseKeepResting" xml:space="preserve">
+    <value>Keep resting</value>
+  </data>
+  <data name="GooseALittleLonger" xml:space="preserve">
+    <value>A little longer, then</value>
+  </data>
+  <data name="GooseEndBreakEarlyLines" xml:space="preserve">
+    <value>Cutting your break short? Bold move. Your future self will remember this.
+Back already? The break isn't over yet, but who am I to judge. (I'm judging.)
+Honk. Some of us take our breaks very seriously.
+Fine, fine. But don't come crying to me when your focus runs out.
+You woke me up for this? Your brain was enjoying that.</value>
+    <comment>When the goose is woken up mid-nap. One per line; it picks one at random.</comment>
+  </data>
+  <data name="GooseStillOnBreakLines" xml:space="preserve">
+    <value>I can hear you clicking. Are you actually taking your break?
+That doesn't sound like a break to me. Go stretch your legs!
+Still at the computer? Your break is waiting for you over there, away from the screen.
+Breaks work better when you get up. Just saying.
+Honk. I can't nap with all that typing going on.</value>
+    <comment>When the computer is used during the break. One per line; it picks one at random.</comment>
+  </data>
+  <data name="GooseEndBreakAnywayLines" xml:space="preserve">
+    <value>I'm not mad. I'm just disappointed.
+Wow. Okay. I'll just sit here and remember this.
+Ending your break to keep working? Bold. Your back is going to file a complaint.
+Your break, your call. I'm just a goose who believed in you.
+Fine. But don't come honking to me when your focus runs out.</value>
+    <comment>When the user wants to end the break early anyway. One per line; it picks one at random.</comment>
+  </data>
+
+  <!-- The goose: other visits -->
+  <data name="GooseTaDa" xml:space="preserve">
+    <value>Ta-da!</value>
+  </data>
+  <data name="GooseLookingGood" xml:space="preserve">
+    <value>Looking good!</value>
+  </data>
+  <data name="GooseThatsAWrap" xml:space="preserve">
+    <value>That's a wrap!</value>
+  </data>
+  <data name="GooseSessionDone" xml:space="preserve">
+    <value>That's it for this focus session: {0} of focus since {1:HH:mm}. Time to wrap up and give your brain some rest.</value>
+    <comment>{0} is how long, like "2 h 5 min"; {1} the time the session started.</comment>
+  </data>
+  <data name="GooseByeGoose" xml:space="preserve">
+    <value>Bye, goose!</value>
+  </data>
+
+  <!-- The goose's messages (the defaults of the user's list) -->
+  <data name="DefaultMessages" xml:space="preserve">
+    <value>Time to stand up and stretch those legs.
+Look at something far away for 20 seconds. Your eyes will thank you.
+Hydration check! Go get a glass of water.
+Step away from the screen. Whatever you're working on will still be there in five minutes.
+Shoulders down, jaw unclenched, take a deep breath.
+Go for a short walk. Even geese waddle around now and then.
+Hyperfocus is a superpower, but even superheroes take breaks.
+Have you eaten something today?</value>
+    <comment>One per line. Keep the same number of lines, in the same order, in every language: a message that's still a default switches along when the language changes.</comment>
+  </data>
+
+  <!-- Outfits -->
+  <data name="OutfitRaincoatName" xml:space="preserve">
+    <value>Rainy day raincoat</value>
+  </data>
+  <data name="OutfitRaincoatDescription" xml:space="preserve">
+    <value>For honking you outside, whatever the weather.</value>
+  </data>
+  <data name="OutfitRaincoatShowOff" xml:space="preserve">
+    <value>Just showing off my raincoat! Rain or shine, I'll keep reminding you to take breaks.</value>
+  </data>
+  <data name="OutfitBonnetName" xml:space="preserve">
+    <value>Sunday bonnet</value>
+  </data>
+  <data name="OutfitBonnetDescription" xml:space="preserve">
+    <value>Fancy enough for a stroll around the block.</value>
+  </data>
+  <data name="OutfitBonnetShowOff" xml:space="preserve">
+    <value>How do you like my Sunday bonnet? Very fancy, I know.</value>
+  </data>
+  <data name="OutfitBandanaName" xml:space="preserve">
+    <value>Polka dot bandana</value>
+  </data>
+  <data name="OutfitBandanaDescription" xml:space="preserve">
+    <value>Ready for a little adventure away from the screen.</value>
+  </data>
+  <data name="OutfitBandanaShowOff" xml:space="preserve">
+    <value>Check out my polka dot bandana! Ready for a little adventure.</value>
+  </data>
+  <data name="OutfitPartyHatName" xml:space="preserve">
+    <value>Party hat</value>
+  </data>
+  <data name="OutfitPartyHatDescription" xml:space="preserve">
+    <value>Every break deserves a small celebration.</value>
+  </data>
+  <data name="OutfitPartyHatShowOff" xml:space="preserve">
+    <value>Party hat on! Every break deserves a small celebration.</value>
+  </data>
+  <data name="OutfitShowOffOther" xml:space="preserve">
+    <value>What do you think of my outfit?</value>
+  </data>
+
+  <!-- Status (tray tooltip and the window header) -->
+  <data name="StatusGooseHere" xml:space="preserve">
+    <value>The goose is here!</value>
+  </data>
+  <data name="StatusInACall" xml:space="preserve">
+    <value>In a call</value>
+  </data>
+  <data name="StatusDoNotDisturb" xml:space="preserve">
+    <value>Do not disturb</value>
+  </data>
+  <data name="StatusSessionDone" xml:space="preserve">
+    <value>{0} · your session is done</value>
+    <comment>{0} is "In a call" or "Do not disturb".</comment>
+  </data>
+  <data name="StatusBreakWaiting" xml:space="preserve">
+    <value>{0} · a break is waiting</value>
+  </data>
+  <data name="StatusNextBreakAt" xml:space="preserve">
+    <value>{0} · next break at {1:HH:mm}</value>
+    <comment>{0} is "Focus session", "Snoozed", "In a call" or "Do not disturb".</comment>
+  </data>
+  <data name="StatusOnBreakUntil" xml:space="preserve">
+    <value>On a break until {0:HH:mm}</value>
+  </data>
+  <data name="StatusBreakOverWaiting" xml:space="preserve">
+    <value>Break's over, waiting for you</value>
+  </data>
+  <data name="StatusAway" xml:space="preserve">
+    <value>Away from the keyboard</value>
+  </data>
+  <data name="StatusFocusSession" xml:space="preserve">
+    <value>Focus session</value>
+  </data>
+  <data name="StatusSnoozed" xml:space="preserve">
+    <value>Snoozed</value>
+  </data>
+  <data name="StatusNoSession" xml:space="preserve">
+    <value>No focus session running</value>
+  </data>
+
+  <!-- Times, durations and counts -->
+  <data name="TimeAt" xml:space="preserve">
+    <value>at {0:HH:mm}</value>
+  </data>
+  <data name="TimeTomorrowAt" xml:space="preserve">
+    <value>tomorrow at {0:HH:mm}</value>
+  </data>
+  <data name="TimeUnderAMinute" xml:space="preserve">
+    <value>under a minute</value>
+  </data>
+  <data name="TimeSeconds" xml:space="preserve">
+    <value>{0} sec</value>
+  </data>
+  <data name="TimeMinutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="TimeMinutesSeconds" xml:space="preserve">
+    <value>{0} min {1} sec</value>
+  </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{0} h</value>
+  </data>
+  <data name="TimeHoursMinutes" xml:space="preserve">
+    <value>{0} h {1} min</value>
+  </data>
+  <data name="TimeSecondsLabel" xml:space="preserve">
+    <value>sec</value>
+    <comment>After a box with the number of seconds.</comment>
+  </data>
+  <data name="TimeMinutesLabel" xml:space="preserve">
+    <value>min</value>
+    <comment>After a box with the number of minutes.</comment>
+  </data>
+  <data name="TimeHoursLabel" xml:space="preserve">
+    <value>h</value>
+    <comment>After a box with the number of hours.</comment>
+  </data>
+  <data name="WordsSecondOne" xml:space="preserve">
+    <value>{0} second</value>
+  </data>
+  <data name="WordsSecondMany" xml:space="preserve">
+    <value>{0} seconds</value>
+  </data>
+  <data name="WordsMinuteOne" xml:space="preserve">
+    <value>{0} minute</value>
+  </data>
+  <data name="WordsMinuteMany" xml:space="preserve">
+    <value>{0} minutes</value>
+  </data>
+  <data name="WordsAnd" xml:space="preserve">
+    <value>{0} and {1}</value>
+    <comment>"1 minute and 30 seconds".</comment>
+  </data>
+  <data name="BreakOne" xml:space="preserve">
+    <value>break</value>
+  </data>
+  <data name="BreakMany" xml:space="preserve">
+    <value>breaks</value>
+  </data>
+  <data name="NumberWords" xml:space="preserve">
+    <value>no
+one
+two
+three
+four
+five
+six
+seven
+eight
+nine
+ten
+eleven
+twelve</value>
+    <comment>0 to 12, one per line; larger numbers are written in digits.</comment>
+  </data>
+  <data name="SummaryNoBreaks" xml:space="preserve">
+    <value>No breaks this time, though. Let's fix that next time!</value>
+  </data>
+  <data name="SummaryQuickBreaks" xml:space="preserve">
+    <value>You took {0} quick {1} along the way.</value>
+    <comment>{0} is a number in words, {1} "break" or "breaks".</comment>
+  </data>
+  <data name="SummaryBreaks" xml:space="preserve">
+    <value>You took {0} {1} along the way, {2} of rest.</value>
+    <comment>{0} is a number in words, {1} "break" or "breaks", {2} how long, like "about 20 minutes".</comment>
+  </data>
+  <data name="SummaryAboutAMinute" xml:space="preserve">
+    <value>about a minute</value>
+  </data>
+  <data name="SummaryAboutMinutes" xml:space="preserve">
+    <value>about {0} minutes</value>
+  </data>
+  <data name="SummaryOverAnHour" xml:space="preserve">
+    <value>over an hour</value>
+  </data>
+  <data name="SummaryOverHours" xml:space="preserve">
+    <value>over {0} hours</value>
+  </data>
+
+  <!-- The app window -->
+  <data name="TabFocusSession" xml:space="preserve">
+    <value>Focus session</value>
+  </data>
+  <data name="TabWardrobe" xml:space="preserve">
+    <value>Wardrobe</value>
+  </data>
+  <data name="TabSettings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="TabSettingsWithNews" xml:space="preserve">
+    <value>Settings •</value>
+    <comment>The Settings tab when a new version is out.</comment>
+  </data>
+  <data name="BackToSettings" xml:space="preserve">
+    <value>←  Settings</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>Saved ✓</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Other" xml:space="preserve">
+    <value>Other…</value>
+  </data>
+  <data name="WholeNumberBetween" xml:space="preserve">
+    <value>{0} must be a whole number between {1} and {2}.</value>
+  </data>
+
+  <!-- Focus session tab -->
+  <data name="SessionRunning" xml:space="preserve">
+    <value>Focus session running</value>
+  </data>
+  <data name="SessionDoNotDisturb" xml:space="preserve">
+    <value>Do not disturb</value>
+  </data>
+  <data name="SessionStop" xml:space="preserve">
+    <value>Stop session</value>
+  </data>
+  <data name="TakeABreakNow" xml:space="preserve">
+    <value>Take a break now</value>
+  </data>
+  <data name="SessionBreaksThisSession" xml:space="preserve">
+    <value>Breaks this session</value>
+  </data>
+  <data name="SessionTurnOffDoNotDisturb" xml:space="preserve">
+    <value>Turn off Do not disturb</value>
+  </data>
+  <data name="SessionDoneTitle" xml:space="preserve">
+    <value>Your focus session is done</value>
+  </data>
+  <data name="SessionStartTitle" xml:space="preserve">
+    <value>Start a focus session</value>
+  </data>
+  <data name="SessionStartHint" xml:space="preserve">
+    <value>The goose reminds you to take breaks while you work, and lets you know when the session is over.</value>
+  </data>
+  <data name="SessionRemindEvery" xml:space="preserve">
+    <value>Remind me to take a break every</value>
+  </data>
+  <data name="SessionEvery" xml:space="preserve">
+    <value>Every</value>
+  </data>
+  <data name="SessionMinutes" xml:space="preserve">
+    <value>minutes</value>
+  </data>
+  <data name="SessionEachBreakLasts" xml:space="preserve">
+    <value>Each break lasts</value>
+  </data>
+  <data name="SessionEndAfter" xml:space="preserve">
+    <value>End after</value>
+  </data>
+  <data name="SessionEndAt" xml:space="preserve">
+    <value>End at</value>
+  </data>
+  <data name="SessionEndTimeToolTip" xml:space="preserve">
+    <value>A time like 17:00, in your computer's local time. Up and Down change it by 5 min, with Shift by 1 min.</value>
+  </data>
+  <data name="SessionEarlier15" xml:space="preserve">
+    <value>−15 min</value>
+  </data>
+  <data name="SessionLater15" xml:space="preserve">
+    <value>+15 min</value>
+  </data>
+  <data name="SessionStart" xml:space="preserve">
+    <value>Start session</value>
+  </data>
+  <data name="SessionHonk" xml:space="preserve">
+    <value>Honk!</value>
+  </data>
+  <data name="SessionGooseOnScreen" xml:space="preserve">
+    <value>The goose is on your screen right now.</value>
+  </data>
+  <data name="SessionWelcomeBack" xml:space="preserve">
+    <value>Welcome back</value>
+  </data>
+  <data name="SessionBreakOverCaption" xml:space="preserve">
+    <value>Your break is over. Tell the goose when you're ready to focus again.</value>
+  </data>
+  <data name="SessionBreakTime" xml:space="preserve">
+    <value>Break time</value>
+  </data>
+  <data name="SessionBreakWaitingCaption" xml:space="preserve">
+    <value>Your break is waiting. The goose comes as soon as you turn off Do not disturb.</value>
+  </data>
+  <data name="SessionAway" xml:space="preserve">
+    <value>Away</value>
+  </data>
+  <data name="SessionAwayCaption" xml:space="preserve">
+    <value>Time away from the keyboard counts as a break.</value>
+  </data>
+  <data name="SessionBreakLeftCaption" xml:space="preserve">
+    <value>left of your break. Enjoy it!</value>
+    <comment>Under a countdown like 4:59.</comment>
+  </data>
+  <data name="SessionUntilNextBreak" xml:space="preserve">
+    <value>until your next break (every {0} min, {1} breaks)</value>
+    <comment>Under a countdown like 24:59. {1} is the break length, like "5 min".</comment>
+  </data>
+  <data name="SessionUntilNextBreakNoLength" xml:space="preserve">
+    <value>until your next break (every {0} min)</value>
+  </data>
+  <data name="SessionStartedAutomaticallyAt" xml:space="preserve">
+    <value>Started automatically at {0:HH:mm}</value>
+  </data>
+  <data name="SessionStartedAt" xml:space="preserve">
+    <value>Started at {0:HH:mm}</value>
+  </data>
+  <data name="SessionEnds" xml:space="preserve">
+    <value>{0} · ends {1} ({2} left)</value>
+    <comment>{0} is "Started at 9:00", {1} "at 17:00" or "tomorrow at 01:00", {2} a countdown.</comment>
+  </data>
+  <data name="SessionNoEnd" xml:space="preserve">
+    <value>{0} · no end time, stop it whenever you're done.</value>
+  </data>
+  <data name="DoNotDisturbHintCalls" xml:space="preserve">
+    <value>Keep the goose away for now. During a call, this turns on by itself.</value>
+  </data>
+  <data name="DoNotDisturbHint" xml:space="preserve">
+    <value>Keep the goose away for now, for example during a meeting.</value>
+  </data>
+  <data name="DoNotDisturbInCallBreakWaiting" xml:space="preserve">
+    <value>On because you're in a call. Your break is waiting until the call is over.</value>
+  </data>
+  <data name="DoNotDisturbInCall" xml:space="preserve">
+    <value>On because you're in a call, and off again when it's over. Your timer keeps running.</value>
+  </data>
+  <data name="DoNotDisturbOnBreakWaiting" xml:space="preserve">
+    <value>Your break is waiting until you turn this off.</value>
+  </data>
+  <data name="DoNotDisturbOn" xml:space="preserve">
+    <value>The goose stays away until you turn this off. Your timer keeps running.</value>
+  </data>
+  <data name="SignOffWaitingInCall" xml:space="preserve">
+    <value>Do not disturb is still on because you're in a call. The goose will say goodbye when the call is over, or when you turn Do not disturb off.</value>
+  </data>
+  <data name="SignOffWaiting" xml:space="preserve">
+    <value>Do not disturb is still on. The goose will say goodbye when you turn it off.</value>
+  </data>
+  <data name="AutoStartNoteOn" xml:space="preserve">
+    <value>When the app starts, it starts a focus session by itself (a break every {0} min). You can change this in Settings.</value>
+  </data>
+  <data name="AutoStartNoteOff" xml:space="preserve">
+    <value>Outside a focus session the goose stays quiet. Want it to start one by itself? You can turn that on in Settings.</value>
+  </data>
+  <data name="HistoryUntilNow" xml:space="preserve">
+    <value>{0:HH:mm} – now</value>
+  </data>
+  <data name="HistoryOnBreak" xml:space="preserve">
+    <value>On your break</value>
+  </data>
+  <data name="HistoryAway" xml:space="preserve">
+    <value>Away from the computer</value>
+  </data>
+  <data name="HistoryEndedEarly" xml:space="preserve">
+    <value>Ended early</value>
+  </data>
+  <data name="HistoryNapped" xml:space="preserve">
+    <value>Napped with the goose</value>
+  </data>
+  <data name="HistoryJustStarted" xml:space="preserve">
+    <value>just started</value>
+  </data>
+  <data name="HistorySoFar" xml:space="preserve">
+    <value>{0} so far</value>
+  </data>
+  <data name="HistorySummary" xml:space="preserve">
+    <value>{0} {1} · {2} in total</value>
+    <comment>{0} is a number, {1} "break" or "breaks", {2} how long, like "14 min".</comment>
+  </data>
+  <data name="EndTimeRemove" xml:space="preserve">
+    <value>Remove end time ▴</value>
+  </data>
+  <data name="EndTimeSet" xml:space="preserve">
+    <value>Set an end time ▾</value>
+  </data>
+  <data name="EndTimeInvalid" xml:space="preserve">
+    <value>Enter the end time like 17:00.</value>
+  </data>
+  <data name="EndLengthInvalid" xml:space="preserve">
+    <value>Enter how long the session lasts, like 2 h 0 min.</value>
+  </data>
+  <data name="EndLengthTooShort" xml:space="preserve">
+    <value>The session needs to last at least a minute.</value>
+  </data>
+  <data name="EndPreview" xml:space="preserve">
+    <value>The session ends {0}, in {1}.</value>
+    <comment>{0} is "at 17:00" or "tomorrow at 01:00", {1} how long, like "2 h 14 min".</comment>
+  </data>
+  <data name="FieldBreakInterval" xml:space="preserve">
+    <value>The break interval</value>
+    <comment>Fills in {0} of "{0} must be a whole number between …".</comment>
+  </data>
+  <data name="FieldBreakMinutes" xml:space="preserve">
+    <value>The break's minutes</value>
+  </data>
+  <data name="FieldBreakSeconds" xml:space="preserve">
+    <value>The break's seconds</value>
+  </data>
+
+  <!-- Wardrobe tab -->
+  <data name="WardrobeHint" xml:space="preserve">
+    <value>The goose picks one of these outfits every time it visits. Send one over to see it in action. It's just showing off, so your focus session timer isn't affected.</value>
+  </data>
+  <data name="WardrobeBusy" xml:space="preserve">
+    <value>The goose is busy with your focus session right now. Once it has left, you can send one over.</value>
+  </data>
+  <data name="WardrobeBusyToolTip" xml:space="preserve">
+    <value>A goose is already on your screen. Once it has left, you can send another one.</value>
+  </data>
+  <data name="WardrobeSend" xml:space="preserve">
+    <value>Send this goose</value>
+  </data>
+
+  <!-- Settings tab -->
+  <data name="SettingsGeneral" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="SettingsLanguage" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="SettingsLanguageHint" xml:space="preserve">
+    <value>The goose's own messages switch along. Messages you wrote or changed yourself stay as they are.</value>
+  </data>
+  <data name="SettingsStartWithWindows" xml:space="preserve">
+    <value>Start Take a Break Goose when my computer starts</value>
+  </data>
+  <data name="SettingsStartWithWindowsHint" xml:space="preserve">
+    <value>It starts as soon as you sign in to Windows. It's also listed under Startup apps in Task Manager.</value>
+  </data>
+  <data name="SettingsStartAtLogin" xml:space="preserve">
+    <value>Start Take a Break Goose when I log in</value>
+  </data>
+  <data name="SettingsStartAtLoginHint" xml:space="preserve">
+    <value>It starts as soon as you log in to your Mac. It's also listed under Login Items in System Settings.</value>
+  </data>
+  <data name="SettingsAutoStart" xml:space="preserve">
+    <value>Start a focus session when the app starts</value>
+  </data>
+  <data name="SettingsAutoStartEvery" xml:space="preserve">
+    <value>with a break every</value>
+  </data>
+  <data name="SettingsAutoStartUntilStopped" xml:space="preserve">
+    <value>minutes, until you stop it</value>
+  </data>
+  <data name="SettingsAutoStartHintWindows" xml:space="preserve">
+    <value>Together with the option above, the goose keeps an eye on you from the moment you sign in, without you having to start a session.</value>
+  </data>
+  <data name="SettingsAutoStartHintMac" xml:space="preserve">
+    <value>Together with the option above, the goose keeps an eye on you from the moment you log in, without you having to start a session.</value>
+  </data>
+  <data name="SettingsCalls" xml:space="preserve">
+    <value>Turn on Do not disturb during calls</value>
+  </data>
+  <data name="SettingsCallsHint" xml:space="preserve">
+    <value>The goose notices a call when your camera is in use, or when a meeting app like Teams, Zoom or Google Meet uses your microphone. Voice chat in games and Discord doesn't count. Do not disturb turns off again when the call is over.</value>
+  </data>
+  <data name="SettingsShortcut" xml:space="preserve">
+    <value>Shortcut to open this window</value>
+  </data>
+  <data name="SettingsShortcutToolTipWindows" xml:space="preserve">
+    <value>Click here and press the key combination you want, e.g. Ctrl+Alt+G</value>
+  </data>
+  <data name="SettingsShortcutToolTipMac" xml:space="preserve">
+    <value>Click here and press the key combination you want, e.g. ⌃⌥G</value>
+  </data>
+  <data name="SettingsShortcutNeedsModifierWindows" xml:space="preserve">
+    <value>The shortcut needs Ctrl, Alt or Win, so it doesn't clash with normal typing.</value>
+  </data>
+  <data name="SettingsShortcutNeedsModifierMac" xml:space="preserve">
+    <value>The shortcut needs Control or Command, so it doesn't clash with normal typing.</value>
+  </data>
+  <data name="SettingsBreaks" xml:space="preserve">
+    <value>Breaks</value>
+  </data>
+  <data name="SettingsSnooze" xml:space="preserve">
+    <value>Let me snooze for</value>
+  </data>
+  <data name="SettingsSnoozeHint" xml:space="preserve">
+    <value>min · turn off to hide the Snooze button when it's time for a break</value>
+  </data>
+  <data name="SettingsAwayHint" xml:space="preserve">
+    <value>Away from your computer for at least 5 minutes, or your whole break if it's longer? That counts as your break, and the countdown to the next one starts fresh when you're back.</value>
+  </data>
+  <data name="SettingsEditMessages" xml:space="preserve">
+    <value>Edit messages</value>
+  </data>
+  <data name="SettingsMessages" xml:space="preserve">
+    <value>Messages</value>
+  </data>
+  <data name="SettingsMessagesHint" xml:space="preserve">
+    <value>The goose picks one of these at random when it's time for a break.</value>
+  </data>
+  <data name="MessageCountOne" xml:space="preserve">
+    <value>{0} message</value>
+  </data>
+  <data name="MessageCountMany" xml:space="preserve">
+    <value>{0} messages</value>
+  </data>
+  <data name="SettingsEnjoying" xml:space="preserve">
+    <value>Enjoying the goose?</value>
+  </data>
+  <data name="SettingsBuyMeACoffee" xml:space="preserve">
+    <value>Buy me a coffee</value>
+  </data>
+  <data name="SettingsDownload" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="SettingsUpdateAvailable" xml:space="preserve">
+    <value>Version {0} is available.</value>
+  </data>
+  <data name="FieldAutoStartInterval" xml:space="preserve">
+    <value>The automatic session interval</value>
+    <comment>Fills in {0} of "{0} must be a whole number between …".</comment>
+  </data>
+  <data name="FieldSnoozeLength" xml:space="preserve">
+    <value>Snooze length</value>
+  </data>
+  <data name="ShortcutTakenWindows" xml:space="preserve">
+    <value>{0} is already used by another program. Pick a different shortcut.</value>
+  </data>
+  <data name="ShortcutTakenMac" xml:space="preserve">
+    <value>{0} is already used by another app. Pick a different shortcut.</value>
+  </data>
+  <data name="SettingsNotSaved" xml:space="preserve">
+    <value>Settings were applied but could not be saved: {0}</value>
+  </data>
+  <data name="StartAtLoginNeedsNewerMac" xml:space="preserve">
+    <value>Starting at login needs macOS 13 or later.</value>
+  </data>
+  <data name="StartAtLoginNotAllowed" xml:space="preserve">
+    <value>macOS didn't allow it.</value>
+  </data>
+
+  <!-- Messages page -->
+  <data name="MessagesResetToDefaults" xml:space="preserve">
+    <value>Reset to defaults</value>
+  </data>
+  <data name="MessagesHint" xml:space="preserve">
+    <value>The goose picks one of these at random when it's time for a break. Click a message to edit it.</value>
+  </data>
+  <data name="MessagesRemove" xml:space="preserve">
+    <value>Remove this message</value>
+  </data>
+  <data name="MessagesAdd" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="MessagesAddPlaceholder" xml:space="preserve">
+    <value>Add a message…</value>
+  </data>
+  <data name="MessagesResetTitle" xml:space="preserve">
+    <value>Reset messages</value>
+  </data>
+  <data name="MessagesResetHeading" xml:space="preserve">
+    <value>Reset the messages?</value>
+  </data>
+  <data name="MessagesResetMessage" xml:space="preserve">
+    <value>This replaces your list with the goose's {0} default messages. Your own messages will be gone after you save.</value>
+  </data>
+  <data name="MessagesResetConfirm" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="MessagesAtLeastOne" xml:space="preserve">
+    <value>Give the goose at least one message to say.</value>
+  </data>
+  <data name="MessagesUnsaved" xml:space="preserve">
+    <value>You changed the messages but didn't save them yet.</value>
+  </data>
+
+  <!-- Unsaved changes -->
+  <data name="UnsavedTitle" xml:space="preserve">
+    <value>Unsaved changes</value>
+  </data>
+  <data name="UnsavedHeading" xml:space="preserve">
+    <value>Save your changes?</value>
+  </data>
+  <data name="UnsavedSettings" xml:space="preserve">
+    <value>You changed some settings but didn't save them yet.</value>
+  </data>
+  <data name="UnsavedKeepEditing" xml:space="preserve">
+    <value>Keep editing</value>
+  </data>
+  <data name="UnsavedDiscard" xml:space="preserve">
+    <value>Discard</value>
+  </data>
+
+  <!-- Tray icon and menu bar -->
+  <data name="MenuOpen" xml:space="preserve">
+    <value>Open Take a Break Goose</value>
+  </data>
+  <data name="MenuDoNotDisturb" xml:space="preserve">
+    <value>Do not disturb</value>
+  </data>
+  <data name="MenuDoNotDisturbInCall" xml:space="preserve">
+    <value>Do not disturb (you're in a call)</value>
+  </data>
+  <data name="MenuStopSession" xml:space="preserve">
+    <value>Stop focus session</value>
+  </data>
+  <data name="MenuQuit" xml:space="preserve">
+    <value>Quit</value>
+  </data>
+  <data name="NoticeAlreadyRunning" xml:space="preserve">
+    <value>Take a Break Goose is already running. Look for the goose in the system tray.</value>
+  </data>
+  <data name="NoticeShortcutTakenWindows" xml:space="preserve">
+    <value>{0} is already used by another program. Open the goose from this tray icon to pick another shortcut.</value>
+  </data>
+  <data name="NoticeShortcutTakenMac" xml:space="preserve">
+    <value>{0} is already used by another app. Open the goose from the menu bar to pick another shortcut.</value>
+  </data>
+  <data name="NoticeSessionStarted" xml:space="preserve">
+    <value>Focus session started. The goose will remind you to take a break every {0} min.</value>
+  </data>
+  <data name="NoticeGooseIsHere" xml:space="preserve">
+    <value>The goose is here. Press {0} to start a focus session.</value>
+  </data>
+  <data name="NoticeInACall" xml:space="preserve">
+    <value>You're in a call, so the goose stays away until it's over. You can turn this off in Settings.</value>
+  </data>
+</root>

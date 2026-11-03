@@ -21,6 +21,9 @@ public enum HotkeyModifiers
 
 public sealed class GooseSettings
 {
+    /// <summary>The language the app speaks, by its code in <see cref="Languages"/>: "en" or "nl".</summary>
+    public string Language { get; set; } = Languages.English;
+
     /// <summary>Start an open-ended focus session as soon as the app starts.</summary>
     public bool AutoStartSession { get; set; }
 
@@ -70,19 +73,31 @@ public sealed class GooseSettings
 
     private const string DefaultHotkeyKey = "G";
 
+    /// <summary>
+    /// What the goose says when it's time for a break, picking one at random. The ones that are still
+    /// one of its default messages are in the app's language (see <see cref="TranslateDefaultMessages"/>).
+    /// </summary>
     public List<string> Messages { get; set; } = DefaultMessages();
 
-    public static List<string> DefaultMessages() => new()
+    /// <summary>The goose's own messages, in a language (English if it's not given).</summary>
+    public static List<string> DefaultMessages(string language = Languages.English) =>
+        Languages.Lines(Languages.Text(nameof(Strings.DefaultMessages), language)).ToList();
+
+    /// <summary>
+    /// Puts the messages that are still one of the goose's default messages, in any language, in this
+    /// settings' language. Messages the user wrote or changed themselves are left as they are.
+    /// </summary>
+    public void TranslateDefaultMessages()
     {
-        "Time to stand up and stretch those legs.",
-        "Look at something far away for 20 seconds. Your eyes will thank you.",
-        "Hydration check! Go get a glass of water.",
-        "Step away from the screen. Whatever you're working on will still be there in five minutes.",
-        "Shoulders down, jaw unclenched, take a deep breath.",
-        "Go for a short walk. Even geese waddle around now and then.",
-        "Hyperfocus is a superpower, but even superheroes take breaks.",
-        "Have you eaten something today?",
-    };
+        var translations = new Dictionary<string, string>();
+        var own = DefaultMessages(Language);
+        foreach (var language in Languages.All)
+        {
+            var defaults = DefaultMessages(language.Code);
+            for (int i = 0; i < defaults.Count && i < own.Count; i++) translations.TryAdd(defaults[i], own[i]);
+        }
+        Messages = Messages.Select(m => translations.TryGetValue(m, out var translated) ? translated : m).ToList();
+    }
 
     // Default messages from older versions that have been reworded since. A saved list still holding
     // the old wording gets the new one; messages the user edited themselves are left alone.
@@ -116,6 +131,7 @@ public sealed class GooseSettings
     /// <summary>Clamps values loaded from disk so a hand-edited file can't break the app.</summary>
     public void Sanitize()
     {
+        if (!Languages.IsKnown(Language)) Language = Languages.English;
         // "Always on" reminders from older versions become a session that starts automatically.
         if (AlwaysOn == true)
         {
@@ -140,7 +156,8 @@ public sealed class GooseSettings
             .Where(m => m.Length > 0)
             .Select(m => RewordedDefaults.TryGetValue(m, out var reworded) ? reworded : m)
             .ToList();
-        if (Messages.Count == 0) Messages = DefaultMessages();
+        if (Messages.Count == 0) Messages = DefaultMessages(Language);
+        TranslateDefaultMessages();
         if (string.IsNullOrWhiteSpace(HotkeyKey) || HotkeyKey == "None") HotkeyKey = DefaultHotkeyKey;
         if (HotkeyModifiers == HotkeyModifiers.None) HotkeyModifiers = HotkeyModifiers.Control | HotkeyModifiers.Alt;
     }

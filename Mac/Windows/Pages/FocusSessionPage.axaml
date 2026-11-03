@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:s="using:TakeABreakGoose"
              x:Class="TakeABreakGoose.FocusSessionPage">
     <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" Focusable="False">
         <StackPanel>
@@ -7,7 +8,7 @@
             <Border x:Name="ActiveCard" Classes="Card" Padding="0" IsVisible="False">
                 <StackPanel>
                     <StackPanel Margin="18,16">
-                        <TextBlock Text="Focus session running" Classes="CardTitle" />
+                        <TextBlock Text="{x:Static s:Strings.SessionRunning}" Classes="CardTitle" />
                         <TextBlock x:Name="CountdownText" FontSize="40" FontWeight="Light" Margin="0,6,0,0" />
                         <TextBlock x:Name="CountdownCaption" Classes="Hint" FontSize="13" />
                         <TextBlock x:Name="SessionEndText" Classes="Hint" Margin="0,10,0,0" />
@@ -18,15 +19,15 @@
                                               Margin="12,0,0,0" Classes="Switch"
                                               IsCheckedChanged="DoNotDisturbSwitch_Changed" />
                                 <StackPanel>
-                                    <TextBlock Text="Do not disturb" FontWeight="SemiBold" />
+                                    <TextBlock Text="{x:Static s:Strings.SessionDoNotDisturb}" FontWeight="SemiBold" />
                                     <TextBlock x:Name="DoNotDisturbHint" Classes="Hint" Margin="0,2,0,0" />
                                 </StackPanel>
                             </DockPanel>
                         </Border>
                         <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
-                            <Button Content="Stop session" Classes="PrimaryButton"
+                            <Button Content="{x:Static s:Strings.SessionStop}" Classes="PrimaryButton"
                                     Click="StopSession_Click" />
-                            <Button Content="Take a break now" Classes="BaseButton"
+                            <Button Content="{x:Static s:Strings.TakeABreakNow}" Classes="BaseButton"
                                     Margin="8,0,0,0" Click="BreakNow_Click" />
                         </StackPanel>
                     </StackPanel>
@@ -40,7 +41,7 @@
                             <DockPanel>
                                 <TextBlock x:Name="BreaksSummary" DockPanel.Dock="Right" Classes="Hint"
                                            VerticalAlignment="Center" Margin="12,0,0,0" />
-                                <TextBlock Text="Breaks this session" FontWeight="SemiBold" />
+                                <TextBlock Text="{x:Static s:Strings.SessionBreaksThisSession}" FontWeight="SemiBold" />
                             </DockPanel>
                             <StackPanel x:Name="BreakList" Margin="0,8,0,0" />
                         </StackPanel>
@@ -51,10 +52,10 @@
             <!-- The session ended during Do not disturb: the goose's goodbye is waiting. -->
             <Border x:Name="SignOffBanner" Classes="Card" Background="#FAF7F2" IsVisible="False">
                 <DockPanel>
-                    <Button DockPanel.Dock="Right" Content="Turn off Do not disturb" Classes="BaseButton"
+                    <Button DockPanel.Dock="Right" Content="{x:Static s:Strings.SessionTurnOffDoNotDisturb}" Classes="BaseButton"
                             VerticalAlignment="Center" Margin="12,0,0,0" Click="EndDoNotDisturb_Click" />
                     <StackPanel>
-                        <TextBlock Text="Your focus session is done" FontWeight="SemiBold" />
+                        <TextBlock Text="{x:Static s:Strings.SessionDoneTitle}" FontWeight="SemiBold" />
                         <TextBlock x:Name="SignOffHint" Classes="Hint" Margin="0,2,0,0" />
                     </StackPanel>
                 </DockPanel>
@@ -62,47 +63,47 @@
 
             <Border x:Name="StartCard" Classes="Card">
                 <StackPanel>
-                    <TextBlock Text="Start a focus session" Classes="CardTitle" />
+                    <TextBlock Text="{x:Static s:Strings.SessionStartTitle}" Classes="CardTitle" />
                     <TextBlock Classes="Hint" Margin="0,2,0,0"
-                               Text="The goose reminds you to take breaks while you work, and lets you know when the session is over." />
+                               Text="{x:Static s:Strings.SessionStartHint}" />
 
-                    <TextBlock Text="Remind me to take a break every" Margin="0,16,0,8" />
+                    <TextBlock Text="{x:Static s:Strings.SessionRemindEvery}" Margin="0,16,0,8" />
                     <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="Interval15" Content="15 min" Tag="15" GroupName="Interval"
+                        <RadioButton x:Name="Interval15" Tag="15" GroupName="Interval"
                                      Classes="ChoiceChip" IsCheckedChanged="Interval_Checked" />
-                        <RadioButton x:Name="Interval30" Content="30 min" Tag="30" GroupName="Interval"
+                        <RadioButton x:Name="Interval30" Tag="30" GroupName="Interval"
                                      Classes="ChoiceChip" IsCheckedChanged="Interval_Checked" />
-                        <RadioButton x:Name="Interval45" Content="45 min" Tag="45" GroupName="Interval"
+                        <RadioButton x:Name="Interval45" Tag="45" GroupName="Interval"
                                      Classes="ChoiceChip" IsCheckedChanged="Interval_Checked" />
-                        <RadioButton x:Name="Interval60" Content="60 min" Tag="60" GroupName="Interval"
+                        <RadioButton x:Name="Interval60" Tag="60" GroupName="Interval"
                                      Classes="ChoiceChip" IsCheckedChanged="Interval_Checked" />
-                        <RadioButton x:Name="IntervalCustom" Content="Other…" GroupName="Interval"
+                        <RadioButton x:Name="IntervalCustom" Content="{x:Static s:Strings.Other}" GroupName="Interval"
                                      Classes="OtherChoiceChip" IsCheckedChanged="Interval_Checked" />
                     </StackPanel>
                     <StackPanel x:Name="CustomIntervalPanel" Orientation="Horizontal" Margin="0,10,0,0"
                                 IsVisible="False">
-                        <TextBlock Text="Every" Classes="Label" Margin="0,0,8,0" />
+                        <TextBlock Text="{x:Static s:Strings.SessionEvery}" Classes="Label" Margin="0,0,8,0" />
                         <TextBox x:Name="SessionIntervalBox" Width="56" GotFocus="NumberBox_GotFocus" />
-                        <TextBlock Text="minutes" Classes="Label" Margin="8,0,0,0" />
+                        <TextBlock Text="{x:Static s:Strings.SessionMinutes}" Classes="Label" Margin="8,0,0,0" />
                     </StackPanel>
 
-                    <TextBlock Text="Each break lasts" Margin="0,16,0,8" />
+                    <TextBlock Text="{x:Static s:Strings.SessionEachBreakLasts}" Margin="0,16,0,8" />
                     <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="Break5" Content="5 min" Tag="5" GroupName="BreakLength"
+                        <RadioButton x:Name="Break5" Tag="5" GroupName="BreakLength"
                                      Classes="ChoiceChip" IsCheckedChanged="BreakLength_Checked" />
-                        <RadioButton x:Name="Break10" Content="10 min" Tag="10" GroupName="BreakLength"
+                        <RadioButton x:Name="Break10" Tag="10" GroupName="BreakLength"
                                      Classes="ChoiceChip" IsCheckedChanged="BreakLength_Checked" />
-                        <RadioButton x:Name="Break15" Content="15 min" Tag="15" GroupName="BreakLength"
+                        <RadioButton x:Name="Break15" Tag="15" GroupName="BreakLength"
                                      Classes="ChoiceChip" IsCheckedChanged="BreakLength_Checked" />
-                        <RadioButton x:Name="BreakCustom" Content="Other…" GroupName="BreakLength"
+                        <RadioButton x:Name="BreakCustom" Content="{x:Static s:Strings.Other}" GroupName="BreakLength"
                                      Classes="OtherChoiceChip" IsCheckedChanged="BreakLength_Checked" />
                     </StackPanel>
                     <StackPanel x:Name="CustomBreakPanel" Orientation="Horizontal" Margin="0,10,0,0"
                                 IsVisible="False">
                         <TextBox x:Name="SessionBreakBox" Width="56" GotFocus="NumberBox_GotFocus" />
-                        <TextBlock Text="min" Classes="Label" Margin="8,0,12,0" />
+                        <TextBlock Text="{x:Static s:Strings.TimeMinutesLabel}" Classes="Label" Margin="8,0,12,0" />
                         <TextBox x:Name="SessionBreakSecondsBox" Width="56" GotFocus="NumberBox_GotFocus" />
-                        <TextBlock Text="sec" Classes="Label" Margin="8,0,0,0" />
+                        <TextBlock Text="{x:Static s:Strings.TimeSecondsLabel}" Classes="Label" Margin="8,0,0,0" />
                     </StackPanel>
 
                     <!-- Optional: when the session ends. Tucked away so a quick start stays quick. -->
@@ -114,43 +115,43 @@
                         <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto">
                             <!-- The option that isn't picked is greyed out (UpdateEndModeLook), but still works:
                                  clicking or typing in it picks it. -->
-                            <RadioButton x:Name="EndAfterRadio" Grid.Row="0" Content="End after" GroupName="EndMode"
+                            <RadioButton x:Name="EndAfterRadio" Grid.Row="0" Content="{x:Static s:Strings.SessionEndAfter}" GroupName="EndMode"
                                          VerticalAlignment="Top" VerticalContentAlignment="Center" Margin="0,4,14,10"
                                          IsCheckedChanged="EndOption_Changed" />
                             <StackPanel x:Name="EndAfterInputs" Grid.Row="0" Grid.Column="1" Margin="0,0,0,10">
                                 <StackPanel Orientation="Horizontal">
-                                    <RadioButton x:Name="Length60" Content="1 h" Tag="60" GroupName="Length"
+                                    <RadioButton x:Name="Length60" Tag="60" GroupName="Length"
                                                  Classes="SmallChoiceChip" IsCheckedChanged="Length_Checked" Click="EndAfterInput_Picked" />
-                                    <RadioButton x:Name="Length120" Content="2 h" Tag="120" GroupName="Length"
+                                    <RadioButton x:Name="Length120" Tag="120" GroupName="Length"
                                                  Classes="SmallChoiceChip" IsCheckedChanged="Length_Checked" Click="EndAfterInput_Picked" />
-                                    <RadioButton x:Name="Length180" Content="3 h" Tag="180" GroupName="Length"
+                                    <RadioButton x:Name="Length180" Tag="180" GroupName="Length"
                                                  Classes="SmallChoiceChip" IsCheckedChanged="Length_Checked" Click="EndAfterInput_Picked" />
-                                    <RadioButton x:Name="Length240" Content="4 h" Tag="240" GroupName="Length"
+                                    <RadioButton x:Name="Length240" Tag="240" GroupName="Length"
                                                  Classes="SmallChoiceChip" IsCheckedChanged="Length_Checked" Click="EndAfterInput_Picked" />
-                                    <RadioButton x:Name="LengthCustom" Content="Other…" GroupName="Length"
+                                    <RadioButton x:Name="LengthCustom" Content="{x:Static s:Strings.Other}" GroupName="Length"
                                                  Classes="SmallOtherChoiceChip" IsCheckedChanged="Length_Checked" Click="EndAfterInput_Picked" />
                                 </StackPanel>
                                 <StackPanel x:Name="CustomLengthPanel" Orientation="Horizontal" Margin="0,8,0,0"
                                             IsVisible="False">
                                     <TextBox x:Name="SessionHoursBox" Width="40" GotFocus="EndAfterInput_Picked"
                                              TextChanged="EndOption_Changed" />
-                                    <TextBlock Text="h" Classes="Label" Margin="6,0,8,0" />
+                                    <TextBlock Text="{x:Static s:Strings.TimeHoursLabel}" Classes="Label" Margin="6,0,8,0" />
                                     <TextBox x:Name="SessionMinutesBox" Width="40" GotFocus="EndAfterInput_Picked"
                                              TextChanged="EndOption_Changed" />
-                                    <TextBlock Text="min" Classes="Label" Margin="6,0,0,0" />
+                                    <TextBlock Text="{x:Static s:Strings.TimeMinutesLabel}" Classes="Label" Margin="6,0,0,0" />
                                 </StackPanel>
                             </StackPanel>
 
-                            <RadioButton x:Name="EndAtRadio" Grid.Row="1" Content="End at" GroupName="EndMode"
+                            <RadioButton x:Name="EndAtRadio" Grid.Row="1" Content="{x:Static s:Strings.SessionEndAt}" GroupName="EndMode"
                                          VerticalContentAlignment="Center" Margin="0,0,14,0"
                                          IsCheckedChanged="EndOption_Changed" />
                             <StackPanel x:Name="EndAtInputs" Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
                                 <TextBox x:Name="SessionEndTimeBox" Width="56" GotFocus="EndAtInput_Picked"
                                          TextChanged="EndOption_Changed"
-                                         ToolTip.Tip="A time like 17:00, in your computer's local time. Up and Down change it by 5 min, with Shift by 1 min." />
-                                <Button Content="−15 min" Tag="-15" Classes="ChipButton" Margin="8,0,6,0"
+                                         ToolTip.Tip="{x:Static s:Strings.SessionEndTimeToolTip}" />
+                                <Button Content="{x:Static s:Strings.SessionEarlier15}" Tag="-15" Classes="ChipButton" Margin="8,0,6,0"
                                         Click="EndTimeStep_Click" />
-                                <Button Content="+15 min" Tag="15" Classes="ChipButton"
+                                <Button Content="{x:Static s:Strings.SessionLater15}" Tag="15" Classes="ChipButton"
                                         Click="EndTimeStep_Click" />
                             </StackPanel>
 
@@ -163,7 +164,7 @@
                                Margin="0,12,0,0" IsVisible="False" />
 
                     <!-- Always the last thing in the card, whether or not an end time is set. -->
-                    <Button Content="Start session" Classes="PrimaryButton"
+                    <Button Content="{x:Static s:Strings.SessionStart}" Classes="PrimaryButton"
                             HorizontalAlignment="Left" Padding="22,8" Margin="0,16,0,0"
                             Click="StartSession_Click" />
                 </StackPanel>

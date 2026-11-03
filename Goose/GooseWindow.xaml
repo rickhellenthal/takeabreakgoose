@@ -1,6 +1,7 @@
 <Window x:Class="TakeABreakGoose.GooseWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:s="clr-namespace:TakeABreakGoose;assembly=TakeABreakGoose.Core"
         xmlns:local="clr-namespace:TakeABreakGoose"
         Title="Take a Break Goose"
         Width="440" Height="360"
@@ -155,7 +156,7 @@
                           StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
                 </Grid>
                 <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-                    <TextBlock x:Name="BreakTitle" Text="Napping during your break" FontSize="13" FontWeight="SemiBold"
+                    <TextBlock x:Name="BreakTitle" Text="{x:Static s:Strings.GooseNappingDuringBreak}" FontSize="13" FontWeight="SemiBold"
                                Foreground="#2B2B2B" />
                     <TextBlock x:Name="BreakTimeText" FontSize="12" Foreground="#8A8172" Margin="0,1,0,0" />
                 </StackPanel>

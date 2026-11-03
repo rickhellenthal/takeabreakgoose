@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -27,6 +28,12 @@ public partial class SettingsPage : UserControl
     public void Initialize(IGooseHost host)
     {
         _host = host;
+        foreach (var language in Languages.All)
+        {
+            var choice = new RadioButton { Content = language.Name, Tag = language.Code, GroupName = "Language" };
+            choice.Classes.Add("SmallChoiceChip");
+            LanguageChoices.Children.Add(choice);
+        }
         LoadForm(host.Settings);
         VersionText.Text = $"Take a Break Goose {UpdateChecker.Display(UpdateChecker.CurrentVersion)}";
     }
@@ -48,6 +55,8 @@ public partial class SettingsPage : UserControl
         _hotkeyModifiers = settings.HotkeyModifiers;
         _hotkeyKey = settings.HotkeyKey;
         HotkeyBox.Text = HotkeyText.Mac(settings.HotkeyModifiers, settings.HotkeyKey);
+        foreach (var choice in LanguageChoices.Children.OfType<RadioButton>())
+            choice.IsChecked = (string?)choice.Tag == settings.Language;
         ShowMessageCount(settings.Messages.Count);
         _savedForm = FormState();
     }
@@ -69,7 +78,7 @@ public partial class SettingsPage : UserControl
         // only Option can't be registered.
         if ((modifiers & (KeyModifiers.Control | KeyModifiers.Meta)) == 0)
         {
-            ShowStatus("The shortcut needs Control or Command, so it doesn't clash with normal typing.", error: true);
+            ShowStatus(Strings.SettingsShortcutNeedsModifierMac, error: true);
             return;
         }
 
@@ -86,7 +95,7 @@ public partial class SettingsPage : UserControl
     public event Action? EditMessagesRequested;
 
     public void ShowMessageCount(int count) =>
-        MessageCountText.Text = count == 1 ? "1 message" : $"{count} messages";
+        MessageCountText.Text = string.Format(count == 1 ? Strings.MessageCountOne : Strings.MessageCountMany, count);
 
     private void EditMessages_Click(object? sender, RoutedEventArgs e) => EditMessagesRequested?.Invoke();
 
@@ -98,11 +107,11 @@ public partial class SettingsPage : UserControl
     private bool TrySave()
     {
         Action<string> fail = message => ShowStatus(message, error: true);
-        if (!Ui.TryParseNumber(AutoStartIntervalBox.Text, 1, 24 * 60, "The automatic session interval", out int autoStartInterval, fail)) return false;
+        if (!Ui.TryParseNumber(AutoStartIntervalBox.Text, 1, 24 * 60, Strings.FieldAutoStartInterval, out int autoStartInterval, fail)) return false;
         // A greyed-out box can't be fixed, so it only needs to make sense while snoozing is on.
         int snooze = _host.Settings.SnoozeMinutes;
         if (AllowSnoozeCheck.IsChecked == true
-            && !Ui.TryParseNumber(SnoozeBox.Text, 1, 24 * 60, "Snooze length", out snooze, fail)) return false;
+            && !Ui.TryParseNumber(SnoozeBox.Text, 1, 24 * 60, Strings.FieldSnoozeLength, out snooze, fail)) return false;
 
         var settings = _host.Settings.Clone();
         settings.AutoStartSession = AutoStartCheck.IsChecked == true;
@@ -112,6 +121,7 @@ public partial class SettingsPage : UserControl
         settings.DoNotDisturbDuringCalls = CallDoNotDisturbCheck.IsChecked == true;
         settings.HotkeyModifiers = _hotkeyModifiers;
         settings.HotkeyKey = _hotkeyKey;
+        settings.Language = SelectedLanguage;
 
         string? error = _host.ApplySettings(settings, StartAtLoginCheck.IsChecked == true);
         if (error != null)
@@ -119,10 +129,16 @@ public partial class SettingsPage : UserControl
             fail(error);
             return false;
         }
-        ShowStatus("Saved ✓", error: false);
+        ShowSaved();
         _savedForm = FormState();
         return true;
     }
+
+    public void ShowSaved() => ShowStatus(Strings.Saved, error: false);
+
+    private string SelectedLanguage =>
+        LanguageChoices.Children.OfType<RadioButton>().FirstOrDefault(c => c.IsChecked == true)?.Tag as string
+        ?? _host.Settings.Language;
 
     private void ShowStatus(string message, bool error)
     {
@@ -135,7 +151,7 @@ public partial class SettingsPage : UserControl
     /// <summary>Everything the form shows, to tell whether anything changed since loading or saving.</summary>
     private string FormState() => string.Join("\u001f",
         AutoStartCheck.IsChecked, AutoStartIntervalBox.Text, AllowSnoozeCheck.IsChecked, SnoozeBox.Text,
-        StartAtLoginCheck.IsChecked, CallDoNotDisturbCheck.IsChecked, HotkeyBox.Text);
+        StartAtLoginCheck.IsChecked, CallDoNotDisturbCheck.IsChecked, HotkeyBox.Text, SelectedLanguage);
 
     public bool HasUnsavedChanges => FormState() != _savedForm;
 
@@ -164,7 +180,7 @@ public partial class SettingsPage : UserControl
     public void ShowUpdate(AvailableUpdate update)
     {
         _update = update;
-        UpdateRun.Text = $"Version {UpdateChecker.Display(update.Version)} is available.";
+        UpdateRun.Text = string.Format(Strings.SettingsUpdateAvailable, UpdateChecker.Display(update.Version));
         UpdateText.IsVisible = true;
     }
 

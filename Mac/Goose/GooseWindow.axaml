@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:s="using:TakeABreakGoose"
         xmlns:local="clr-namespace:TakeABreakGoose"
         x:Class="TakeABreakGoose.GooseWindow"
         Title="Take a Break Goose"
@@ -129,7 +130,7 @@
                           StrokeLineCap="Round" />
                 </Grid>
                 <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-                    <TextBlock x:Name="BreakTitle" Text="Napping during your break" FontSize="13" FontWeight="SemiBold"
+                    <TextBlock x:Name="BreakTitle" Text="{x:Static s:Strings.GooseNappingDuringBreak}" FontSize="13" FontWeight="SemiBold"
                                Foreground="#2B2B2B" />
                     <TextBlock x:Name="BreakTimeText" FontSize="12" Foreground="#8A8172" Margin="0,1,0,0" />
                 </StackPanel>

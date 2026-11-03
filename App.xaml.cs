@@ -29,11 +29,14 @@ public partial class App : Application, IGooseHost
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        // First, so that even "already running" is in the user's language.
+        Settings = _settingsStore.Load();
+        Languages.Use(Settings.Language);
 
         _singleInstance = new Mutex(true, @"Local\TakeABreakGoose", out bool isFirstInstance);
         if (!isFirstInstance)
         {
-            MessageBox.Show("Take a Break Goose is already running. Look for the goose in the system tray.",
+            MessageBox.Show(Strings.NoticeAlreadyRunning,
                 "Take a Break Goose", MessageBoxButton.OK, MessageBoxImage.Information);
             _singleInstance.Dispose();
             _singleInstance = null;
@@ -41,7 +44,6 @@ public partial class App : Application, IGooseHost
             return;
         }
 
-        Settings = _settingsStore.Load();
         TrySave(); // writes back settings carried over from older versions
 
         Scheduler = new BreakScheduler(Settings, SystemClock.Instance, UserActivity.Instance);
@@ -77,11 +79,11 @@ public partial class App : Application, IGooseHost
         if (Array.IndexOf(e.Args, Autostart.Argument) < 0) ShowMainWindow();
 
         if (!hotkeyOk)
-            _tray.ShowBalloon($"{Settings.HotkeyText} is already used by another program. Open the goose from this tray icon to pick another shortcut.");
+            _tray.ShowBalloon(string.Format(Strings.NoticeShortcutTakenWindows, Settings.HotkeyText));
         else if (Array.IndexOf(e.Args, Autostart.Argument) >= 0)
             _tray.ShowBalloon(Settings.AutoStartSession
-                ? $"Focus session started. The goose will remind you to take a break every {Settings.AutoStartIntervalMinutes} min."
-                : $"The goose is here. Press {Settings.HotkeyText} to start a focus session.");
+                ? string.Format(Strings.NoticeSessionStarted, Settings.AutoStartIntervalMinutes)
+                : string.Format(Strings.NoticeGooseIsHere, Settings.HotkeyText));
 
         if (Array.IndexOf(e.Args, "--summon") >= 0) _goose.SummonBreakGoose();
     }
@@ -136,9 +138,11 @@ public partial class App : Application, IGooseHost
         if (hotkeyChanged && _hotkey != null && !_hotkey.Register(newSettings.HotkeyModifiers, newSettings.HotkeyKey))
         {
             _hotkey.Register(Settings.HotkeyModifiers, Settings.HotkeyKey);
-            return $"{newSettings.HotkeyText} is already used by another program. Pick a different shortcut.";
+            return string.Format(Strings.ShortcutTakenWindows, newSettings.HotkeyText);
         }
 
+        bool languageChanged = newSettings.Language != Settings.Language;
+        if (languageChanged) newSettings.TranslateDefaultMessages();
         bool autoStartTurnedOn = newSettings.AutoStartSession && !Settings.AutoStartSession;
         Settings = newSettings;
         Scheduler.ApplySettings(Settings);
@@ -146,6 +150,13 @@ public partial class App : Application, IGooseHost
         if (autoStartTurnedOn && Scheduler.Session == null)
             Scheduler.StartSession(Settings.AutoStartIntervalMinutes, TimeSpan.FromSeconds(Settings.LastSessionBreakSeconds),
                 endsAt: null, automatically: true);
+        if (languageChanged)
+        {
+            Languages.Use(Settings.Language);
+            UpdateTray();
+            // Once the Settings page is done saving, its window makes way for one in the new language.
+            Dispatcher.BeginInvoke(ReopenMainWindow);
+        }
 
         try
         {
@@ -154,7 +165,7 @@ public partial class App : Application, IGooseHost
         }
         catch (Exception ex)
         {
-            return $"Settings were applied but could not be saved: {ex.Message}";
+            return string.Format(Strings.SettingsNotSaved, ex.Message);
         }
         return null;
     }
@@ -163,14 +174,39 @@ public partial class App : Application, IGooseHost
 
     private void ShowMainWindow()
     {
-        if (_mainWindow == null)
-        {
-            _mainWindow = new MainWindow(this);
-            _mainWindow.Closed += (_, _) => _mainWindow = null;
-            _mainWindow.Show();
-        }
-        if (_mainWindow.WindowState == WindowState.Minimized) _mainWindow.WindowState = WindowState.Normal;
+        if (_mainWindow == null) OpenMainWindow(new MainWindow(this));
+        if (_mainWindow!.WindowState == WindowState.Minimized) _mainWindow.WindowState = WindowState.Normal;
         _mainWindow.Activate();
+    }
+
+    private void OpenMainWindow(MainWindow window)
+    {
+        _mainWindow = window;
+        window.Closed += (_, _) =>
+        {
+            if (_mainWindow == window) _mainWindow = null;
+        };
+        window.Show();
+    }
+
+    /// <summary>
+    /// Swaps the app window for a new one in the same place, after the language changed: the window
+    /// shows its texts in the language it was opened in. It opens on Settings, where the language was changed.
+    /// </summary>
+    private void ReopenMainWindow()
+    {
+        if (_mainWindow is not { } old) return;
+        var window = new MainWindow(this)
+        {
+            WindowStartupLocation = WindowStartupLocation.Manual,
+            Left = old.Left,
+            Top = old.Top,
+            Width = old.Width,
+            Height = old.Height,
+        };
+        window.ShowSavedSettings();
+        OpenMainWindow(window);
+        old.Close();
     }
 
     /// <summary>The first time a call keeps the goose away, says so, so a skipped break isn't a mystery.</summary>
@@ -179,7 +215,7 @@ public partial class App : Application, IGooseHost
         if (Settings.CallNoticeShown) return;
         Settings.CallNoticeShown = true;
         TrySave();
-        _tray?.ShowBalloon("You're in a call, so the goose stays away until it's over. You can turn this off in Settings.");
+        _tray?.ShowBalloon(Strings.NoticeInACall);
     }
 
     private void TrySave()

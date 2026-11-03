@@ -29,11 +29,11 @@ public static class LoginItem
     /// <summary>Throws, with macOS's own explanation, when it can't be changed.</summary>
     public static void SetEnabled(bool enabled)
     {
-        if (!IsAvailable) throw new InvalidOperationException("Starting at login needs macOS 13 or later.");
+        if (!IsAvailable) throw new InvalidOperationException(Strings.StartAtLoginNeedsNewerMac);
         string selector = enabled ? "registerAndReturnError:" : "unregisterAndReturnError:";
         if (ObjC.SendWithError(MainAppService(), ObjC.Selector(selector), out IntPtr error)) return;
         string? reason = error == IntPtr.Zero ? null : ObjC.Text(ObjC.Send(error, ObjC.Selector("localizedDescription")));
-        throw new InvalidOperationException(reason ?? "macOS didn't allow it.");
+        throw new InvalidOperationException(reason ?? Strings.StartAtLoginNotAllowed);
     }
 
     private static IntPtr _mainAppService;

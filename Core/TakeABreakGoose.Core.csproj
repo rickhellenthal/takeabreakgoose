@@ -14,4 +14,19 @@
     <Product>Take a Break Goose</Product>
   </PropertyGroup>
 
+  <!--
+    The texts, in English (Strings.resx) and Dutch (Strings.nl.resx). The build turns Strings.resx into
+    the Strings class, with a property per text, which both apps use as well (see docs/architecture.md).
+  -->
+  <ItemGroup>
+    <EmbeddedResource Update="Text\Strings.resx">
+      <StronglyTypedFileName>$(IntermediateOutputPath)Strings.Designer.cs</StronglyTypedFileName>
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>TakeABreakGoose</StronglyTypedNamespace>
+      <StronglyTypedClassName>Strings</StronglyTypedClassName>
+      <StronglyTypedManifestPrefix>TakeABreakGoose.Text</StronglyTypedManifestPrefix>
+      <PublicClass>true</PublicClass>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

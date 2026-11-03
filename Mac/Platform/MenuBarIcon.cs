@@ -14,6 +14,7 @@ public sealed class MenuBarIcon : IDisposable
     private readonly NativeMenuItem _breakNowItem;
     private readonly NativeMenuItem _doNotDisturbItem;
     private readonly NativeMenuItem _stopSessionItem;
+    private readonly NativeMenuItem _quitItem;
 
     public event Action? OpenRequested;
     public event Action? SummonRequested;
@@ -23,16 +24,17 @@ public sealed class MenuBarIcon : IDisposable
 
     public MenuBarIcon()
     {
-        var openItem = _openItem = new NativeMenuItem("Open Take a Break Goose");
+        // The texts come with Update, in the app's language.
+        var openItem = _openItem = new NativeMenuItem();
         openItem.Click += (_, _) => OpenRequested?.Invoke();
-        _breakNowItem = new NativeMenuItem("Take a break now");
+        _breakNowItem = new NativeMenuItem();
         _breakNowItem.Click += (_, _) => SummonRequested?.Invoke();
-        _doNotDisturbItem = new NativeMenuItem("Do not disturb") { ToggleType = NativeMenuItemToggleType.CheckBox };
+        _doNotDisturbItem = new NativeMenuItem { ToggleType = NativeMenuItemToggleType.CheckBox };
         _doNotDisturbItem.Click += (_, _) => DoNotDisturbToggled?.Invoke();
-        _stopSessionItem = new NativeMenuItem("Stop focus session");
+        _stopSessionItem = new NativeMenuItem();
         _stopSessionItem.Click += (_, _) => StopSessionRequested?.Invoke();
-        var quitItem = new NativeMenuItem("Quit");
-        quitItem.Click += (_, _) => QuitRequested?.Invoke();
+        _quitItem = new NativeMenuItem();
+        _quitItem.Click += (_, _) => QuitRequested?.Invoke();
 
         using var iconStream = AssetLoader.Open(new Uri("avares://TakeABreakGoose/Assets/goose.ico"));
         _icon = new TrayIcon
@@ -41,7 +43,7 @@ public sealed class MenuBarIcon : IDisposable
             ToolTipText = "Take a Break Goose",
             Menu = new NativeMenu
             {
-                openItem, _breakNowItem, _doNotDisturbItem, _stopSessionItem, new NativeMenuItemSeparator(), quitItem,
+                openItem, _breakNowItem, _doNotDisturbItem, _stopSessionItem, new NativeMenuItemSeparator(), _quitItem,
             },
             IsVisible = true,
         };
@@ -57,7 +59,11 @@ public sealed class MenuBarIcon : IDisposable
     {
         _icon.ToolTipText = $"Take a Break Goose\n{status}";
         _doNotDisturbItem.IsChecked = doNotDisturb;
-        _doNotDisturbItem.Header = inCall ? "Do not disturb (you're in a call)" : "Do not disturb";
+        _openItem.Header = Strings.MenuOpen;
+        _breakNowItem.Header = Strings.TakeABreakNow;
+        _doNotDisturbItem.Header = inCall ? Strings.MenuDoNotDisturbInCall : Strings.MenuDoNotDisturb;
+        _stopSessionItem.Header = Strings.MenuStopSession;
+        _quitItem.Header = Strings.MenuQuit;
         // Breaks, Do not disturb and stopping only mean something during a focus session.
         // Do not disturb can outlast its session (the goose's goodbye waits for it), so it stays while on.
         _breakNowItem.IsVisible = _stopSessionItem.IsVisible = sessionRunning;

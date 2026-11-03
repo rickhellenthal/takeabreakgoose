@@ -28,6 +28,9 @@ public partial class FocusSessionPage : UserControl
     public void Initialize(IGooseHost host)
     {
         _host = host;
+        // "15 min", "1 h": the chips' texts come from their numbers of minutes, in the app's language.
+        foreach (var chip in IntervalPresets.Concat(BreakPresets)) chip.Content = TimeText.Minutes(int.Parse((string)chip.Tag!));
+        foreach (var chip in LengthPresets) chip.Content = TimeText.Duration(TimeSpan.FromMinutes(int.Parse((string)chip.Tag!)));
         LoadSessionForm(host.Settings);
     }
 
@@ -99,35 +102,35 @@ public partial class FocusSessionPage : UserControl
         {
             if (scheduler.GooseVisiting)
             {
-                CountdownText.Text = "Honk!";
-                CountdownCaption.Text = "The goose is on your screen right now.";
+                CountdownText.Text = Strings.SessionHonk;
+                CountdownCaption.Text = Strings.SessionGooseOnScreen;
             }
             else if (scheduler.AwaitingReturn && !(scheduler.BreakEndsAt > now))
             {
-                CountdownText.Text = "Welcome back";
-                CountdownCaption.Text = "Your break is over. Tell the goose when you're ready to focus again.";
+                CountdownText.Text = Strings.SessionWelcomeBack;
+                CountdownCaption.Text = Strings.SessionBreakOverCaption;
             }
             else if (scheduler.BreakWaiting)
             {
-                CountdownText.Text = "Break time";
-                CountdownCaption.Text = "Your break is waiting. The goose comes as soon as you turn off Do not disturb.";
+                CountdownText.Text = Strings.SessionBreakTime;
+                CountdownCaption.Text = Strings.SessionBreakWaitingCaption;
             }
             else if (scheduler.IsAway)
             {
-                CountdownText.Text = "Away";
-                CountdownCaption.Text = "Time away from the keyboard counts as a break.";
+                CountdownText.Text = Strings.SessionAway;
+                CountdownCaption.Text = Strings.SessionAwayCaption;
             }
             else if (scheduler.BreakEndsAt is DateTime breakEnd)
             {
                 CountdownText.Text = TimeText.Countdown(breakEnd - now);
-                CountdownCaption.Text = "left of your break. Enjoy it!";
+                CountdownCaption.Text = Strings.SessionBreakLeftCaption;
             }
             else if (scheduler.NextBreakAt is DateTime next)
             {
                 CountdownText.Text = TimeText.Countdown(next - now);
                 CountdownCaption.Text = session.BreakLength > TimeSpan.Zero
-                    ? $"until your next break (every {session.IntervalMinutes} min, {TimeText.BreakLength(session.BreakLength)} breaks)"
-                    : $"until your next break (every {session.IntervalMinutes} min)";
+                    ? string.Format(Strings.SessionUntilNextBreak, session.IntervalMinutes, TimeText.BreakLength(session.BreakLength))
+                    : string.Format(Strings.SessionUntilNextBreakNoLength, session.IntervalMinutes);
             }
             else
             {
@@ -135,12 +138,12 @@ public partial class FocusSessionPage : UserControl
                 CountdownCaption.Text = "";
             }
 
-            string started = session.StartedAutomatically
-                ? $"Started automatically at {session.StartedAt:HH:mm}"
-                : $"Started at {session.StartedAt:HH:mm}";
+            string started = string.Format(
+                session.StartedAutomatically ? Strings.SessionStartedAutomaticallyAt : Strings.SessionStartedAt,
+                session.StartedAt);
             SessionEndText.Text = session.EndsAt is DateTime end
-                ? $"{started} · ends {TimeText.End(end, now)} ({TimeText.Countdown(end - now)} left)"
-                : $"{started} · no end time, stop it whenever you're done.";
+                ? string.Format(Strings.SessionEnds, started, TimeText.End(end, now), TimeText.Countdown(end - now))
+                : string.Format(Strings.SessionNoEnd, started);
 
             ShowBreakHistory(scheduler, now);
 
@@ -149,15 +152,15 @@ public partial class FocusSessionPage : UserControl
             _showingStatus = false;
             DoNotDisturbHint.Text = !scheduler.DoNotDisturb
                 ? settings.DoNotDisturbDuringCalls
-                    ? "Keep the goose away for now. During a call, this turns on by itself."
-                    : "Keep the goose away for now, for example during a meeting."
+                    ? Strings.DoNotDisturbHintCalls
+                    : Strings.DoNotDisturbHint
                 : _host.DoNotDisturbForCall
                     ? scheduler.BreakWaiting
-                        ? "On because you're in a call. Your break is waiting until the call is over."
-                        : "On because you're in a call, and off again when it's over. Your timer keeps running."
+                        ? Strings.DoNotDisturbInCallBreakWaiting
+                        : Strings.DoNotDisturbInCall
                     : scheduler.BreakWaiting
-                        ? "Your break is waiting until you turn this off."
-                        : "The goose stays away until you turn this off. Your timer keeps running.";
+                        ? Strings.DoNotDisturbOnBreakWaiting
+                        : Strings.DoNotDisturbOn;
         }
         else
         {
@@ -166,12 +169,12 @@ public partial class FocusSessionPage : UserControl
 
         SignOffBanner.IsVisible = session == null && scheduler.DoNotDisturb;
         SignOffHint.Text = _host.DoNotDisturbForCall
-            ? "Do not disturb is still on because you're in a call. The goose will say goodbye when the call is over, or when you turn Do not disturb off."
-            : "Do not disturb is still on. The goose will say goodbye when you turn it off.";
+            ? Strings.SignOffWaitingInCall
+            : Strings.SignOffWaiting;
         AutoStartNote.IsVisible = session == null;
         AutoStartNote.Text = settings.AutoStartSession
-            ? $"When the app starts, it starts a focus session by itself (a break every {settings.AutoStartIntervalMinutes} min). You can change this in Settings."
-            : "Outside a focus session the goose stays quiet. Want it to start one by itself? You can turn that on in Settings.";
+            ? string.Format(Strings.AutoStartNoteOn, settings.AutoStartIntervalMinutes)
+            : Strings.AutoStartNoteOff;
     }
 
     // ---- Break history ----
@@ -183,16 +186,16 @@ public partial class FocusSessionPage : UserControl
     {
         var rows = new List<(string Times, string Note, string Length, bool Now)>();
         if (scheduler.BreakStartedAt is DateTime onBreakSince)
-            rows.Add(($"{onBreakSince:HH:mm} – now", "On your break", SoFar(now - onBreakSince), true));
+            rows.Add((string.Format(Strings.HistoryUntilNow, onBreakSince), Strings.HistoryOnBreak, SoFar(now - onBreakSince), true));
         else if (scheduler.AwaySince is DateTime awaySince)
-            rows.Add(($"{awaySince:HH:mm} – now", "Away from the computer", SoFar(now - awaySince), true));
+            rows.Add((string.Format(Strings.HistoryUntilNow, awaySince), Strings.HistoryAway, SoFar(now - awaySince), true));
         foreach (var record in scheduler.Breaks.Reverse())
             rows.Add(($"{record.Start:HH:mm} – {record.End:HH:mm}", BreakNote(record.Kind), TimeText.Length(record.Length), false));
 
         var done = scheduler.Breaks;
         var total = done.Aggregate(TimeSpan.Zero, (sum, b) => sum + b.Length);
         BreaksSummary.Text = done.Count == 0 ? ""
-            : $"{done.Count} {(done.Count == 1 ? "break" : "breaks")} · {TimeText.Length(total)} in total";
+            : string.Format(Strings.HistorySummary, done.Count, SessionSummary.BreakNoun(done.Count), TimeText.Length(total));
         BreaksFooter.IsVisible = rows.Count > 0;
 
         // Only rebuild the list when something in it changed (this runs every second).
@@ -204,13 +207,13 @@ public partial class FocusSessionPage : UserControl
     }
 
     private static string SoFar(TimeSpan time) =>
-        time < TimeSpan.FromSeconds(30) ? "just started" : $"{TimeText.Length(time)} so far";
+        time < TimeSpan.FromSeconds(30) ? Strings.HistoryJustStarted : string.Format(Strings.HistorySoFar, TimeText.Length(time));
 
     private static string BreakNote(BreakKind kind) => kind switch
     {
-        BreakKind.EndedEarly => "Ended early",
-        BreakKind.Away => "Away from the computer",
-        _ => "Napped with the goose",
+        BreakKind.EndedEarly => Strings.HistoryEndedEarly,
+        BreakKind.Away => Strings.HistoryAway,
+        _ => Strings.HistoryNapped,
     };
 
     /// <summary>One break; the one in progress looks like a selected chip (orange border and text).</summary>
@@ -285,7 +288,7 @@ public partial class FocusSessionPage : UserControl
     {
         bool open = EndOptionsToggle.IsChecked == true;
         EndOptionsPanel.IsVisible = open;
-        EndOptionsToggle.Content = open ? "Remove end time ▴" : "Set an end time ▾";
+        EndOptionsToggle.Content = open ? Strings.EndTimeRemove : Strings.EndTimeSet;
         UpdateEndModeLook();
         UpdateEndPreview();
     }
@@ -352,7 +355,7 @@ public partial class FocusSessionPage : UserControl
         if (EndAtRadio.IsChecked == true)
         {
             if (!SessionPlan.TryParseTimeOfDay(SessionEndTimeBox.Text ?? "", out endTime))
-                return (SessionEndMode.At, length, settings.LastSessionEndTime, "Enter the end time like 17:00.");
+                return (SessionEndMode.At, length, settings.LastSessionEndTime, Strings.EndTimeInvalid);
             return (SessionEndMode.At, length, endTime, null);
         }
 
@@ -362,10 +365,10 @@ public partial class FocusSessionPage : UserControl
         if (!int.TryParse((SessionHoursBox.Text ?? "").Trim(), out int hours) || hours is < 0 or > 24
             || !int.TryParse((SessionMinutesBox.Text ?? "").Trim(), out int minutes) || minutes is < 0 or > 59)
         {
-            return (SessionEndMode.After, length, endTime, "Enter how long the session lasts, like 2 h 0 min.");
+            return (SessionEndMode.After, length, endTime, Strings.EndLengthInvalid);
         }
         length = hours * 60 + minutes;
-        if (length == 0) return (SessionEndMode.After, length, endTime, "The session needs to last at least a minute.");
+        if (length == 0) return (SessionEndMode.After, length, endTime, Strings.EndLengthTooShort);
         return (SessionEndMode.After, length, endTime, null);
     }
 
@@ -381,7 +384,7 @@ public partial class FocusSessionPage : UserControl
         }
         var now = DateTime.Now;
         var end = new SessionPlan(1, TimeSpan.Zero, mode, length, endTime).EndsAt(now)!.Value;
-        EndPreview.Text = $"The session ends {TimeText.End(end, now)}, in {TimeText.Duration(end - now)}.";
+        EndPreview.Text = string.Format(Strings.EndPreview, TimeText.End(end, now), TimeText.Duration(end - now));
     }
 
     private void StartSession_Click(object? sender, RoutedEventArgs e)
@@ -391,7 +394,7 @@ public partial class FocusSessionPage : UserControl
         int interval;
         var preset = IntervalPresets.FirstOrDefault(r => r.IsChecked == true);
         if (preset != null) interval = int.Parse((string)preset.Tag!);
-        else if (!Ui.TryParseNumber(SessionIntervalBox.Text, 1, 600, "The break interval", out interval, ShowSessionError)) return;
+        else if (!Ui.TryParseNumber(SessionIntervalBox.Text, 1, 600, Strings.FieldBreakInterval, out interval, ShowSessionError)) return;
 
         TimeSpan breakLength;
         var breakPreset = BreakPresets.FirstOrDefault(r => r.IsChecked == true);
@@ -400,8 +403,8 @@ public partial class FocusSessionPage : UserControl
         {
             // An empty box counts as 0, so "20 sec" can be typed without filling in "0 min".
             static string OrZero(string? text) => string.IsNullOrWhiteSpace(text) ? "0" : text;
-            if (!Ui.TryParseNumber(OrZero(SessionBreakBox.Text), 0, 120, "The break's minutes", out int minutes, ShowSessionError)) return;
-            if (!Ui.TryParseNumber(OrZero(SessionBreakSecondsBox.Text), 0, 59, "The break's seconds", out int seconds, ShowSessionError)) return;
+            if (!Ui.TryParseNumber(OrZero(SessionBreakBox.Text), 0, 120, Strings.FieldBreakMinutes, out int minutes, ShowSessionError)) return;
+            if (!Ui.TryParseNumber(OrZero(SessionBreakSecondsBox.Text), 0, 59, Strings.FieldBreakSeconds, out int seconds, ShowSessionError)) return;
             breakLength = new TimeSpan(0, minutes, seconds);
         }
 

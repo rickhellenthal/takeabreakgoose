@@ -10,7 +10,6 @@ namespace TakeABreakGoose;
 public partial class WardrobePage : UserControl
 {
     private IGooseHost _host = null!;
-    private const string BusyToolTip = "A goose is already on your screen. Once it has left, you can send another one.";
     private readonly List<Button> _sendButtons = new();
 
     public WardrobePage()
@@ -39,7 +38,7 @@ public partial class WardrobePage : UserControl
         foreach (var button in _sendButtons)
         {
             button.IsEnabled = !busy;
-            ToolTip.SetTip(button, busy ? BusyToolTip : null);
+            ToolTip.SetTip(button, busy ? Strings.WardrobeBusyToolTip : null);
         }
     }
 
@@ -47,7 +46,7 @@ public partial class WardrobePage : UserControl
     {
         var sendButton = new Button
         {
-            Content = "Send this goose",
+            Content = Strings.WardrobeSend,
             Classes = { "BaseButton" },
             Padding = new Thickness(12, 5, 12, 5),
             HorizontalAlignment = HorizontalAlignment.Left,
