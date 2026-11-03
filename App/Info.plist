@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- What macOS needs to know about the app. App/package.sh fills in the version. -->
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>Take a Break Goose</string>
+    <key>CFBundleDisplayName</key>
+    <string>Take a Break Goose</string>
+    <key>CFBundleIdentifier</key>
+    <string>io.github.rickhellenthal.takeabreakgoose</string>
+    <key>CFBundleExecutable</key>
+    <string>TakeABreakGoose</string>
+    <key>CFBundleIconFile</key>
+    <string>goose</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>{{VERSION}}</string>
+    <key>CFBundleVersion</key>
+    <string>{{VERSION}}</string>
+    <!-- .NET 8 runs on macOS 12 and later. -->
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
+    <!-- A menu bar app: no Dock icon and no app menu. -->
+    <key>LSUIElement</key>
+    <true/>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.productivity</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+</dict>
+</plist>

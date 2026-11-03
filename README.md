@@ -121,7 +121,7 @@ Full disclosure: as you can probably tell, I built this app with the help of [Cl
 You need the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
 
 ```bash
-dotnet run
+dotnet run --project App
 ```
 
 Add `-- --summon` to make the goose appear right away, which is handy for testing. To run the tests:
@@ -131,6 +131,6 @@ dotnet test tests/TakeABreakGoose.Tests
 dotnet test tests/TakeABreakGoose.Windows.Tests
 ```
 
-What the goose does without any windows lives in `Core/`, a plain .NET library shared by the Windows app (WPF, in the repository root) and the macOS app (Avalonia, in `Mac/`). The [technical documentation](docs/README.md) explains how it all fits together, how the goose decides when to come by, and how a release is made.
+The app is built with [Avalonia](https://avaloniaui.net/) and is the same on Windows and macOS (`App/`). What the goose does without any windows lives in `Core/`, a plain .NET library. The [technical documentation](docs/README.md) explains how it all fits together, how the goose decides when to come by, and how a release is made.
 
 </details>

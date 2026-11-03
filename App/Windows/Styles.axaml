@@ -1,0 +1,263 @@
+<!--
+  Colours and control styles shared by the app window, its pages and the dialogs, taken over from
+  the WPF app that came before. FluentTheme is the base; these restyle on top of it. Each style is a
+  class: Classes="Card". The templates' parts are named differently from Fluent's (PART_ContentPresenter and so on), so
+  Fluent's hover and pressed looks don't reach into them.
+-->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Styles.Resources>
+        <SolidColorBrush x:Key="Accent" Color="#F28C28" />
+        <SolidColorBrush x:Key="AccentDark" Color="#D9711A" />
+        <!-- The primary buttons' edge: just darker than the orange, so it doesn't look heavy from a distance. -->
+        <SolidColorBrush x:Key="AccentEdge" Color="#E8822A" />
+        <SolidColorBrush x:Key="Muted" Color="#7A7A7A" />
+    </Styles.Resources>
+
+    <Style Selector="Border.Card">
+        <Setter Property="Background" Value="White" />
+        <Setter Property="BorderBrush" Value="#E8E1D6" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="18,16" />
+        <Setter Property="Margin" Value="0,0,0,12" />
+    </Style>
+
+    <Style Selector="TextBlock.CardTitle">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="TextBlock.Hint">
+        <Setter Property="Foreground" Value="{StaticResource Muted}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <Style Selector="TextBlock.Label">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,0,12,0" />
+    </Style>
+
+    <!-- Fluent's text boxes and check boxes are taller and wider than WPF's; these keep the WPF sizes. -->
+    <Style Selector="TextBox">
+        <Setter Property="Padding" Value="5,3" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+
+    <Style Selector="CheckBox">
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+
+    <Style Selector="RadioButton">
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+
+    <!-- BaseButton, with PrimaryButton and ChipButton based on it. -->
+    <Style Selector="Button.BaseButton, Button.PrimaryButton, Button.ChipButton">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Padding" Value="16,7" />
+        <Setter Property="Background" Value="White" />
+        <Setter Property="Foreground" Value="#222222" />
+        <Setter Property="BorderBrush" Value="#D6CFC4" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Template">
+            <ControlTemplate TargetType="Button">
+                <Border Name="Chrome" Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="6" Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Name="Presenter" Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Foreground="{TemplateBinding Foreground}"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <!-- The same warm tint as the choice chips; a slightly deeper orange for PrimaryButton (further down). -->
+    <Style Selector="Button.BaseButton:pointerover, Button.ChipButton:pointerover">
+        <Setter Property="Background" Value="#F7F2EA" />
+        <Setter Property="BorderBrush" Value="#C9BFAF" />
+    </Style>
+    <Style Selector="Button.BaseButton:disabled /template/ Border#Chrome, Button.PrimaryButton:disabled /template/ Border#Chrome, Button.ChipButton:disabled /template/ Border#Chrome">
+        <Setter Property="Opacity" Value="0.4" />
+    </Style>
+
+    <Style Selector="Button.PrimaryButton">
+        <Setter Property="Background" Value="{StaticResource Accent}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AccentEdge}" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <!-- After the style above: of two styles that set the same property, the later one wins. -->
+    <Style Selector="Button.PrimaryButton:pointerover">
+        <Setter Property="Background" Value="#E57E1E" />
+    </Style>
+
+    <Style Selector="Button.ChipButton">
+        <Setter Property="Padding" Value="10,3" />
+        <Setter Property="Margin" Value="0,0,6,0" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <Style Selector="RadioButton.TabPill">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="#555555" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <ControlTemplate TargetType="RadioButton">
+                <Border Name="Pill" CornerRadius="14" Padding="14,5" Background="{TemplateBinding Background}">
+                    <ContentPresenter Name="Presenter" Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Foreground="{TemplateBinding Foreground}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.TabPill:checked">
+        <Setter Property="Background" Value="#2B2B2B" />
+        <Setter Property="Foreground" Value="White" />
+    </Style>
+    <Style Selector="RadioButton.TabPill:pointerover /template/ Border#Pill">
+        <Setter Property="Opacity" Value="0.85" />
+    </Style>
+
+    <!-- Goes back from a page within a tab; sits where the tabs are, in the same size. -->
+    <Style Selector="Button.BackButton">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="#555555" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <ControlTemplate TargetType="Button">
+                <Border Name="Pill" CornerRadius="14" Padding="12,5" Background="{TemplateBinding Background}">
+                    <ContentPresenter Name="Presenter" Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Foreground="{TemplateBinding Foreground}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="Button.BackButton:pointerover">
+        <Setter Property="Background" Value="#EDE4D3" />
+        <Setter Property="Foreground" Value="#222222" />
+    </Style>
+
+    <!-- A selectable option, e.g. the break interval. The selected one is tinted orange.
+         OtherChoiceChip is the "Other…" option next to the chips: quieter (light border, grey) until
+         it's picked, then like the others. The Small ones are for choices tucked inside a panel (e.g.
+         how long the session lasts). -->
+    <Style Selector="RadioButton.ChoiceChip, RadioButton.OtherChoiceChip, RadioButton.SmallChoiceChip, RadioButton.SmallOtherChoiceChip">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="#3A3A3A" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="MinWidth" Value="74" />
+        <Setter Property="Margin" Value="0,0,8,0" />
+        <Setter Property="Padding" Value="12,9" />
+        <Setter Property="Background" Value="White" />
+        <Setter Property="BorderBrush" Value="#D6CFC4" />
+        <Setter Property="Template">
+            <ControlTemplate TargetType="RadioButton">
+                <Border Name="Chip" Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1.5"
+                        CornerRadius="10" Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Name="Presenter" Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Foreground="{TemplateBinding Foreground}"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.OtherChoiceChip, RadioButton.SmallOtherChoiceChip">
+        <Setter Property="Foreground" Value="#8A8172" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="#E6DFD4" />
+    </Style>
+    <Style Selector="RadioButton.SmallChoiceChip, RadioButton.SmallOtherChoiceChip">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Padding" Value="10,3" />
+        <Setter Property="Margin" Value="0,0,6,0" />
+    </Style>
+    <Style Selector="RadioButton.ChoiceChip:pointerover, RadioButton.OtherChoiceChip:pointerover, RadioButton.SmallChoiceChip:pointerover, RadioButton.SmallOtherChoiceChip:pointerover">
+        <Setter Property="Background" Value="#F7F2EA" />
+    </Style>
+    <Style Selector="RadioButton.OtherChoiceChip:pointerover, RadioButton.SmallOtherChoiceChip:pointerover">
+        <Setter Property="Foreground" Value="#3A3A3A" />
+    </Style>
+    <Style Selector="RadioButton.ChoiceChip:checked, RadioButton.OtherChoiceChip:checked, RadioButton.SmallChoiceChip:checked, RadioButton.SmallOtherChoiceChip:checked">
+        <Setter Property="Background" Value="#FDEBD8" />
+        <Setter Property="BorderBrush" Value="{StaticResource Accent}" />
+        <Setter Property="Foreground" Value="#B85F12" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!-- A small round button with just an icon, e.g. to remove a message. -->
+    <Style Selector="Button.IconButton">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="#8A8172" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <ControlTemplate TargetType="Button">
+                <Border Name="Circle" Width="26" Height="26" CornerRadius="13" Background="{TemplateBinding Background}">
+                    <ContentPresenter Name="Presenter" Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Foreground="{TemplateBinding Foreground}"
+                                      HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="Button.IconButton:pointerover">
+        <Setter Property="Background" Value="#EDE4D3" />
+        <Setter Property="Foreground" Value="#C0392B" />
+    </Style>
+
+    <!-- An on/off switch. -->
+    <Style Selector="ToggleButton.Switch">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <ControlTemplate TargetType="ToggleButton">
+                <Grid Width="40" Height="22" Background="Transparent">
+                    <Border Name="Track" CornerRadius="11" Background="#D6CFC4" />
+                    <Ellipse Name="Knob" Width="16" Height="16" Fill="White"
+                             HorizontalAlignment="Left" Margin="3,0,0,0" />
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="ToggleButton.Switch:checked /template/ Border#Track">
+        <Setter Property="Background" Value="#5E7773" />
+    </Style>
+    <Style Selector="ToggleButton.Switch:checked /template/ Ellipse#Knob">
+        <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="Margin" Value="0,0,3,0" />
+    </Style>
+
+    <!-- A quiet text link that toggles something open. -->
+    <Style Selector="ToggleButton.LinkToggle">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Foreground" Value="#5E7773" />
+        <Setter Property="Template">
+            <ControlTemplate TargetType="ToggleButton">
+                <Border Background="Transparent" Padding="4,6">
+                    <TextBlock Name="Label" Foreground="{TemplateBinding Foreground}"
+                               Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="ToggleButton.LinkToggle:pointerover /template/ TextBlock#Label">
+        <Setter Property="TextDecorations" Value="Underline" />
+    </Style>
+
+    <!-- Fluent shrinks buttons a little while they're pressed; the WPF ones don't. -->
+    <Style Selector="Button.BaseButton:pressed, Button.PrimaryButton:pressed, Button.ChipButton:pressed, Button.BackButton:pressed, Button.IconButton:pressed, ToggleButton.Switch:pressed, ToggleButton.LinkToggle:pressed">
+        <Setter Property="RenderTransform" Value="{x:Null}" />
+    </Style>
+</Styles>

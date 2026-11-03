@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Tests for the Windows app's own code (the registry, meeting app names); the rest is in TakeABreakGoose.Tests. -->
+  <!-- Tests for the app's Windows-only code (the registry, meeting app names, shortcut keys); the rest is in TakeABreakGoose.Tests. -->
   <PropertyGroup>
     <TargetFramework>net8.0-windows</TargetFramework>
-    <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
@@ -17,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\TakeABreakGoose.csproj" />
+    <ProjectReference Include="..\..\App\TakeABreakGoose.App.csproj" />
   </ItemGroup>
 
 </Project>

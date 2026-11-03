@@ -1,0 +1,16 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TakeABreakGoose.App"
+             Name="Take a Break Goose"
+             RequestedThemeVariant="Light">
+    <Application.Styles>
+        <!-- The goose's own orange, rather than the accent colour picked in Windows or macOS (check
+             boxes, focused text boxes and buttons). -->
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Light" Accent="#F28C28" />
+            </FluentTheme.Palettes>
+        </FluentTheme>
+        <StyleInclude Source="avares://TakeABreakGoose/Windows/Styles.axaml" />
+    </Application.Styles>
+</Application>

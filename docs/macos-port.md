@@ -3,6 +3,10 @@
 How Take a Break Goose came to macOS, step by step. The port was built in a branch of its own,
 so `main` (the Windows app) stayed releasable, and merged into `main` for release 1.8.0.
 
+> Since then the Avalonia app has replaced the WPF one on Windows as well, and moved from `Mac/` to
+> `App/` (see [One app](avalonia-on-windows.md)). This log keeps the names from the time: `Mac/...`
+> is now `App/...`, and the macOS parts of `Mac/Platform/` are in `App/Platform/MacOS/`.
+
 The macOS app is built with [Avalonia](https://avaloniaui.net/): its XAML is close to WPF's, the
 goose's vector paths carry over, and Linux could follow later from the same code. It is shared
 through GitHub releases only, not the App Store, and is not signed with an Apple Developer ID.

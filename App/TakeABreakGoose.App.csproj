@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The app for Windows and macOS, built with Avalonia on the shared core. Avalonia brings its own
+    backend for each, so this is plain net8.0; what each operating system needs is in
+    Platform/Windows and Platform/MacOS, behind OperatingSystem checks.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>TakeABreakGoose</RootNamespace>
+    <AssemblyName>TakeABreakGoose</AssemblyName>
+    <Product>Take a Break Goose</Product>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- The .exe's icon on Windows, in Explorer, the Start menu and the installer. -->
+    <ApplicationIcon>..\Assets\goose.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.22" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.22" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\TakeABreakGoose.Core.csproj" />
+    <InternalsVisibleTo Include="TakeABreakGoose.Windows.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- For the tray icon and the window icons; the .exe's comes from ApplicationIcon. -->
+    <AvaloniaResource Include="..\Assets\goose.ico" Link="Assets\goose.ico" />
+  </ItemGroup>
+
+</Project>

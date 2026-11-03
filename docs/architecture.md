@@ -1,16 +1,17 @@
 # Architecture
 
-Take a Break Goose is two desktop apps around one shared core, all in C# on .NET 8:
+Take a Break Goose is one desktop app for Windows and macOS around a core without any windows, all
+in C# on .NET 8:
 
 | Project | Target | What it is |
 |---|---|---|
-| `Core/TakeABreakGoose.Core.csproj` | `net8.0` | Everything the goose decides, without any windows: plain .NET, so both apps share it and its tests run anywhere |
-| `TakeABreakGoose.csproj` (repository root) | `net8.0-windows` | The Windows app, in WPF (plus WinForms for the tray icon) |
-| `Mac/TakeABreakGoose.Mac.csproj` | `net8.0` | The macOS app, in [Avalonia](https://avaloniaui.net/). It also builds and runs on Windows, for trying it out |
+| `Core/TakeABreakGoose.Core.csproj` | `net8.0` | Everything the goose decides, without any windows: plain .NET, so its tests run anywhere |
+| `App/TakeABreakGoose.App.csproj` | `net8.0` | The app, in [Avalonia](https://avaloniaui.net/): the same windows and pages on Windows and macOS, with what each operating system needs in `App/Platform/` |
 | `tests/TakeABreakGoose.Tests` | `net8.0` | Tests for the core |
-| `tests/TakeABreakGoose.Windows.Tests` | `net8.0-windows` | Tests for the Windows-only parts |
+| `tests/TakeABreakGoose.Windows.Tests` | `net8.0-windows` | Tests for the app's Windows-only parts |
 
-Both apps take their version from `Directory.Build.props`.
+The app takes its version from `Directory.Build.props`. Until 1.9.0, Windows had an app of its own
+in WPF; see [One app](avalonia-on-windows.md) for how it was replaced.
 
 ## The core
 
@@ -29,7 +30,7 @@ Core/
 └── Updates/     UpdateChecker: asks GitHub whether a newer release is out
 ```
 
-The core has no timers and no threads of its own. Each app calls `BreakScheduler.Tick()` every
+The core has no timers and no threads of its own. The app calls `BreakScheduler.Tick()` every
 second and `GooseBehavior.NextFrame()` every frame, on its UI thread, so every event is raised
 where the windows can handle it. The current time and the time since the last mouse or keyboard
 input come in through `IClock` and `IUserActivity`, which is what lets the tests run hours of a
@@ -39,7 +40,7 @@ session in milliseconds with a fake clock.
 
 ```mermaid
 flowchart LR
-    App["App<br/>(App.xaml.cs / Mac/App.axaml.cs)"]
+    App["App<br/>(App/App.axaml.cs)"]
     Window["App window<br/>(MainWindow + pages)"]
     Scheduler["BreakScheduler"]
     Coordinator["GooseCoordinator"]
@@ -65,27 +66,25 @@ flowchart LR
 - **`GooseCoordinator`** directs the visits. It turns `BreakDue` into a break reminder, makes sure
   only one goose is on screen at a time (a visit that mustn't get lost waits for the current one to
   leave), passes the user's answers back to the scheduler, and turns Do not disturb on and off for
-  calls. It creates each visit's window through a factory, so it doesn't know about WPF or Avalonia.
+  calls. It creates each visit's window through a factory, so it doesn't know about Avalonia.
 - **`GooseBehavior`** is one visit: walking in, asking, peeking at the screen edge, napping and
   walking out. It's a state machine driven by frames and clicks, and draws through `IGooseView`.
   See [How the goose decides](break-logic.md).
-- **`GooseWindow`** (one per app) is the transparent, always-on-top window. It draws the goose
+- **`GooseWindow`** is the transparent, always-on-top window. It draws the goose
   (`GooseFigure`), the speech bubble and the break card, and passes frames and clicks on to its
   `GooseBehavior`. It implements both `IGooseView` (for the behaviour) and `IGooseWindow` (for the
   coordinator).
-- **The app window** (`Windows/` and `Mac/Windows/`) has three tabs: Focus session, Wardrobe and
+- **The app window** (`App/Windows/`) has three tabs: Focus session, Wardrobe and
   Settings, plus a Messages page. It only talks to the app through `IGooseHost`.
 
-## Each app
+## The app
 
-The two apps are laid out the same way:
-
-| | Windows | macOS |
-|---|---|---|
-| Startup, wiring, single instance | `App.xaml.cs` | `Mac/App.axaml.cs`, `Mac/Program.cs` |
-| The goose's window and drawing | `Goose/` | `Mac/Goose/` |
-| App window, pages, dialogs, styles | `Windows/` | `Mac/Windows/` |
-| What it needs from the operating system | `Platform/`, `Settings/Autostart.cs` | `Mac/Platform/` |
+| | |
+|---|---|
+| Startup, wiring, single instance | `App/App.axaml.cs`, `App/Program.cs` |
+| The goose's window and drawing | `App/Goose/` |
+| App window, pages, dialogs, styles | `App/Windows/` |
+| What it needs from the operating system | `App/Platform/`: one class per job (`Calls`, `HotkeyManager`, `StatusIcon`, ...) that picks `Platform/Windows/` or `Platform/MacOS/` |
 
 At startup the app loads the settings, creates the `BreakScheduler` and `GooseCoordinator`, starts
 the one-second tick and the two-second call check, registers the global shortcut, creates the tray
@@ -94,10 +93,10 @@ starts** is on. See [Platform integration](platform.md) for the operating system
 
 ## Settings
 
-`GooseSettings` is serialized to `settings.json` with `System.Text.Json`, in the folder each app
+`GooseSettings` is serialized to `settings.json` with `System.Text.Json`, in the folder the app
 passes to `SettingsStore`:
 
-- Windows: `%APPDATA%\TakeABreakGoose\settings.json`
+- Windows: `%APPDATA%\TakeABreakGoose\settings.json` (`TakeABreakGoose.Debug` for a Debug build)
 - macOS: `~/Library/Application Support/TakeABreakGoose/settings.json`
 
 A missing or corrupt file gives the defaults. `GooseSettings.Sanitize()` runs after every load
@@ -120,21 +119,20 @@ The app speaks English (the default) or Dutch, picked under **Language** in Sett
 - **The texts** live in the core, in `Core/Text/Strings.resx` (English) and `Strings.nl.resx`
   (Dutch, with the same names). The build turns them into the `Strings` class, with a property per
   text, and puts the Dutch ones in a satellite assembly (`nl/TakeABreakGoose.Core.resources.dll`,
-  bundled into the single-file `.exe`). The core, both apps and the tests all use `Strings`:
+  bundled into the single-file `.exe`). The core, the app and the tests all use `Strings`:
   - In code: `Strings.GooseHonk`, or `string.Format(Strings.GooseSnooze, minutes)` for a text with
     placeholders. Clock times are placeholders too (`{0:HH:mm}`), so they stay on the 24-hour clock.
-  - In XAML, the same in WPF and Avalonia: `Text="{x:Static s:Strings.SessionStart}"`, with
-    `xmlns:s` pointing at the `TakeABreakGoose` namespace (in WPF: `assembly=TakeABreakGoose.Core`).
+  - In XAML: `Text="{x:Static s:Strings.SessionStart}"`, with `xmlns:s="using:TakeABreakGoose"`.
   - Counts and plurals have a text for one and one for more (`WordsMinuteOne` "1 minute",
     `WordsMinuteMany` "5 minutes"), which `TimeText` and `SessionSummary` pick from. Lists, like the
     goose's lines and the number words, are one text with an item per line (`Languages.Lines`).
 - **Which language** the texts are in is `Languages.Current`, one setting for the whole app
   (`Strings.Culture`). It's English from the start, also before the settings are loaded and in the
-  tests, rather than following the computer's own language. Each app calls `Languages.Use(...)`
+  tests, rather than following the computer's own language. The app calls `Languages.Use(...)`
   with the saved language at startup, and again when it's changed in Settings.
 - **Switching** applies right away when Settings is saved: the tray or menu bar menu and the status
   update, the next goose speaks the new language, and the app window is swapped for a new one in the
-  same place, back on Settings (`ReopenMainWindow` in each app). XAML texts are read once, when a
+  same place, back on Settings (`ReopenMainWindow` in `App`). XAML texts are read once, when a
   window opens, so a new window is the simple way to show them all in the new language. A goose
   that's on screen at that moment finishes its visit in the old one.
 - **The messages** the goose picks from are the user's own list, so they aren't texts in `Strings`,

@@ -30,7 +30,7 @@ Compression=lzma2/max
 SolidCompression=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-; Ask to close the running goose before updating or uninstalling (same mutex as App.xaml.cs).
+; Ask to close the running goose before updating or uninstalling (same mutex as SingleInstance.cs).
 AppMutex=Local\TakeABreakGoose
 CloseApplications=yes
 
@@ -46,7 +46,7 @@ Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
 [Registry]
-; Same Run entry the app's own "Start with Windows" setting writes (Autostart.cs).
+; Same Run entry the app's own "Start with Windows" setting writes (App/Platform/Windows/Autostart.cs).
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; \
     ValueName: "TakeABreakGoose"; ValueData: """{app}\{#AppExe}"" --autostart"; Tasks: startup
 ; Undo an earlier "Disable" in Task Manager's Startup apps, or the Run entry above does nothing.

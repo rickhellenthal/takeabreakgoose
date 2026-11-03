@@ -41,7 +41,7 @@ jobs:
 
       # A release's version comes from its tag; otherwise from Directory.Build.props.
       - name: Build the .dmg
-        run: Mac/package.sh ${{ matrix.arch }} ${TAG:+"${TAG#v}"}
+        run: App/package.sh ${{ matrix.arch }} ${TAG:+"${TAG#v}"}
 
       - uses: actions/upload-artifact@v4
         with:
