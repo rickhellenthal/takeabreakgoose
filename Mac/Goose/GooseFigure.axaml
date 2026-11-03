@@ -132,7 +132,7 @@
                     <Canvas x:Name="Bonnet" IsVisible="False">
                         <Path Fill="{StaticResource Mustard}" Data="M 62,14 C 57,-6 87,-12 93,6 Z" />
                         <Path Fill="{StaticResource Mustard}"
-                              Data="M 53,17 C 57,4 92,-7 103,1 C 103,9 68,21 53,17 Z" />
+                              Data="M 53,17 C 57,4 92,-7 103,1 C 103,6 68,16 53,17 Z" />
                         <Path Stroke="{StaticResource Slate}" StrokeThickness="3.5"
                               Data="M 62,11 C 71,4 84,1 93,5" />
                         <Path Stroke="{StaticResource Ink}" StrokeThickness="1.4" StrokeLineCap="Round"
