@@ -43,7 +43,7 @@ public partial class SettingsPage : UserControl
             LanguageChoices.Children.Add(choice);
         }
         LoadForm(host.Settings);
-        VersionText.Text = $"Take a Break Goose {UpdateChecker.Display(UpdateChecker.CurrentVersion)}";
+        VersionText.Text = $"Take a Break Goose {Updater.CurrentVersionName ?? UpdateChecker.Display(UpdateChecker.CurrentVersion)}";
     }
 
     public void ScrollToTop() => Scroller.ScrollToHome();
@@ -196,13 +196,37 @@ public partial class SettingsPage : UserControl
     public void ShowUpdate(AvailableUpdate update)
     {
         _update = update;
-        UpdateRun.Text = string.Format(Strings.SettingsUpdateAvailable, UpdateChecker.Display(update.Version));
+        UpdateRun.Text = string.Format(Strings.SettingsUpdateAvailable, update.DisplayName);
+        // Installed with Velopack: it updates itself. Otherwise: a link to the release page.
+        DownloadUpdateButton.Content = Updater.CanUpdate ? Strings.SettingsUpdateNow : Strings.SettingsDownload;
         UpdateText.IsVisible = true;
     }
 
-    private void DownloadUpdate_Click(object? sender, RoutedEventArgs e)
+    private async void DownloadUpdate_Click(object? sender, RoutedEventArgs e)
     {
-        if (_update != null) UpdateChecker.OpenInBrowser(_update.Url);
+        if (_update == null) return;
+        if (!Updater.CanUpdate)
+        {
+            UpdateChecker.OpenInBrowser(_update.Url);
+            return;
+        }
+        // Restarting the app takes the goose off the screen and forgets the break.
+        if (!UpdateMoment.IsGood(_host.Scheduler, _host.GooseOnScreen, _host.DoNotDisturbForCall))
+        {
+            ShowStatus(Strings.SettingsUpdateNotNow, error: false);
+            return;
+        }
+        DownloadUpdateButton.IsEnabled = false;
+        ShowStatus(Strings.SettingsUpdating, error: false);
+        try
+        {
+            await Updater.DownloadAndRestartAsync(); // quits and starts the new version
+        }
+        catch (Exception ex)
+        {
+            ShowStatus(string.Format(Strings.SettingsUpdateFailed, ex.Message), error: true);
+            DownloadUpdateButton.IsEnabled = true;
+        }
     }
 
     private const string KoFiUrl = "https://ko-fi.com/rickhellenthal";

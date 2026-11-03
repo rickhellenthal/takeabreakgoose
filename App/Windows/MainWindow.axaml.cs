@@ -38,7 +38,7 @@ public partial class MainWindow : Window
         MessagesView.Initialize(host);
         SettingsView.EditMessagesRequested += OpenMessages;
         MessagesView.Saved += SettingsView.ShowMessageCount;
-        Loaded += async (_, _) => ShowUpdate(await UpdateChecker.CheckAsync());
+        Loaded += async (_, _) => ShowUpdate(Updater.CanUpdate ? await Updater.CheckAsync() : await UpdateChecker.CheckAsync());
 
         _host.Scheduler.StateChanged += RefreshStatus;
         Closed += (_, _) => _host.Scheduler.StateChanged -= RefreshStatus;

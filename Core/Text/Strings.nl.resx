@@ -660,6 +660,18 @@ twaalf</value>
   <data name="SettingsUpdateAvailable" xml:space="preserve">
     <value>Versie {0} is beschikbaar.</value>
   </data>
+  <data name="SettingsUpdateNow" xml:space="preserve">
+    <value>Nu bijwerken</value>
+  </data>
+  <data name="SettingsUpdating" xml:space="preserve">
+    <value>De nieuwe gans wordt opgehaald…</value>
+  </data>
+  <data name="SettingsUpdateNotNow" xml:space="preserve">
+    <value>Nu even niet, de gans heeft het druk. Probeer het na je pauze opnieuw.</value>
+  </data>
+  <data name="SettingsUpdateFailed" xml:space="preserve">
+    <value>Bijwerken lukte niet: {0}</value>
+  </data>
   <data name="FieldAutoStartInterval" xml:space="preserve">
     <value>De tijd tussen pauzes in de automatische sessie</value>
   </data>

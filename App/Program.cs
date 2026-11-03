@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Controls;
+using Velopack;
 
 namespace TakeABreakGoose;
 
@@ -9,6 +10,10 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // First of all: when Velopack's installer or updater starts the app to let it know about an
+        // install, update or uninstall, this handles that and quits.
+        VelopackApp.Build().Run();
+
         // Before Avalonia starts, which can't quit again before its main loop runs.
         using var singleInstance = new SingleInstance(App.SettingsFolder());
         if (!singleInstance.IsFirst)

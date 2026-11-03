@@ -1,0 +1,150 @@
+# A trial of updating the app with Velopack (see docs/in-app-updates.md): packs the app with Velopack
+# for Windows and both kinds of Mac and publishes it as a GitHub pre-release, 1.11.0-spike.<run>.
+# Install one, push again (or re-run), and the installed one should offer the newer one under Settings.
+# Normal releases don't see these: UpdateChecker and Velopack only look at pre-releases from a pre-release.
+name: Velopack spike
+
+on:
+  push:
+    branches: [spike/velopack]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  VERSION: 1.11.0-spike.${{ github.run_number }}
+  REPO_URL: https://github.com/${{ github.repository }}
+  VPK_VERSION: 1.2.161
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Run the tests
+        run: dotnet test tests/TakeABreakGoose.Tests -c Release
+
+      - name: Publish the app
+        run: >
+          dotnet publish App/TakeABreakGoose.App.csproj -c Release -r win-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:Version=$VERSION
+          -o publish
+
+      - name: Install Velopack
+        run: dotnet tool install -g vpk --version $VPK_VERSION
+
+      # The previous test build, to make a small delta update from. There is none the first time.
+      - name: Download the previous test build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: vpk download github --repoUrl $REPO_URL --token $GH_TOKEN --channel win --pre -o Releases || echo "Nothing to make a delta from."
+
+      - name: Pack with Velopack
+        run: >
+          vpk pack -u TakeABreakGoose -v $VERSION -p publish -e TakeABreakGoose.exe
+          --packTitle "Take a Break Goose" --packAuthors "Rick Hellenthal"
+          -i Assets/goose.ico --shortcuts StartMenuRoot --channel win -o Releases
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: velopack-win
+          path: Releases/*
+
+      - name: Publish the pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          vpk upload github --repoUrl $REPO_URL --token $GH_TOKEN --channel win -o Releases
+          --pre --publish --tag v$VERSION --targetCommitish $GITHUB_SHA
+          --releaseName "Take a Break Goose $VERSION (test build, not for everyday use)"
+
+  mac:
+    needs: windows
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [arm64, x64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      # The ad hoc signed .app, as for a normal release (the .dmg it also makes isn't used here).
+      - name: Build the app
+        run: App/package.sh ${{ matrix.arch }} "$VERSION"
+
+      - name: Install Velopack
+        run: dotnet tool install -g vpk --version $VPK_VERSION
+
+      - name: Download the previous test build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: vpk download github --repoUrl $REPO_URL --token $GH_TOKEN --channel osx-${{ matrix.arch }} --pre -o Releases || echo "Nothing to make a delta from."
+
+      # Velopack adds its updater (UpdateMac) to the bundle, so it has to sign it again: ad hoc ("-"),
+      # only what it added plus the bundle, since package.sh already signed every file.
+      - name: Pack with Velopack
+        run: >
+          vpk pack -u TakeABreakGoose -v "$VERSION" -p "dist/mac-${{ matrix.arch }}/Take a Break Goose.app"
+          -e TakeABreakGoose --packTitle "Take a Break Goose" --packAuthors "Rick Hellenthal"
+          --channel osx-${{ matrix.arch }} -o Releases
+          --signAppIdentity "-" --signDisableDeep --signEntitlements App/TakeABreakGoose.entitlements
+
+      # What the spike is about: is the app Velopack made still validly signed, and does it start?
+      # The answers go on the run's summary page.
+      - name: Check the packed app
+        run: |
+          set +e
+          summary() { echo "$1" >> "$GITHUB_STEP_SUMMARY"; }
+          summary "## Mac ${{ matrix.arch }}: $VERSION"
+          summary '```'
+          ls -la Releases >> "$GITHUB_STEP_SUMMARY"
+          mkdir -p check
+          ditto -x -k Releases/*-Portable.zip check
+          app="$(find check -maxdepth 1 -name '*.app' | head -n 1)"
+          echo "--- codesign --verify --strict --deep" >> "$GITHUB_STEP_SUMMARY"
+          codesign --verify --strict --deep -vv "$app" >> "$GITHUB_STEP_SUMMARY" 2>&1; echo "exit $?" >> "$GITHUB_STEP_SUMMARY"
+          echo "--- codesign -d (flags, entitlements)" >> "$GITHUB_STEP_SUMMARY"
+          codesign -dvv --entitlements - "$app" >> "$GITHUB_STEP_SUMMARY" 2>&1
+          echo "--- quarantine attributes in the bundle (none expected)" >> "$GITHUB_STEP_SUMMARY"
+          xattr -lr "$app" | grep -i quarantine >> "$GITHUB_STEP_SUMMARY"; echo "grep exit $? (1 = none)" >> "$GITHUB_STEP_SUMMARY"
+          echo "--- spctl (rejected expected: not notarized)" >> "$GITHUB_STEP_SUMMARY"
+          spctl -a -vv "$app" >> "$GITHUB_STEP_SUMMARY" 2>&1
+          echo "--- .pkg signature (unsigned expected) and where it installs" >> "$GITHUB_STEP_SUMMARY"
+          pkgutil --check-signature Releases/*.pkg >> "$GITHUB_STEP_SUMMARY" 2>&1
+          pkgutil --expand Releases/*.pkg pkg-expanded && grep -o 'install-location="[^"]*"' -r pkg-expanded >> "$GITHUB_STEP_SUMMARY"
+          echo "--- does it start and keep running?" >> "$GITHUB_STEP_SUMMARY"
+          open "$app"
+          sleep 20
+          if pgrep -x TakeABreakGoose > /dev/null; then echo "running after 20 s" >> "$GITHUB_STEP_SUMMARY"; else echo "NOT running after 20 s" >> "$GITHUB_STEP_SUMMARY"; fi
+          pkill -x TakeABreakGoose
+          summary '```'
+          exit 0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: velopack-mac-${{ matrix.arch }}
+          path: Releases/*
+
+      - name: Add it to the pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          vpk upload github --repoUrl $REPO_URL --token $GH_TOKEN --channel osx-${{ matrix.arch }} -o Releases
+          --pre --publish --merge --tag v$VERSION --targetCommitish $GITHUB_SHA
+          --releaseName "Take a Break Goose $VERSION (test build, not for everyday use)"

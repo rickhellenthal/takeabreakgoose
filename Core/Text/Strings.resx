@@ -685,6 +685,19 @@ twelve</value>
   <data name="SettingsUpdateAvailable" xml:space="preserve">
     <value>Version {0} is available.</value>
   </data>
+  <data name="SettingsUpdateNow" xml:space="preserve">
+    <value>Update now</value>
+  </data>
+  <data name="SettingsUpdating" xml:space="preserve">
+    <value>Fetching the new goose…</value>
+  </data>
+  <data name="SettingsUpdateNotNow" xml:space="preserve">
+    <value>Not right now, the goose is busy. Try again after your break.</value>
+  </data>
+  <data name="SettingsUpdateFailed" xml:space="preserve">
+    <value>The update didn't work: {0}</value>
+    <comment>{0} is what went wrong, in the words of the computer.</comment>
+  </data>
   <data name="FieldAutoStartInterval" xml:space="preserve">
     <value>The automatic session interval</value>
     <comment>Fills in {0} of "{0} must be a whole number between …".</comment>

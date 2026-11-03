@@ -7,7 +7,11 @@ using System.Threading.Tasks;
 
 namespace TakeABreakGoose;
 
-public sealed record AvailableUpdate(Version Version, string Url);
+/// <param name="Name">How to show the version, when it's more than its numbers (e.g. "1.11.0-spike.3" for a test build).</param>
+public sealed record AvailableUpdate(Version Version, string Url, string? Name = null)
+{
+    public string DisplayName => Name ?? UpdateChecker.Display(Version);
+}
 
 /// <summary>Checks GitHub for a newer release. Quietly gives up when offline or when anything goes wrong.</summary>
 public static class UpdateChecker

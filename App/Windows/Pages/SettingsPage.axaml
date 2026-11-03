@@ -104,7 +104,7 @@
                     <StackPanel x:Name="UpdateText" IsVisible="False" Orientation="Horizontal"
                                 HorizontalAlignment="Center" Margin="0,4,0,0">
                         <TextBlock x:Name="UpdateRun" FontSize="12" Foreground="#B85F12" />
-                        <Button Classes="Link" Content="{x:Static s:Strings.SettingsDownload}" FontSize="12" Foreground="#B85F12"
+                        <Button x:Name="DownloadUpdateButton" Classes="Link" Content="{x:Static s:Strings.SettingsDownload}" FontSize="12" Foreground="#B85F12"
                                 Margin="4,0,0,0" Click="DownloadUpdate_Click" />
                     </StackPanel>
                 </StackPanel>
