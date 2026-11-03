@@ -118,7 +118,7 @@ jobs:
           ditto -x -k Releases/*-Portable.zip check
           app="$(find check -maxdepth 1 -name '*.app' | head -n 1)"
           echo "--- codesign --verify --strict --deep" >> "$GITHUB_STEP_SUMMARY"
-          codesign --verify --strict --deep -vv "$app" >> "$GITHUB_STEP_SUMMARY" 2>&1; echo "exit $?" >> "$GITHUB_STEP_SUMMARY"
+          codesign --verify --strict --deep -v "$app" >> "$GITHUB_STEP_SUMMARY" 2>&1; echo "exit $?" >> "$GITHUB_STEP_SUMMARY"
           echo "--- codesign -d (flags, entitlements)" >> "$GITHUB_STEP_SUMMARY"
           codesign -dvv --entitlements - "$app" >> "$GITHUB_STEP_SUMMARY" 2>&1
           echo "--- quarantine attributes in the bundle (none expected)" >> "$GITHUB_STEP_SUMMARY"

@@ -130,6 +130,21 @@ What's not in the spike yet: checking regularly instead of once per run, the men
 keeping the focus session across the restart, and texts for after an update. Those are in
 [The experience](#the-experience) below and come with the real thing.
 
+### Results so far
+
+`1.11.0-spike.1` (Apple Silicon, on the GitHub runner):
+
+- `codesign --verify --strict --deep`: valid, including Velopack's `UpdateMac`. Signed ad hoc with
+  the hardened runtime (`flags=adhoc,runtime`, no team ID) and the three entitlements.
+- No quarantine attributes in the bundle. `spctl` rejects it, as expected without notarization.
+- The `.pkg` is unsigned and installs into `/Applications`.
+- The app starts and is still running after 20 seconds.
+- Sizes: `.pkg` 44.6 MB, portable `.zip` 45.0 MB, update package 46.2 MB (the 1.10.0 `.dmg` was
+  49.6 MB). Windows `Setup.exe` is 50.1 MB, against 40.2 MB for the Inno installer.
+
+Still to see on a real Mac: the first install from a browser download, the in-app update, and
+the login item.
+
 ### Running it
 
 1. Push this branch as `spike/velopack`. The workflow publishes `1.11.0-spike.N`.
