@@ -690,9 +690,6 @@ twaalf</value>
   <data name="WhatsNewIntro" xml:space="preserve">
     <value>Wat er nieuw is:</value>
   </data>
-  <data name="WhatsNewNoNotes" xml:space="preserve">
-    <value>Alles wat er nieuw is staat op de releasepagina.</value>
-  </data>
   <data name="WhatsNewVersion" xml:space="preserve">
     <value>Versie {0}</value>
   </data>

@@ -717,9 +717,6 @@ twelve</value>
   <data name="WhatsNewIntro" xml:space="preserve">
     <value>What's new:</value>
   </data>
-  <data name="WhatsNewNoNotes" xml:space="preserve">
-    <value>Everything that's new is on the release page.</value>
-  </data>
   <data name="WhatsNewVersion" xml:space="preserve">
     <value>Version {0}</value>
     <comment>{0} is a version, like 1.11.0.</comment>

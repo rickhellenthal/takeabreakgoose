@@ -23,8 +23,8 @@ public partial class WhatsNewWindow : Window
         InitializeComponent();
     }
 
-    /// <param name="notes">What the previous version saved before updating; null when there's nothing.</param>
-    public static Task ShowAsync(Window owner, string version, UpdateNotes? notes)
+    /// <param name="notes">The release notes to show, newest version first.</param>
+    public static Task ShowAsync(Window owner, string version, UpdateNotes notes)
     {
         var window = new WhatsNewWindow();
         window.Fill(version, notes);
@@ -40,7 +40,7 @@ public partial class WhatsNewWindow : Window
         bool several = versions.Count > 1;
 
         HeadingText.Text = string.Format(Strings.WhatsNewHeading, version);
-        IntroText.Text = versions.Count > 0 ? Strings.WhatsNewIntro : Strings.WhatsNewNoNotes;
+        IntroText.Text = Strings.WhatsNewIntro;
         foreach (var (v, sections) in versions)
         {
             // With more than one version, each says which one it's from.
@@ -52,7 +52,7 @@ public partial class WhatsNewWindow : Window
                 });
             foreach (var section in sections) AddSection(section);
         }
-        if (notes?.More == true && versions.Count > 0)
+        if (notes?.More == true)
             SectionsPanel.Children.Add(new TextBlock { Text = Strings.WhatsNewOlder, Classes = { "Hint" } });
         _releaseUrl = several ? Updater.AllReleasesUrl : Updater.ReleaseUrl(version);
     }

@@ -22,7 +22,8 @@ public static class Updater
 {
     private const string RepoUrl = "https://github.com/rickhellenthal/takeabreakgoose";
     private const string ReleasesUrl = RepoUrl + "/releases";
-    private const string ReleasesApi = "https://api.github.com/repos/rickhellenthal/takeabreakgoose/releases?per_page=30";
+    private const string ReleaseApi = "https://api.github.com/repos/rickhellenthal/takeabreakgoose/releases";
+    private const string ReleasesApi = ReleaseApi + "?per_page=30";
 
     /// <summary>Started again after an update.</summary>
     public const string UpdatedArgument = "--updated";
@@ -137,6 +138,27 @@ public static class Updater
             File.Delete(ReleaseNotesFile);
             var notes = JsonSerializer.Deserialize<UpdateNotes>(json);
             return notes?.Versions.Count > 0 && notes.Versions[0].Version == CurrentVersionName ? notes : null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// A version's release notes from its GitHub release, for a version that was installed rather
+    /// than updated to from inside the app (e.g. over 1.10.0, which can't hand them over). Null
+    /// when offline or anything goes wrong.
+    /// </summary>
+    public static async Task<UpdateNotes?> FetchReleaseNotesAsync(string version)
+    {
+        try
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+            http.DefaultRequestHeaders.UserAgent.ParseAdd($"TakeABreakGoose/{version}");
+            using var json = JsonDocument.Parse(await http.GetStringAsync($"{ReleaseApi}/tags/v{version}"));
+            string? body = json.RootElement.GetProperty("body").GetString();
+            return string.IsNullOrWhiteSpace(body) ? null : new UpdateNotes(new[] { new VersionNotes(version, body) }, More: false);
         }
         catch (Exception)
         {

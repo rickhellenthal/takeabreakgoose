@@ -1,5 +1,5 @@
 # Builds the macOS app and packs it with Velopack, for Apple Silicon and for Intel Macs: an installer
-# (.pkg), a portable .zip and the update package, under the run's Artifacts (mac-arm64, mac-x64).
+# (.pkg) and the update package, under the run's Artifacts (mac-arm64, mac-x64).
 # - The release workflow calls it with the release's tag; it then publishes them with the rest.
 # - On every push to a branch other than main it builds them to try out, unless the push only
 #   changes text that isn't part of the app (the README, docs/, release-notes/).
@@ -81,22 +81,23 @@ jobs:
       # Velopack adds its updater (UpdateMac) to the bundle, so it has to sign it again: ad hoc ("-"),
       # only what it added plus the bundle, since package.sh already signed every file. Velopack
       # always signs with the hardened runtime, which needs the entitlements for .NET.
+      # No portable .zip: on a Mac the .pkg is the better download (a downloaded .zip is quarantined).
       - name: Pack with Velopack
         run: >
           vpk pack -u TakeABreakGoose -v "${{ steps.version.outputs.version }}"
           -p "dist/mac-${{ matrix.arch }}/Take a Break Goose.app"
           -e TakeABreakGoose --packTitle "Take a Break Goose" --packAuthors "Rick Hellenthal"
-          -r osx-${{ matrix.arch }} --channel osx-${{ matrix.arch }} -o Releases
+          -r osx-${{ matrix.arch }} --channel osx-${{ matrix.arch }} -o Releases --noPortable
           $( [[ -f notes.md ]] && echo --releaseNotes notes.md )
           --signAppIdentity "-" --signDisableDeep --signEntitlements App/TakeABreakGoose.entitlements
 
-      # Stops a broken build before anyone installs it: the packed app must be validly signed and
-      # keep running once started.
+      # Stops a broken build before anyone installs it: the app in the installer must be validly
+      # signed and keep running once started.
       - name: Check the packed app
         run: |
-          mkdir -p check
-          ditto -x -k Releases/*-Portable.zip check
-          app="$(find check -maxdepth 1 -name '*.app' | head -n 1)"
+          pkgutil --expand-full Releases/*-Setup.pkg check
+          app="$(find check -name '*.app' -type d -prune | head -n 1)"
+          echo "Checking $app"
           codesign --verify --strict --deep "$app"
           open "$app"
           sleep 20

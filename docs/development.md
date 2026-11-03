@@ -138,7 +138,7 @@ Pushing a `v*` tag runs `.github/workflows/release.yml`:
    is one.
 4. Calls `.github/workflows/mac-build.yml`, which runs the core tests on macOS, builds the ad hoc
    signed app for Apple Silicon and for Intel Macs with `App/package.sh`, packs each with Velopack
-   (a `.pkg`, a portable `.zip` and the update), and checks that the packed app is validly signed
+   (a `.pkg` and the update), and checks that the packed app is validly signed
    and keeps running.
 5. Once all of that worked, creates the GitHub release with everything in it, and
    `release-notes/vX.Y.Z.md` as its description. The app reads the descriptions too, for the

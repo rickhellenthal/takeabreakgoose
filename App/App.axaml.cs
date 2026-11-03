@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -313,9 +314,18 @@ public partial class App : Application, IGooseHost
     {
         if (!_whatsNewPending || Updater.CurrentVersionName is not { } version) return;
         _whatsNewPending = false;
-        var notes = Updater.TakeReleaseNotes();
         // Once the window is on screen, which it has to be to own a dialog.
-        Dispatcher.UIThread.Post(() => _ = WhatsNewWindow.ShowAsync(owner, version, notes));
+        Dispatcher.UIThread.Post(async () =>
+        {
+            // Handed over by the version before, when it updated from inside the app. Otherwise (installed
+            // over an older version, which can't hand them over) this version's notes from GitHub.
+            var notes = Updater.TakeReleaseNotes()
+                        ?? (Settings.CheckForUpdates ? await Updater.FetchReleaseNotesAsync(version) : null);
+            // Nothing to tell, or the window was closed meanwhile: no window.
+            if (notes == null || !notes.Versions.Any(v => ReleaseNotes.Highlights(v.Markdown).Count > 0)) return;
+            if (!owner.IsVisible) return;
+            await WhatsNewWindow.ShowAsync(owner, version, notes);
+        });
     }
 
     private void OpenMainWindow(MainWindow window)

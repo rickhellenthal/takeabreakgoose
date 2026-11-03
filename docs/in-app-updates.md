@@ -20,7 +20,7 @@ describes how that works, from the release workflow to the restart, and why it's
 | | Windows | macOS |
 |---|---|---|
 | Installer | `TakeABreakGoose-win-Setup.exe` | `TakeABreakGoose-osx-arm64-Setup.pkg` (Apple Silicon), `TakeABreakGoose-osx-x64-Setup.pkg` (Intel) |
-| Without installing | `TakeABreakGoose-win-Portable.zip` | `TakeABreakGoose-osx-<arch>-Portable.zip` |
+| Without installing | `TakeABreakGoose-win-Portable.zip` | None: a downloaded `.zip` is quarantined, so the `.pkg` is the better way |
 | Installed in | `%LOCALAPPDATA%\TakeABreakGoose`, per user, no admin rights | `/Applications/Take a Break Goose.app` |
 | What's there | `current\TakeABreakGoose.exe` (the app, replaced as a whole on every update), `Update.exe`, and `Take a Break Goose.exe` (a small stub for the Start menu shortcut) | the app bundle, with Velopack's `UpdateMac` in `Contents/MacOS` |
 | Settings | `%APPDATA%\TakeABreakGoose`, apart from the install | `~/Library/Application Support/TakeABreakGoose` |
@@ -69,7 +69,8 @@ update for itself and finds it at its next check.
 ### What's new
 
 The first time a new version runs (`GooseSettings.LastRunVersion`), it shows what's new over its
-window. A new install shows nothing.
+window. A new install shows nothing; installing over an older version (whose settings are still
+there) counts as an update.
 
 - **Which notes.** Velopack goes straight to the newest version and only brings its notes along.
   So while the update downloads, the app also fetches GitHub's list of releases and keeps the notes
@@ -78,7 +79,9 @@ window. A new install shows nothing.
   on the release page. If fetching the list fails, only the newest version's notes, from Velopack.
 - **Handing them over.** Velopack 1.2 doesn't let the new version read its own notes, so the old
   version saves them as `whats-new.json` in the settings folder just before restarting, and the new
-  one reads and deletes it.
+  one reads and deletes it. Without them (installed over 1.10.0, which can't hand them over), the
+  new version fetches its own release's notes from GitHub; without any notes at all, offline or
+  with update checks off, it shows nothing.
 - **In short** (`ReleaseNotes`): the headings stay, a bullet becomes its bold start, a bullet without
   one stays whole, a section without bullets gets its first sentence, and the Install section is
   left out. So every bullet in the release notes starts with a short bold phrase.
