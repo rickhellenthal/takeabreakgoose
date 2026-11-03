@@ -99,6 +99,11 @@ Every text the app shows is in `Core/Text/Strings.resx` (English) and `Core/Text
 1. Set the new version in `Directory.Build.props`.
 2. Write `release-notes/vX.Y.Z.md`: what's new for users, followed by the **Install** section
    (copy it from the previous release and change the version numbers).
+   - **Start every bullet with a short bold phrase** that says the point on its own, e.g.
+     `- **A smaller download**: about a third smaller than before.` After an update the app shows
+     what's new in short: the headings, and of each bullet only its bold start (a bullet without
+     one is shown whole, a section without bullets by its first sentence, and the Install section
+     not at all). See [In-app updates](in-app-updates.md).
 3. Commit, then tag and push:
 
    ```bash

@@ -21,6 +21,7 @@ public partial class App : Application, IGooseHost
     private DispatcherTimer? _schedulerTick;
     private DispatcherTimer? _callCheck;
     private SettingsStore _settingsStore = null!;
+    private bool _whatsNewPending;
 
     public GooseSettings Settings { get; private set; } = new();
     public BreakScheduler Scheduler { get; private set; } = null!;
@@ -44,9 +45,17 @@ public partial class App : Application, IGooseHost
             };
 
         _settingsStore = new SettingsStore(SettingsFolder());
+        bool hadSettings = _settingsStore.Exists;
         Settings = _settingsStore.Load();
         Languages.Use(Settings.Language);
-        TrySave(); // writes back settings carried over from older versions
+        // The first time a new version runs, it says what's new once its window is open. Only for
+        // an app that Velopack installed, which brings the release notes along.
+        if (Updater.CurrentVersionName is { } version)
+        {
+            _whatsNewPending = WhatsNew.ShouldShow(Settings.LastRunVersion, version, hadSettings);
+            Settings.LastRunVersion = version;
+        }
+        TrySave(); // writes back settings carried over from older versions, and the version
 
         Scheduler = new BreakScheduler(Settings, SystemClock.Instance, UserActivity.Instance);
         _schedulerTick = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
@@ -193,6 +202,17 @@ public partial class App : Application, IGooseHost
         if (_mainWindow == null) OpenMainWindow(new MainWindow(this));
         if (_mainWindow!.WindowState == WindowState.Minimized) _mainWindow.WindowState = WindowState.Normal;
         _mainWindow.Activate();
+        ShowWhatsNewOnce(_mainWindow);
+    }
+
+    /// <summary>After an update, over the app window: what's new in this version.</summary>
+    private void ShowWhatsNewOnce(Window owner)
+    {
+        if (!_whatsNewPending || Updater.CurrentVersionName is not { } version) return;
+        _whatsNewPending = false;
+        var notes = Updater.TakeReleaseNotes();
+        // Once the window is on screen, which it has to be to own a dialog.
+        Dispatcher.UIThread.Post(() => _ = WhatsNewWindow.ShowAsync(owner, version, notes));
     }
 
     private void OpenMainWindow(MainWindow window)

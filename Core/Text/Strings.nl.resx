@@ -663,14 +663,47 @@ twaalf</value>
   <data name="SettingsUpdateNow" xml:space="preserve">
     <value>Nu bijwerken</value>
   </data>
-  <data name="SettingsUpdating" xml:space="preserve">
-    <value>De nieuwe gans wordt opgehaald…</value>
-  </data>
   <data name="SettingsUpdateNotNow" xml:space="preserve">
     <value>Nu even niet, de gans heeft het druk. Probeer het na je pauze opnieuw.</value>
   </data>
   <data name="SettingsUpdateFailed" xml:space="preserve">
     <value>Bijwerken lukte niet: {0}</value>
+  </data>
+  <data name="SettingsUpdateCancelled" xml:space="preserve">
+    <value>Bijwerken gestopt. Je kunt het altijd opnieuw proberen.</value>
+  </data>
+  <data name="UpdateDownloadingHeading" xml:space="preserve">
+    <value>De nieuwe gans wordt opgehaald…</value>
+  </data>
+  <data name="UpdateDownloadingHint" xml:space="preserve">
+    <value>Daarna start de gans vanzelf opnieuw.</value>
+  </data>
+  <data name="UpdateRestartingHeading" xml:space="preserve">
+    <value>Daar komt hij!</value>
+  </data>
+  <data name="UpdateRestartingHint" xml:space="preserve">
+    <value>De gans start zo opnieuw.</value>
+  </data>
+  <data name="WhatsNewHeading" xml:space="preserve">
+    <value>Gak! Je hebt nu versie {0}</value>
+  </data>
+  <data name="WhatsNewIntro" xml:space="preserve">
+    <value>Wat er nieuw is:</value>
+  </data>
+  <data name="WhatsNewNoNotes" xml:space="preserve">
+    <value>Alles wat er nieuw is staat op de releasepagina.</value>
+  </data>
+  <data name="WhatsNewVersion" xml:space="preserve">
+    <value>Versie {0}</value>
+  </data>
+  <data name="WhatsNewOlder" xml:space="preserve">
+    <value>Oudere veranderingen staan op de releasepagina.</value>
+  </data>
+  <data name="WhatsNewAllNotes" xml:space="preserve">
+    <value>Lees alles wat er nieuw is</value>
+  </data>
+  <data name="WhatsNewOk" xml:space="preserve">
+    <value>Leuk!</value>
   </data>
   <data name="FieldAutoStartInterval" xml:space="preserve">
     <value>De tijd tussen pauzes in de automatische sessie</value>

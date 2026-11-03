@@ -688,15 +688,50 @@ twelve</value>
   <data name="SettingsUpdateNow" xml:space="preserve">
     <value>Update now</value>
   </data>
-  <data name="SettingsUpdating" xml:space="preserve">
-    <value>Fetching the new goose…</value>
-  </data>
   <data name="SettingsUpdateNotNow" xml:space="preserve">
     <value>Not right now, the goose is busy. Try again after your break.</value>
   </data>
   <data name="SettingsUpdateFailed" xml:space="preserve">
     <value>The update didn't work: {0}</value>
     <comment>{0} is what went wrong, in the words of the computer.</comment>
+  </data>
+  <data name="SettingsUpdateCancelled" xml:space="preserve">
+    <value>Update cancelled. You can try again any time.</value>
+  </data>
+  <data name="UpdateDownloadingHeading" xml:space="preserve">
+    <value>Fetching the new goose…</value>
+  </data>
+  <data name="UpdateDownloadingHint" xml:space="preserve">
+    <value>The goose restarts by itself when it's done.</value>
+  </data>
+  <data name="UpdateRestartingHeading" xml:space="preserve">
+    <value>Here it comes!</value>
+  </data>
+  <data name="UpdateRestartingHint" xml:space="preserve">
+    <value>The goose restarts in a moment.</value>
+  </data>
+  <data name="WhatsNewHeading" xml:space="preserve">
+    <value>Honk! You now have version {0}</value>
+    <comment>{0} is the version, like 1.11.0.</comment>
+  </data>
+  <data name="WhatsNewIntro" xml:space="preserve">
+    <value>What's new:</value>
+  </data>
+  <data name="WhatsNewNoNotes" xml:space="preserve">
+    <value>Everything that's new is on the release page.</value>
+  </data>
+  <data name="WhatsNewVersion" xml:space="preserve">
+    <value>Version {0}</value>
+    <comment>{0} is a version, like 1.11.0.</comment>
+  </data>
+  <data name="WhatsNewOlder" xml:space="preserve">
+    <value>Older changes are on the release page.</value>
+  </data>
+  <data name="WhatsNewAllNotes" xml:space="preserve">
+    <value>Read everything that's new</value>
+  </data>
+  <data name="WhatsNewOk" xml:space="preserve">
+    <value>Nice!</value>
   </data>
   <data name="FieldAutoStartInterval" xml:space="preserve">
     <value>The automatic session interval</value>

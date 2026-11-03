@@ -1,0 +1,26 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:s="using:TakeABreakGoose"
+        x:Class="TakeABreakGoose.WhatsNewWindow"
+        Title="Take a Break Goose" Icon="/Assets/goose.ico"
+        Width="440" SizeToContent="Height" CanResize="False" ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner" Background="#FAF7F2"
+        FontSize="13" Foreground="#222222">
+    <!-- After an update: what's new in this version, in short, with a link to the full notes. -->
+    <DockPanel Margin="22,18,22,18">
+        <StackPanel DockPanel.Dock="Top">
+            <TextBlock x:Name="HeadingText" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+            <TextBlock x:Name="IntroText" Classes="Hint" Margin="0,4,0,12" />
+        </StackPanel>
+        <DockPanel DockPanel.Dock="Bottom" Margin="0,16,0,0">
+            <Button DockPanel.Dock="Right" Content="{x:Static s:Strings.WhatsNewOk}" Classes="PrimaryButton"
+                    Padding="22,7" IsDefault="True" IsCancel="True" Click="Ok_Click" />
+            <Button x:Name="AllNotesButton" Classes="Link" Content="{x:Static s:Strings.WhatsNewAllNotes}"
+                    Foreground="#5E7773" VerticalAlignment="Center" Click="AllNotes_Click" />
+        </DockPanel>
+        <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
+            <!-- Room on the right for the scroll bar, which goes over the content. -->
+            <StackPanel x:Name="SectionsPanel" Margin="0,0,14,0" />
+        </ScrollViewer>
+    </DockPanel>
+</Window>

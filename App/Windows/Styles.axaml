@@ -239,6 +239,21 @@
         <Setter Property="Margin" Value="0,0,3,0" />
     </Style>
 
+    <!-- A text link, like WPF's Hyperlink (Avalonia's text has no clickable inlines). -->
+    <Style Selector="Button.Link">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Template">
+            <ControlTemplate TargetType="Button">
+                <TextBlock Foreground="{TemplateBinding Foreground}" Background="Transparent"
+                           TextDecorations="Underline"
+                           Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}" />
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="Button.Link:pressed">
+        <Setter Property="RenderTransform" Value="{x:Null}" />
+    </Style>
+
     <!-- A quiet text link that toggles something open. -->
     <Style Selector="ToggleButton.LinkToggle">
         <Setter Property="Cursor" Value="Hand" />

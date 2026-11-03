@@ -1,6 +1,7 @@
 # A trial of updating the app with Velopack (see docs/in-app-updates.md): packs the app with Velopack
 # for Windows and both kinds of Mac and publishes it as a GitHub pre-release, 1.11.0-spike.<run>.
 # Install one, push again (or re-run), and the installed one should offer the newer one under Settings.
+# Each one's release notes (see "Write the release notes") are what the "what's new" window shows.
 # Normal releases don't see these: UpdateChecker and Velopack only look at pre-releases from a pre-release.
 name: Velopack spike
 
@@ -43,6 +44,19 @@ jobs:
           -p:Version=$VERSION
           -o publish
 
+      # This build's release notes: which test build it is and what changed in it, then
+      # release-notes/spike.md. What the "what's new" window shows after updating to it.
+      - name: Write the release notes
+        shell: bash
+        run: |
+          {
+            echo "## 🔢 Test build $VERSION"
+            echo
+            echo "- **$(git log -1 --format=%s)** (commit ${GITHUB_SHA::7})"
+            echo
+            cat release-notes/spike.md
+          } > spike-notes.md
+
       - name: Install Velopack
         run: dotnet tool install -g vpk --version $VPK_VERSION
 
@@ -56,7 +70,8 @@ jobs:
         run: >
           vpk pack -u TakeABreakGoose -v $VERSION -p publish -e TakeABreakGoose.exe
           --packTitle "Take a Break Goose" --packAuthors "Rick Hellenthal"
-          -i Assets/goose.ico --shortcuts StartMenuRoot --channel win -o Releases
+          -i Assets/goose.ico --shortcuts StartMenuRoot -r win-x64 --channel win -o Releases
+          --releaseNotes spike-notes.md
 
       - uses: actions/upload-artifact@v4
         with:
@@ -70,6 +85,13 @@ jobs:
           vpk upload github --repoUrl $REPO_URL --token $GH_TOKEN --channel win -o Releases
           --pre --publish --tag v$VERSION --targetCommitish $GITHUB_SHA
           --releaseName "Take a Break Goose $VERSION (test build, not for everyday use)"
+
+      # The release's description is its release notes, as for a normal release: the app reads them
+      # from there for the versions it skips when updating.
+      - name: Set the release notes on GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "v$VERSION" --repo "${{ github.repository }}" --notes-file spike-notes.md
 
   mac:
     needs: windows
@@ -88,6 +110,19 @@ jobs:
       - name: Build the app
         run: App/package.sh ${{ matrix.arch }} "$VERSION"
 
+      # This build's release notes: which test build it is and what changed in it, then
+      # release-notes/spike.md. What the "what's new" window shows after updating to it.
+      - name: Write the release notes
+        shell: bash
+        run: |
+          {
+            echo "## 🔢 Test build $VERSION"
+            echo
+            echo "- **$(git log -1 --format=%s)** (commit ${GITHUB_SHA::7})"
+            echo
+            cat release-notes/spike.md
+          } > spike-notes.md
+
       - name: Install Velopack
         run: dotnet tool install -g vpk --version $VPK_VERSION
 
@@ -102,7 +137,7 @@ jobs:
         run: >
           vpk pack -u TakeABreakGoose -v "$VERSION" -p "dist/mac-${{ matrix.arch }}/Take a Break Goose.app"
           -e TakeABreakGoose --packTitle "Take a Break Goose" --packAuthors "Rick Hellenthal"
-          --channel osx-${{ matrix.arch }} -o Releases
+          -r osx-${{ matrix.arch }} --channel osx-${{ matrix.arch }} -o Releases --releaseNotes spike-notes.md
           --signAppIdentity "-" --signDisableDeep --signEntitlements App/TakeABreakGoose.entitlements
 
       # What the spike is about: is the app Velopack made still validly signed, and does it start?

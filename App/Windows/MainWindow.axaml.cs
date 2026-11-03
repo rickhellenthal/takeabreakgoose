@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
@@ -18,6 +19,7 @@ public partial class MainWindow : Window
     private RadioButton? _currentTab;
     private bool _revertingTab;
     private bool _closeAnswered;
+    private CancellationTokenSource? _updateDownload;
 
     /// <summary>For the XAML loader and previewer only; the app uses the other constructor.</summary>
     public MainWindow() : this(null!)
@@ -31,12 +33,13 @@ public partial class MainWindow : Window
         _currentTab = SessionTab;
         if (host == null) return; // the previewer
 
-        HeaderIcon.Source = LargestIconFrame();
+        HeaderIcon.Source = UpdateIcon.Source = LargestIconFrame();
         SessionView.Initialize(host);
         WardrobeView.Initialize(host);
         SettingsView.Initialize(host);
         MessagesView.Initialize(host);
         SettingsView.EditMessagesRequested += OpenMessages;
+        SettingsView.UpdateRequested += InstallUpdate;
         MessagesView.Saved += SettingsView.ShowMessageCount;
         Loaded += async (_, _) => ShowUpdate(Updater.CanUpdate ? await Updater.CheckAsync() : await UpdateChecker.CheckAsync());
 
@@ -122,6 +125,8 @@ public partial class MainWindow : Window
     protected override void OnClosing(WindowClosingEventArgs e)
     {
         base.OnClosing(e);
+        // Closing the window while an update downloads cancels it, as the Cancel button does.
+        _updateDownload?.Cancel();
         if (e.Cancel || _closeAnswered) return;
         // Quitting the app can't wait for an answer.
         if (e.CloseReason is WindowCloseReason.ApplicationShutdown or WindowCloseReason.OSShutdown) return;
@@ -159,4 +164,67 @@ public partial class MainWindow : Window
         SettingsView.ShowUpdate(update);
         SettingsTab.Content = Strings.TabSettingsWithNews; // a small hint that there's something new to see there
     }
+
+    // ---- Installing an update ----
+
+    /// <summary>
+    /// Downloads the update with the window covered by a progress card, then the app restarts as the
+    /// new version. Not while the goose is busy; unsaved settings are dealt with first.
+    /// </summary>
+    private async void InstallUpdate()
+    {
+        // Restarting the app takes the goose off the screen and forgets the break.
+        if (!UpdateMoment.IsGood(_host.Scheduler, _host.GooseOnScreen, _host.DoNotDisturbForCall))
+        {
+            SettingsView.ShowUpdateStatus(Strings.SettingsUpdateNotNow, error: false);
+            return;
+        }
+        if (!await SettingsView.ResolveUnsavedChangesAsync()) return;
+
+        using var download = _updateDownload = new CancellationTokenSource();
+        ShowUpdateOverlay(true);
+        try
+        {
+            await Updater.DownloadAndRestartAsync(
+                percent => Dispatcher.UIThread.Post(() => ShowUpdateProgress(percent)), download.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            SettingsView.ShowUpdateStatus(Strings.SettingsUpdateCancelled, error: false);
+        }
+        catch (Exception ex)
+        {
+            SettingsView.ShowUpdateStatus(string.Format(Strings.SettingsUpdateFailed, ex.Message), error: true);
+        }
+        // Only gets here when the update didn't go ahead.
+        _updateDownload = null;
+        ShowUpdateOverlay(false);
+    }
+
+    private void ShowUpdateOverlay(bool show)
+    {
+        UpdateOverlay.IsVisible = show;
+        // Also out of reach of the keyboard.
+        WindowContent.IsEnabled = !show;
+        if (!show) return;
+        UpdateHeading.Text = Strings.UpdateDownloadingHeading;
+        UpdateHint.Text = Strings.UpdateDownloadingHint;
+        CancelUpdateButton.IsEnabled = true;
+        ShowUpdateProgress(0);
+        CancelUpdateButton.Focus();
+    }
+
+    private void ShowUpdateProgress(int percent)
+    {
+        if (!UpdateOverlay.IsVisible) return;
+        UpdateProgress.Value = percent;
+        UpdatePercent.Text = $"{percent}%";
+        if (percent < 100) return;
+        // Downloaded: from here on it can't be stopped, and the app quits in a moment.
+        UpdateHeading.Text = Strings.UpdateRestartingHeading;
+        UpdateHint.Text = Strings.UpdateRestartingHint;
+        CancelUpdateButton.IsEnabled = false;
+    }
+
+    private void CancelUpdate_Click(object? sender, RoutedEventArgs e) => _updateDownload?.Cancel();
 }

@@ -114,21 +114,42 @@ update to reset.
   like `1.11.0-spike.3`) also looks for newer pre-releases; a normal release only for releases.
 - `Program.Main` starts with `VelopackApp.Build().Run()`, which handles Velopack's install, update
   and uninstall events.
-- Settings: when an update is found, the link says **Update now**. It downloads the update, quits
-  and starts the new version. It refuses while a goose is on screen, during a break, while a break
-  waits for Do not disturb, or during a call (`UpdateMoment`, tested in `UpdateMomentTests`), and
-  says to try again after the break.
+- Settings: when an update is found, the link says **Update now**. It refuses while a goose is on
+  screen, during a break, while a break waits for Do not disturb, or during a call (`UpdateMoment`,
+  tested in `UpdateMomentTests`), and says to try again after the break. Unsaved settings are dealt
+  with first, as when closing the window.
+- While it downloads, a card covers the app window (so nothing else can be clicked or typed in)
+  with the progress and a **Cancel** button. Closing the window cancels too. Once downloaded, the
+  card says the goose restarts in a moment, and it can't be cancelled any more.
+- After the restart, the new version shows **what's new** once, over its window: each heading of
+  its release notes with the bold start of each point (`ReleaseNotes`, tested in
+  `ReleaseNotesTests`), and a link to the release page.
+  - **Skipped versions too.** Velopack goes straight to the newest version and only brings its
+    notes along. So while the update downloads, the app also fetches GitHub's list of releases and
+    keeps the notes of every version since the installed one, newest first, at most three
+    (`ReleaseHistory`, tested in `ReleaseHistoryTests`). With more than one, each block says which
+    version it's from; with more than three, it says the older ones are on the release page. A
+    release's description on GitHub is its release notes, so these have to stay in sync. If
+    fetching the list fails, it shows only the newest version's notes, from Velopack
+    (`vpk pack --releaseNotes`).
+  - Velopack 1.2 doesn't let the new version read its own notes, so the old version saves them as
+    `whats-new.json` in the settings folder just before restarting, and the new one reads and
+    deletes it. Whether to show it is decided by
+  `GooseSettings.LastRunVersion` (`WhatsNew`, tested in `WhatsNewTests`): a new install shows
+  nothing, an update or a first run after an older version does.
 - `.github/workflows/velopack-spike.yml`: on every push to the `spike/velopack` branch, packs the app
   as `1.11.0-spike.<run number>` for Windows, Apple Silicon and Intel, and publishes it as one
-  GitHub **pre-release**. The Mac jobs also check the packed app (signature, quarantine, the `.pkg`,
+  GitHub **pre-release**. Its release notes are the test build's number and the commit's message,
+  followed by `release-notes/spike.md`, so each version's notes differ. The Mac jobs also check the packed app (signature, quarantine, the `.pkg`,
   whether it starts and keeps running) and put the answers on the run's summary page.
 
 Pre-releases don't reach normal users: `UpdateChecker` asks for `releases/latest`, which skips
 them, and the release page shows them marked as pre-release.
 
-What's not in the spike yet: checking regularly instead of once per run, the menu item and notice,
-keeping the focus session across the restart, and texts for after an update. Those are in
-[The experience](#the-experience) below and come with the real thing.
+What's not in the spike yet: checking regularly instead of each time the window opens, the menu
+item and notice, and keeping the focus session across the restart. Those are in
+[The experience](#the-experience) below and come with the real thing. The release notes are in
+English only, also for someone using the app in Dutch; that's fine.
 
 ### Results so far
 
@@ -153,7 +174,14 @@ the login item.
 3. Install that version (Windows: `TakeABreakGoose-win-Setup.exe`; Mac: the `.pkg` for the Mac's
    chip).
 4. Push again (any small change) to publish `1.11.0-spike.N+1`.
-5. In the installed goose: **Settings**, then **Update now** at the bottom.
+5. In the installed goose: **Settings**, then **Update now** at the bottom. The test build checks
+   each time its window opens, so close and reopen it from the tray or menu bar if it was open
+   before the new version came out.
+
+The progress card and saving the release notes belong to the version that's running, showing
+what's new to the version it updates to. So all of it shows from `spike.3` on: install `spike.3`,
+then update to `spike.4`. Updating from `spike.1` or `spike.2` to `spike.3` shows no card, and
+what's new only with the link to the release page.
 
 On Windows the test build runs next to the Inno-installed goose's settings: both use
 `%APPDATA%\TakeABreakGoose`, and only one runs at a time. Quit the normal goose first.

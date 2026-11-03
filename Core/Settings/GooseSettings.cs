@@ -51,6 +51,12 @@ public sealed class GooseSettings
     /// <summary>The user has been told, once, that the goose stays away during calls.</summary>
     public bool CallNoticeShown { get; set; }
 
+    /// <summary>
+    /// The version of the app that ran last ("1.11.0"), to show what's new the first time a newer
+    /// one runs. Null in settings from versions before it was remembered.
+    /// </summary>
+    public string? LastRunVersion { get; set; }
+
     // The last session the user started, used to pre-fill the start form.
     public int LastSessionIntervalMinutes { get; set; } = 45;
 
