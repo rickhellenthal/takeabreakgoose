@@ -1,7 +1,8 @@
 # Builds the macOS app and packs it with Velopack, for Apple Silicon and for Intel Macs: an installer
 # (.pkg), a portable .zip and the update package, under the run's Artifacts (mac-arm64, mac-x64).
 # - The release workflow calls it with the release's tag; it then publishes them with the rest.
-# - On every push to a branch other than main it builds them to try out.
+# - On every push to a branch other than main it builds them to try out, unless the push only
+#   changes text that isn't part of the app (the README, docs/, release-notes/).
 #   (GitHub only offers "Run workflow" by hand for workflows that are on main; once it is, that
 #   works too: Actions → Mac build → Run workflow.)
 name: Mac build
@@ -9,6 +10,7 @@ name: Mac build
 on:
   push:
     branches-ignore: [main]
+    paths-ignore: ["README.md", "docs/**", "release-notes/**"]
   workflow_dispatch:
   workflow_call:
     inputs:
