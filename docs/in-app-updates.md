@@ -38,9 +38,11 @@ it, so all three fit in one GitHub release, and an installed app only looks at i
    delta update) and `vpk pack`.
 2. **Mac**, for each architecture: `App/package.sh` builds and signs the app ad hoc, `vpk pack`
    packs it, and a check makes sure the packed app is validly signed and keeps running.
-3. **Publishing**, once all three are packed: `vpk upload github` creates the release with the
-   Windows files and adds the Mac ones (`--merge`), and `gh release edit --notes-file` makes
-   `release-notes/vX.Y.Z.md` its description. When a build fails, nothing is published.
+3. **Publishing**, once all three are packed: `gh release create --draft` makes a draft release
+   for the tag, with `release-notes/vX.Y.Z.md` as its description; `vpk upload github --merge`
+   adds each platform's files to it; then it's published. When a build fails, nothing is published.
+   (Letting `vpk upload` create the release itself was refused by GitHub with "Resource not
+   accessible by integration", although the workflow may write.)
 
 A tag with a dash (`v1.11.0-beta.1`) becomes a pre-release (`--pre`). A normal release only
 updates to normal releases; a pre-release also to newer pre-releases (`Updater` decides from its own
