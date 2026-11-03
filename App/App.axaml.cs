@@ -82,7 +82,8 @@ public partial class App : Application, IGooseHost
             _mainWindow?.InstallUpdate();
         };
 
-        if (Settings.AutoStartSession)
+        // After an update, the session that was running carries on; otherwise maybe a new one.
+        if (!TryResumeSession() && Settings.AutoStartSession)
             Scheduler.StartSession(Settings.AutoStartIntervalMinutes, TimeSpan.FromSeconds(Settings.LastSessionBreakSeconds),
                 endsAt: null, automatically: true);
         UpdateStatusIcon();
@@ -175,6 +176,14 @@ public partial class App : Application, IGooseHost
     {
         Settings.RestoreStartAtLogin = OperatingSystem.IsMacOS() && StartAtLogin.IsEnabled;
         TrySave();
+        try
+        {
+            if (Scheduler.Snapshot() is { } snapshot) File.WriteAllText(SessionFile, snapshot.ToJson());
+        }
+        catch (Exception)
+        {
+            // Then the new version starts without it, as after a normal restart.
+        }
     }
 
     public void SummonBreakGoose() => _goose.SummonBreakGoose();
@@ -253,6 +262,27 @@ public partial class App : Application, IGooseHost
         Settings.UpdateNoticeShownFor = update.DisplayName;
         TrySave();
         _statusIcon?.ShowNotice(string.Format(Strings.NoticeUpdateAvailable, update.DisplayName));
+    }
+
+    // The focus session that was running before an update, for the new version to carry on with.
+    private static string SessionFile => Path.Combine(SettingsFolder(), "session.json");
+
+    /// <summary>Carries on with the session from before an update, if there is one from just now.</summary>
+    private bool TryResumeSession()
+    {
+        try
+        {
+            if (!File.Exists(SessionFile)) return false;
+            var snapshot = SessionSnapshot.FromJson(File.ReadAllText(SessionFile));
+            File.Delete(SessionFile);
+            if (snapshot == null || !snapshot.IsFresh(DateTime.Now)) return false;
+            Scheduler.Resume(snapshot);
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     /// <summary>After an update on a Mac: start at login again if macOS forgot it was on.</summary>

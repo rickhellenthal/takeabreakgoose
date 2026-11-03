@@ -59,6 +59,7 @@ doesn't see an update for itself yet and finds it at its next check.
 | Telling the user | `App`, `StatusIcon`, `SettingsPage` | **Update now** at the bottom of Settings, **Update to version …** in the tray / menu bar menu, and a notice once per version (`GooseSettings.UpdateNoticeShownFor`) |
 | Not now | `UpdateMoment` (Core) | No restart while a goose is on screen, during a break, while a break waits for Do not disturb, or during a call |
 | Downloading | `MainWindow.InstallUpdate` | Unsaved settings first; then a card over the window with the progress and **Cancel** (closing the window cancels too) |
+| Keeping the session | `SessionSnapshot`, `BreakScheduler.Snapshot` / `Resume` (Core) | Just before the restart, a running focus session goes into `session.json` in the settings folder (the session, the next break, Do not disturb, the breaks so far); the new version carries on with it if it's at most ten minutes old, instead of starting the automatic session |
 | After the restart | `WhatsNew`, `ReleaseNotes`, `ReleaseHistory` (Core), `WhatsNewWindow` | What's new, once |
 | A copy Velopack didn't install | `UpdateChecker` (Core) | A Debug build, or a version from before 1.11: only a link to the release page |
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TakeABreakGoose;
 
@@ -99,6 +100,30 @@ public sealed class BreakScheduler
         _breaks.Clear();
         BreakStartedAt = null;
         Reschedule();
+    }
+
+    /// <summary>The running session, to carry on with after a restart; null without one.</summary>
+    public SessionSnapshot? Snapshot() =>
+        Session is { } session ? new SessionSnapshot(session, NextBreakAt, DoNotDisturb, _breaks.ToList(), _clock.Now) : null;
+
+    /// <summary>
+    /// Carries on with a session from before the app restarted: the same session and breaks so far,
+    /// and the next break when it was due (or right away, if that time has passed meanwhile).
+    /// </summary>
+    public void Resume(SessionSnapshot snapshot)
+    {
+        Session = snapshot.Session;
+        SignOffWaiting = null;
+        _breaks.Clear();
+        _breaks.AddRange(snapshot.Breaks);
+        GooseVisiting = false;
+        AwaitingReturn = false;
+        BreakEndsAt = null;
+        BreakStartedAt = null;
+        BreakWaiting = false;
+        DoNotDisturb = snapshot.DoNotDisturb;
+        SetNext(snapshot.NextBreakAt ?? _clock.Now.AddMinutes(snapshot.Session.IntervalMinutes));
+        StateChanged?.Invoke();
     }
 
     public void StopSession()
