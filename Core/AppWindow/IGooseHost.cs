@@ -20,6 +20,9 @@ public interface IGooseHost
     /// <summary>Whether a goose is on screen right now (walking, talking, peeking or napping).</summary>
     bool GooseOnScreen { get; }
 
+    /// <summary>A goose is on screen for the session (a break, or saying goodbye), not just showing off an outfit.</summary>
+    bool SessionGooseOnScreen { get; }
+
     /// <summary>Keeps the goose away during a focus session (e.g. during a meeting), or lets it come again.</summary>
     void SetDoNotDisturb(bool on);
 

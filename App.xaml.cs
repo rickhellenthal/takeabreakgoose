@@ -123,6 +123,8 @@ public partial class App : Application, IGooseHost
 
     public bool GooseOnScreen => _goose.GooseOnScreen;
 
+    public bool SessionGooseOnScreen => _goose.SessionGooseOnScreen;
+
     public void SetDoNotDisturb(bool on) => _goose.SetDoNotDisturb(on);
 
     public bool DoNotDisturbForCall => _goose.DoNotDisturbForCall;

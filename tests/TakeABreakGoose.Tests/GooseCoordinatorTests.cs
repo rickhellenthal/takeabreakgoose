@@ -58,6 +58,24 @@ public class GooseCoordinatorTests
     }
 
     [Fact]
+    public void A_goose_showing_off_is_on_screen_but_not_for_the_session()
+    {
+        _coordinator.ShowOffOutfit(GooseOutfit.Bonnet);
+        Assert.True(_coordinator.GooseOnScreen);
+        Assert.False(_coordinator.SessionGooseOnScreen);
+        Goose.Leave();
+
+        _h.StartSession(intervalMinutes: 30);
+        _h.Work(Minutes(30));
+        Assert.True(_coordinator.GooseOnScreen);
+        Assert.True(_coordinator.SessionGooseOnScreen);
+
+        Goose.Leave();
+        Assert.False(_coordinator.GooseOnScreen);
+        Assert.False(_coordinator.SessionGooseOnScreen);
+    }
+
+    [Fact]
     public void Stopping_the_session_sends_its_goose_away_but_not_one_showing_off()
     {
         _h.StartSession(intervalMinutes: 30);

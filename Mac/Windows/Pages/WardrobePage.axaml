@@ -9,7 +9,7 @@
             <Border x:Name="WardrobeBusyText" IsVisible="False" Background="#FDEBD8" CornerRadius="8"
                     Padding="12,8" Margin="0,0,0,12">
                 <TextBlock TextWrapping="Wrap" Foreground="#8A4A10" FontSize="12"
-                           Text="The goose is already on your screen. Try again once it has left." />
+                           Text="The goose is busy with your focus session right now. Once it has left, you can send one over." />
             </Border>
             <UniformGrid x:Name="WardrobeGrid" Columns="2" />
         </StackPanel>

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
@@ -9,6 +10,8 @@ namespace TakeABreakGoose;
 public partial class WardrobePage : UserControl
 {
     private IGooseHost _host = null!;
+    private const string BusyToolTip = "A goose is already on your screen. Once it has left, you can send another one.";
+    private readonly List<Button> _sendButtons = new();
 
     public WardrobePage()
     {
@@ -23,10 +26,21 @@ public partial class WardrobePage : UserControl
 
     public void ScrollToTop() => Scroller.ScrollToHome();
 
-    /// <summary>The "goose is already on your screen" note only makes sense while it still is.</summary>
+    /// <summary>
+    /// Only one goose fits on the screen: while one is there, the buttons wait, and their tooltip says
+    /// why. The note above the cards only comes for a goose that's there for the session (one you
+    /// just sent over explains itself), so the page doesn't jump around after every click.
+    /// Called every second, so the buttons come back soon after the goose has left.
+    /// </summary>
     public void Refresh()
     {
-        if (!_host.GooseOnScreen) WardrobeBusyText.IsVisible = false;
+        bool busy = _host.GooseOnScreen;
+        WardrobeBusyText.IsVisible = _host.SessionGooseOnScreen;
+        foreach (var button in _sendButtons)
+        {
+            button.IsEnabled = !busy;
+            ToolTip.SetTip(button, busy ? BusyToolTip : null);
+        }
     }
 
     private Border OutfitCard(GooseOutfit outfit)
@@ -39,11 +53,13 @@ public partial class WardrobePage : UserControl
             HorizontalAlignment = HorizontalAlignment.Left,
             Margin = new Thickness(0, 10, 0, 0),
         };
+        ToolTip.SetShowOnDisabled(sendButton, true);
         sendButton.Click += (_, _) =>
         {
-            bool sent = _host.ShowOffOutfit(outfit);
-            WardrobeBusyText.IsVisible = !sent;
+            _host.ShowOffOutfit(outfit);
+            Refresh();
         };
+        _sendButtons.Add(sendButton);
 
         var stage = new Border
         {

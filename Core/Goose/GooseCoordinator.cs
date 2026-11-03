@@ -31,6 +31,9 @@ public sealed class GooseCoordinator
     /// <summary>Whether a goose is on screen right now (walking, talking, peeking or napping).</summary>
     public bool GooseOnScreen => _goose != null;
 
+    /// <summary>A goose is on screen for the session (a break, or saying goodbye), not just showing off an outfit.</summary>
+    public bool SessionGooseOnScreen => _goose != null && !GooseJustVisiting;
+
     private bool GooseJustVisiting => _currentVisit?.JustVisiting == true;
 
     /// <summary>A break reminder with one of the user's messages.</summary>
