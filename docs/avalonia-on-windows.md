@@ -16,9 +16,10 @@ page. Total effort: **about 4–6 days**, most of it trying things by hand on Wi
 
 ## Where it stands
 
-On the branch `feature/avalonia-windows` (not committed yet), steps 2 to 6 below are done:
+Done, on the branch `feature/avalonia-windows`: the WPF app is gone, and the Avalonia app moved
+from `Mac/` to `App/` (`App/TakeABreakGoose.App.csproj`). What it took, beyond the plan below:
 
-- `Mac/Platform/` is split into `Windows/` and `MacOS/`, with one class per job that picks the
+- `App/Platform/` is split into `Windows/` and `MacOS/`, with one class per job that picks the
   operating system: `Calls`, `UserActivity`, `HotkeyManager`, `StartAtLogin`, `StatusIcon`,
   `OverlayWindow`, `SingleInstance`.
 - **The goose's window** lets clicks through wherever the goose, bubble and card aren't, never takes
@@ -37,10 +38,9 @@ On the branch `feature/avalonia-windows` (not committed yet), steps 2 to 6 below
 - A Debug build on Windows keeps its own settings (`%APPDATA%\TakeABreakGoose.Debug`), lock and Run
   entry, so it runs next to the installed goose. A Release build uses the real ones, like the WPF app.
 
-Still to do: step 7 (try it for real), then step 8 (delete the WPF app). Until step 8, merging this
-branch means the next release ships the Avalonia app on Windows.
+The rest of this document is the assessment as it was written beforehand, with the names from then.
 
-## What's duplicated today
+## What was duplicated
 
 | | WPF (`Windows/`, `Goose/`) | Avalonia (`Mac/Windows/`, `Mac/Goose/`) |
 |---|---|---|

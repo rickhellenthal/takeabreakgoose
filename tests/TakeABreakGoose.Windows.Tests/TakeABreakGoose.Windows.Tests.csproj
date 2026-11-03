@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Mac\TakeABreakGoose.Mac.csproj" />
+    <ProjectReference Include="..\..\App\TakeABreakGoose.App.csproj" />
   </ItemGroup>
 
 </Project>

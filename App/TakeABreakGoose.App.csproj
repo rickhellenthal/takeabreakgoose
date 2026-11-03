@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- The same icon as the Windows app. -->
+    <!-- For the tray icon and the window icons; the .exe's comes from ApplicationIcon. -->
     <AvaloniaResource Include="..\Assets\goose.ico" Link="Assets\goose.ico" />
   </ItemGroup>
 

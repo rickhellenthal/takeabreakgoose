@@ -2,7 +2,7 @@
 
   <!--
     What the goose does, without any windows: focus sessions and breaks, settings, and the texts
-    the goose says. Plain .NET with no WPF or WinForms, so the Windows app and a macOS app can share it.
+    the goose says. Plain .NET with no user interface, so its tests run anywhere.
     What it needs from the computer (the clock, the mouse and keyboard) comes in through Platform/.
   -->
   <PropertyGroup>

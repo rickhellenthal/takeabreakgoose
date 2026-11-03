@@ -1,12 +1,12 @@
 # Renders the app icon (goose.ico) from the vector drawing below, in all the sizes Windows uses,
 # and the macOS app's icon (goose.icns) in all the sizes macOS uses.
 # Usage: powershell -File tools\make-icon.ps1 [-OutPath Assets\goose.ico] [-PngPath docs\icon.png]
-#        [-IcnsPath Mac\Assets\goose.icns] [-PreviewPath preview.png]
+#        [-IcnsPath App\Assets\goose.icns] [-PreviewPath preview.png]
 param(
     [string]$OutPath = (Join-Path $PSScriptRoot '..\Assets\goose.ico'),
     # A 256x256 PNG of the same icon, used by the README.
     [string]$PngPath = (Join-Path $PSScriptRoot '..\docs\icon.png'),
-    [string]$IcnsPath = (Join-Path $PSScriptRoot '..\Mac\Assets\goose.icns'),
+    [string]$IcnsPath = (Join-Path $PSScriptRoot '..\App\Assets\goose.icns'),
     [string]$PreviewPath
 )
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase

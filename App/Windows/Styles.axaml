@@ -1,8 +1,7 @@
 <!--
-  Colours and control styles shared by the app window, its pages and the dialogs, after
-  Windows/Styles.xaml in the Windows app. FluentTheme is the base; these restyle on top of it.
-  Each WPF style key is a class here: Style="{StaticResource Card}" becomes Classes="Card".
-  The templates' parts are named differently from Fluent's (PART_ContentPresenter and so on), so
+  Colours and control styles shared by the app window, its pages and the dialogs, taken over from
+  the WPF app that came before. FluentTheme is the base; these restyle on top of it. Each style is a
+  class: Classes="Card". The templates' parts are named differently from Fluent's (PART_ContentPresenter and so on), so
   Fluent's hover and pressed looks don't reach into them.
 -->
 <Styles xmlns="https://github.com/avaloniaui"

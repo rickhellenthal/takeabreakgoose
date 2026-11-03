@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- What macOS needs to know about the app. Mac/package.sh fills in the version. -->
+<!-- What macOS needs to know about the app. App/package.sh fills in the version. -->
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>

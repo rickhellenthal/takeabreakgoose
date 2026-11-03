@@ -46,7 +46,7 @@ Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
 [Registry]
-; Same Run entry the app's own "Start with Windows" setting writes (Mac/Platform/Windows/Autostart.cs).
+; Same Run entry the app's own "Start with Windows" setting writes (App/Platform/Windows/Autostart.cs).
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; \
     ValueName: "TakeABreakGoose"; ValueData: """{app}\{#AppExe}"" --autostart"; Tasks: startup
 ; Undo an earlier "Disable" in Task Manager's Startup apps, or the Run entry above does nothing.
