@@ -43,9 +43,9 @@ public sealed class GooseCoordinator
         string message = messages[Random.Shared.Next(messages.Count)];
         var breakLength = _scheduler.CurrentBreakLength;
         string? hint = breakLength > TimeSpan.Zero
-            ? $"Take {TimeText.BreakLengthInWords(breakLength)}. I'll start counting again after that."
+            ? string.Format(Strings.GooseBreakHint, TimeText.BreakLengthInWords(breakLength))
             : null;
-        Summon(new GooseVisit("HONK!", message, hint, "Okay, break time!",
+        Summon(new GooseVisit(Strings.GooseHonk, message, hint, Strings.GooseBreakTime,
             AllowSnooze: _settings().AllowSnooze, AllowFinishUp: true, StartsBreak: true));
     }
 
@@ -53,7 +53,7 @@ public sealed class GooseCoordinator
     public bool ShowOffOutfit(GooseOutfit outfit)
     {
         if (_goose != null) return false;
-        Summon(new GooseVisit("Ta-da!", GooseOutfits.ShowOffLine(outfit), null, "Looking good!",
+        Summon(new GooseVisit(Strings.GooseTaDa, GooseOutfits.ShowOffLine(outfit), null, Strings.GooseLookingGood,
             AllowSnooze: false, AllowFinishUp: false, StartsBreak: false, outfit, JustVisiting: true));
         return true;
     }
@@ -111,13 +111,12 @@ public sealed class GooseCoordinator
     {
         var focused = _scheduler.Now - session.StartedAt;
         string duration = focused.TotalHours >= 1
-            ? $"{(int)focused.TotalHours} h {focused.Minutes} min"
-            : $"{Math.Max(1, (int)focused.TotalMinutes)} min";
+            ? string.Format(Strings.TimeHoursMinutes, (int)focused.TotalHours, focused.Minutes)
+            : string.Format(Strings.TimeMinutes, Math.Max(1, (int)focused.TotalMinutes));
         Summon(new GooseVisit(
-            "That's a wrap!",
-            $"That's it for this focus session: {duration} of focus since {session.StartedAt:HH:mm}. "
-            + "Time to wrap up and give your brain some rest.",
-            SessionSummary.Breaks(_scheduler.Breaks), "Bye, goose!", AllowSnooze: false, AllowFinishUp: false, StartsBreak: false,
+            Strings.GooseThatsAWrap,
+            string.Format(Strings.GooseSessionDone, duration, session.StartedAt),
+            SessionSummary.Breaks(_scheduler.Breaks), Strings.GooseByeGoose, AllowSnooze: false, AllowFinishUp: false, StartsBreak: false,
             Outfit: GooseOutfit.PartyHat));
     }
 

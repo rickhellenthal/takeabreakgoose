@@ -12,29 +12,29 @@ public static class GooseOutfits
 
     public static string Name(GooseOutfit outfit) => outfit switch
     {
-        GooseOutfit.Raincoat => "Rainy day raincoat",
-        GooseOutfit.Bonnet => "Sunday bonnet",
-        GooseOutfit.Bandana => "Polka dot bandana",
-        GooseOutfit.PartyHat => "Party hat",
+        GooseOutfit.Raincoat => Strings.OutfitRaincoatName,
+        GooseOutfit.Bonnet => Strings.OutfitBonnetName,
+        GooseOutfit.Bandana => Strings.OutfitBandanaName,
+        GooseOutfit.PartyHat => Strings.OutfitPartyHatName,
         _ => outfit.ToString(),
     };
 
     /// <summary>What the goose says when it comes over just to show off this outfit.</summary>
     public static string ShowOffLine(GooseOutfit outfit) => outfit switch
     {
-        GooseOutfit.Raincoat => "Just showing off my raincoat! Rain or shine, I'll keep reminding you to take breaks.",
-        GooseOutfit.Bonnet => "How do you like my Sunday bonnet? Very fancy, I know.",
-        GooseOutfit.Bandana => "Check out my polka dot bandana! Ready for a little adventure.",
-        GooseOutfit.PartyHat => "Party hat on! Every break deserves a small celebration.",
-        _ => "What do you think of my outfit?",
+        GooseOutfit.Raincoat => Strings.OutfitRaincoatShowOff,
+        GooseOutfit.Bonnet => Strings.OutfitBonnetShowOff,
+        GooseOutfit.Bandana => Strings.OutfitBandanaShowOff,
+        GooseOutfit.PartyHat => Strings.OutfitPartyHatShowOff,
+        _ => Strings.OutfitShowOffOther,
     };
 
     public static string Description(GooseOutfit outfit) => outfit switch
     {
-        GooseOutfit.Raincoat => "For honking you outside, whatever the weather.",
-        GooseOutfit.Bonnet => "Fancy enough for a stroll around the block.",
-        GooseOutfit.Bandana => "Ready for a little adventure away from the screen.",
-        GooseOutfit.PartyHat => "Every break deserves a small celebration.",
+        GooseOutfit.Raincoat => Strings.OutfitRaincoatDescription,
+        GooseOutfit.Bonnet => Strings.OutfitBonnetDescription,
+        GooseOutfit.Bandana => Strings.OutfitBandanaDescription,
+        GooseOutfit.PartyHat => Strings.OutfitPartyHatDescription,
         _ => "",
     };
 }

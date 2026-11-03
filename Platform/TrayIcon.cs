@@ -14,6 +14,7 @@ public sealed class TrayIcon : IDisposable
     private readonly Forms.ToolStripMenuItem _breakNowItem;
     private readonly Forms.ToolStripMenuItem _doNotDisturbItem;
     private readonly Forms.ToolStripMenuItem _stopSessionItem;
+    private readonly Forms.ToolStripMenuItem _quitItem;
 
     public event Action? OpenRequested;
     public event Action? SummonRequested;
@@ -26,17 +27,19 @@ public sealed class TrayIcon : IDisposable
         _gooseIcon = LoadGooseIcon();
 
         var menu = new Forms.ContextMenuStrip();
-        _openItem = new Forms.ToolStripMenuItem("Open Take a Break Goose", null, (_, _) => OpenRequested?.Invoke());
+        // The texts come with Update, in the app's language.
+        _openItem = new Forms.ToolStripMenuItem("", null, (_, _) => OpenRequested?.Invoke());
         _openItem.Font = new Drawing.Font(_openItem.Font, Drawing.FontStyle.Bold);
         menu.Items.Add(_openItem);
-        _breakNowItem = new Forms.ToolStripMenuItem("Take a break now", null, (_, _) => SummonRequested?.Invoke());
+        _breakNowItem = new Forms.ToolStripMenuItem("", null, (_, _) => SummonRequested?.Invoke());
         menu.Items.Add(_breakNowItem);
-        _doNotDisturbItem = new Forms.ToolStripMenuItem("Do not disturb", null, (_, _) => DoNotDisturbToggled?.Invoke());
+        _doNotDisturbItem = new Forms.ToolStripMenuItem("", null, (_, _) => DoNotDisturbToggled?.Invoke());
         menu.Items.Add(_doNotDisturbItem);
-        _stopSessionItem = new Forms.ToolStripMenuItem("Stop focus session", null, (_, _) => StopSessionRequested?.Invoke());
+        _stopSessionItem = new Forms.ToolStripMenuItem("", null, (_, _) => StopSessionRequested?.Invoke());
         menu.Items.Add(_stopSessionItem);
         menu.Items.Add(new Forms.ToolStripSeparator());
-        menu.Items.Add("Quit", null, (_, _) => QuitRequested?.Invoke());
+        _quitItem = new Forms.ToolStripMenuItem("", null, (_, _) => QuitRequested?.Invoke());
+        menu.Items.Add(_quitItem);
 
         _icon = new Forms.NotifyIcon
         {
@@ -58,7 +61,11 @@ public sealed class TrayIcon : IDisposable
         if (text.Length > 63) text = text[..63]; // NotifyIcon.Text is limited to 63 chars
         if (_icon.Text != text) _icon.Text = text;
         _doNotDisturbItem.Checked = doNotDisturb;
-        _doNotDisturbItem.Text = inCall ? "Do not disturb (you're in a call)" : "Do not disturb";
+        _openItem.Text = Strings.MenuOpen;
+        _breakNowItem.Text = Strings.TakeABreakNow;
+        _doNotDisturbItem.Text = inCall ? Strings.MenuDoNotDisturbInCall : Strings.MenuDoNotDisturb;
+        _stopSessionItem.Text = Strings.MenuStopSession;
+        _quitItem.Text = Strings.MenuQuit;
         // Breaks, Do not disturb and stopping only mean something during a focus session.
         // Do not disturb can outlast its session (the goose's goodbye waits for it), so it stays while on.
         _breakNowItem.Visible = _stopSessionItem.Visible = sessionRunning;

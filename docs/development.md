@@ -51,8 +51,11 @@ dotnet test tests/TakeABreakGoose.Windows.Tests
 
 - **`TakeABreakGoose.Tests`** (xUnit, `net8.0`) covers the core: the scheduler, the goose's visits
   and behaviour, the nap watch, session plans, the break history and goodbye sentence, calls and Do
-  not disturb, settings (including files from older versions), and the time texts. It runs on
-  Windows and macOS.
+  not disturb, settings (including files from older versions), the time texts, and the texts in
+  Dutch (`LanguageTests`, which also checks that every text has a Dutch version with the same
+  placeholders). It runs on Windows and macOS.
+  - The app's language is one setting for everything, so the tests run one at a time. A test that
+    needs Dutch uses `using var _ = InLanguage.Dutch();`, which switches back to English afterwards.
   - `SchedulerHarness` gives the scheduler a fake clock and fake idle time: `Work(...)`,
     `BeAway(...)` and `ComeBack()` move time forward and call `Tick()` along the way.
   - `GooseBehaviorTests` has a `GooseHarness` with a fake view, which runs a visit frame by frame
@@ -72,8 +75,28 @@ try it in the app.
   `Mac/Goose/`.
 - **Settings** that are renamed or replaced keep the old property around for reading, so older
   settings files carry over (see [Architecture](architecture.md#settings)).
-- **Texts** are written for people who aren't programmers: friendly, short and without jargon.
+- **Texts** are written for people who aren't programmers: friendly, short and without jargon. The
+  Dutch ones too, with an informal "je".
 - The README describes how the app works for users. Keep it in sync with changes in behaviour.
+
+## Adding or changing a text
+
+Every text the app shows is in `Core/Text/Strings.resx` (English) and `Core/Text/Strings.nl.resx`
+(Dutch), never typed into the code or the XAML (see [Architecture](architecture.md#languages)).
+
+- **To change a text**, change it in both files. Keep the placeholders (`{0}`, `{1:HH:mm}`) in both;
+  the order of the words around them can differ.
+- **To add one**, add an entry with the same name to both files (in Visual Studio's resource editor
+  or as XML: `<data name="..." xml:space="preserve"><value>...</value></data>`), with a `<comment>`
+  in the English file when it has placeholders. Build, and it's there as `Strings.TheName`:
+  - In code: `Strings.TheName`, or `string.Format(Strings.TheName, value)`.
+  - In XAML: `Text="{x:Static s:Strings.TheName}"`, with `xmlns:s` on the root element as in the
+    other pages. Both apps' window usually needs it.
+- **Numbers**: a text for one and one for more (`…One` and `…Many`), rather than adding an "s".
+- **Lists** (the goose's lines, the number words, the default messages) are one text with an item
+  per line. The default messages must keep the same number of lines, in the same order, in both
+  languages: that's how a message that's still a default switches along with the language.
+- `LanguageTests` fails when a text is missing in Dutch or its placeholders don't match.
 
 ## Making a release
 

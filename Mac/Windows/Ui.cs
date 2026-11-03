@@ -9,7 +9,7 @@ internal static class Ui
     public static bool TryParseNumber(string? text, int min, int max, string name, out int value, Action<string> fail)
     {
         if (int.TryParse((text ?? "").Trim(), out value) && value >= min && value <= max) return true;
-        fail($"{name} must be a whole number between {min} and {max}.");
+        fail(string.Format(Strings.WholeNumberBetween, name, min, max));
         return false;
     }
 }

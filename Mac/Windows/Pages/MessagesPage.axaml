@@ -1,5 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:s="using:TakeABreakGoose"
              xmlns:core="clr-namespace:TakeABreakGoose;assembly=TakeABreakGoose.Core"
              x:Class="TakeABreakGoose.MessagesPage">
     <UserControl.Styles>
@@ -23,12 +24,12 @@
         <Border Classes="Card" Margin="0">
             <Grid RowDefinitions="Auto,*,Auto">
                 <DockPanel>
-                    <Button DockPanel.Dock="Right" Content="Reset to defaults" Classes="ChipButton"
+                    <Button DockPanel.Dock="Right" Content="{x:Static s:Strings.MessagesResetToDefaults}" Classes="ChipButton"
                             Margin="12,0,0,0" VerticalAlignment="Top" Click="ResetMessages_Click" />
                     <StackPanel>
-                        <TextBlock Text="Messages" Classes="CardTitle" />
+                        <TextBlock Text="{x:Static s:Strings.SettingsMessages}" Classes="CardTitle" />
                         <TextBlock Classes="Hint" Margin="0,2,0,0"
-                                   Text="The goose picks one of these at random when it's time for a break. Click a message to edit it." />
+                                   Text="{x:Static s:Strings.MessagesHint}" />
                     </StackPanel>
                 </DockPanel>
 
@@ -41,7 +42,7 @@
                                         BorderThickness="1">
                                     <DockPanel>
                                         <Button DockPanel.Dock="Right" Content="✕" Classes="IconButton"
-                                                ToolTip.Tip="Remove this message" Click="RemoveMessage_Click" />
+                                                ToolTip.Tip="{x:Static s:Strings.MessagesRemove}" Click="RemoveMessage_Click" />
                                         <TextBox Classes="InRow" Text="{Binding Text}"
                                                  BorderThickness="0" Background="Transparent" TextWrapping="Wrap"
                                                  Padding="2,4" VerticalAlignment="Center" />
@@ -53,11 +54,11 @@
                 </ScrollViewer>
 
                 <DockPanel Grid.Row="2" Margin="0,6,0,0">
-                    <Button DockPanel.Dock="Right" Content="Add" Classes="BaseButton"
+                    <Button DockPanel.Dock="Right" Content="{x:Static s:Strings.MessagesAdd}" Classes="BaseButton"
                             Padding="16,5" Margin="8,0,0,0" Click="AddMessage_Click" />
                     <Grid>
                         <TextBox x:Name="NewMessageBox" Padding="6,5" TextChanged="NewMessageBox_TextChanged" />
-                        <TextBlock x:Name="NewMessageHint" Text="Add a message…" Classes="Hint"
+                        <TextBlock x:Name="NewMessageHint" Text="{x:Static s:Strings.MessagesAddPlaceholder}" Classes="Hint"
                                    FontSize="13" Margin="10,0,0,0" VerticalAlignment="Center"
                                    IsHitTestVisible="False" />
                     </Grid>
@@ -66,7 +67,7 @@
         </Border>
 
         <DockPanel Grid.Row="1" Margin="0,12,0,0" LastChildFill="False">
-            <Button DockPanel.Dock="Right" Content="Save" Classes="PrimaryButton" Padding="24,7"
+            <Button DockPanel.Dock="Right" Content="{x:Static s:Strings.Save}" Classes="PrimaryButton" Padding="24,7"
                     Click="Save_Click" />
             <TextBlock x:Name="Status" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,12,0"
                        TextWrapping="Wrap" MaxWidth="260" />

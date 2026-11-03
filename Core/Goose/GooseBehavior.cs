@@ -17,32 +17,11 @@ public enum GooseQuestion { TakeABreak, ReadyToFocus, EndBreakEarly, StillOnBrea
 /// </summary>
 public sealed class GooseBehavior
 {
-    private static readonly string[] EndBreakEarlyLines =
-    {
-        "Cutting your break short? Bold move. Your future self will remember this.",
-        "Back already? The break isn't over yet, but who am I to judge. (I'm judging.)",
-        "Honk. Some of us take our breaks very seriously.",
-        "Fine, fine. But don't come crying to me when your focus runs out.",
-        "You woke me up for this? Your brain was enjoying that.",
-    };
-
-    private static readonly string[] StillOnBreakLines =
-    {
-        "I can hear you clicking. Are you actually taking your break?",
-        "That doesn't sound like a break to me. Go stretch your legs!",
-        "Still at the computer? Your break is waiting for you over there, away from the screen.",
-        "Breaks work better when you get up. Just saying.",
-        "Honk. I can't nap with all that typing going on.",
-    };
-
-    private static readonly string[] EndBreakAnywayLines =
-    {
-        "I'm not mad. I'm just disappointed.",
-        "Wow. Okay. I'll just sit here and remember this.",
-        "Ending your break to keep working? Bold. Your back is going to file a complaint.",
-        "Your break, your call. I'm just a goose who believed in you.",
-        "Fine. But don't come honking to me when your focus runs out.",
-    };
+    // What it says, picking one at random: woken up mid-nap, catching you at the computer during your
+    // break, and when you end the break anyway.
+    private static string[] EndBreakEarlyLines => Languages.Lines(Strings.GooseEndBreakEarlyLines);
+    private static string[] StillOnBreakLines => Languages.Lines(Strings.GooseStillOnBreakLines);
+    private static string[] EndBreakAnywayLines => Languages.Lines(Strings.GooseEndBreakAnywayLines);
 
     private const double WalkSpeed = 150;   // DIPs per second
     private const double StepRate = 12;     // leg swing speed, radians per second
@@ -111,8 +90,8 @@ public sealed class GooseBehavior
 
         _bubble = new SpeechBubble(visit.Title, visit.Message, visit.Hint, visit.DismissText,
             // Finishing up is the better answer than a snooze timer, so it gets the button and snooze the link.
-            SecondaryButton: visit.AllowFinishUp ? "Let me finish up" : null,
-            LinkButton: visit.AllowSnooze ? $"Snooze {snoozeMinutes} min" : null);
+            SecondaryButton: visit.AllowFinishUp ? Strings.GooseFinishUp : null,
+            LinkButton: visit.AllowSnooze ? string.Format(Strings.GooseSnooze, snoozeMinutes) : null);
 
         _enteredFromLeft = random.Next(2) == 0;
         // Start with the goose itself just off screen (the window is wider than the goose).
@@ -222,7 +201,7 @@ public sealed class GooseBehavior
                     Phase = GoosePhase.Peeking;
                     _peekingSince = _clock.Now;
                     _view.Facing = InwardDirection;
-                    _view.FigureToolTip = "Click me when you're ready for your break";
+                    _view.FigureToolTip = Strings.GoosePeekToolTip;
                 }
                 // Time away while it waits counts too, as while it asks.
                 else WatchForBreakWhileAway();
@@ -236,7 +215,7 @@ public sealed class GooseBehavior
                 WatchForBreakWhileAway();
                 // Forgotten about? Then it comes back to ask by itself.
                 if (Phase == GoosePhase.Peeking && _clock.Now - _peekingSince >= FinishUpReminder)
-                    ComeBack("Done finishing up? Your break is waiting for you!");
+                    ComeBack(Strings.GooseDoneFinishingUp);
                 break;
 
             case GoosePhase.Sleeping:
@@ -339,7 +318,7 @@ public sealed class GooseBehavior
             Phase = GoosePhase.WalkingOut;
     }
 
-    private void StartSleeping(TimeSpan length, string title = "Enjoy your break")
+    private void StartSleeping(TimeSpan length, string? title = null)
     {
         Phase = GoosePhase.Sleeping;
         _breakStart = _clock.Now;
@@ -348,7 +327,7 @@ public sealed class GooseBehavior
         _view.FigureToolTip = NapToolTip;
         _napWatch.Restart(_clock.Now);
 
-        _view.BreakTitle = title;
+        _view.BreakTitle = title ?? Strings.GooseEnjoyYourBreak;
         UpdateBreakProgress();
         _view.ShowBreakCard(popUp: true);
     }
@@ -360,7 +339,7 @@ public sealed class GooseBehavior
         if (left < TimeSpan.Zero) left = TimeSpan.Zero;
         double progress = total > TimeSpan.Zero ? 1 - left / total : 1;
 
-        _view.ShowBreakProgress(progress, $"{FormatTimeLeft(left)} left");
+        _view.ShowBreakProgress(progress, string.Format(Strings.GooseTimeLeft, FormatTimeLeft(left)));
     }
 
     private static string FormatTimeLeft(TimeSpan left)
@@ -369,7 +348,7 @@ public sealed class GooseBehavior
         return left.TotalHours >= 1 ? $"{(int)left.TotalHours}:{left:mm\\:ss}" : $"{left:m\\:ss}";
     }
 
-    private string NapToolTip => $"Napping until {_breakEnd:HH:mm}. Click me if you need to end your break early.";
+    private string NapToolTip => string.Format(Strings.GooseNapToolTip, _breakEnd);
 
     /// <summary>
     /// Mid-nap: using the computer half wakes the goose (head up, one eye open). Keep at it and it
@@ -394,9 +373,9 @@ public sealed class GooseBehavior
 
         string message = StillOnBreakLines[_random.Next(StillOnBreakLines.Length)];
         // Getting up is the highlighted choice, on purpose.
-        Ask(GooseQuestion.StillOnBreak, "Psst…", message,
-            hint: $"There's still {FormatTimeLeft(_breakEnd - _clock.Now)} of your break left.",
-            primary: "I'm going!", secondary: "End my break");
+        Ask(GooseQuestion.StillOnBreak, Strings.GoosePsst, message,
+            hint: string.Format(Strings.GooseBreakLeftHint, FormatTimeLeft(_breakEnd - _clock.Now)),
+            primary: Strings.GooseImGoing, secondary: Strings.GooseEndMyBreak);
     }
 
     /// <summary>They'd rather end the break: the goose checks once more, not hiding what it thinks of that.</summary>
@@ -406,8 +385,8 @@ public sealed class GooseBehavior
         if (_view.Sleeping) _view.Look = NapLook.Unimpressed;
         else _view.Huffy = true;
         string message = EndBreakAnywayLines[_random.Next(EndBreakAnywayLines.Length)];
-        Ask(GooseQuestion.EndBreakAnyway, "Really?", message, hint: null,
-            primary: "Fine, I'll go", secondary: "Yes, end my break");
+        Ask(GooseQuestion.EndBreakAnyway, Strings.GooseReally, message, hint: null,
+            primary: Strings.GooseFineIllGo, secondary: Strings.GooseYesEndMyBreak);
     }
 
     /// <summary>The break time is up; the goose keeps napping until the user is back.</summary>
@@ -415,13 +394,13 @@ public sealed class GooseBehavior
     {
         _view.Look = NapLook.Asleep;
         Phase = GoosePhase.BreakOver;
-        _view.FigureToolTip = "Break's over. I'll wake up when you're back.";
-        _view.ShowBreakProgress(1, "Waiting for you to come back");
-        _view.BreakTitle = "Break's over";
+        _view.FigureToolTip = Strings.GooseBreakOverToolTip;
+        _view.ShowBreakProgress(1, Strings.GooseWaitingForYou);
+        _view.BreakTitle = Strings.GooseBreakOver;
     }
 
     /// <summary>The user is back: wake up and ask whether they're ready to focus again.</summary>
-    private void AskIfReady(string message = "Break's over. Ready to focus again?")
+    private void AskIfReady(string? message = null)
     {
         _view.Sleeping = false;
         _view.Huffy = false; // the break ran out while it was sulking: all is forgiven
@@ -429,8 +408,8 @@ public sealed class GooseBehavior
         _view.HideBreakCard();
 
         // The next focus stretch only starts once the user says so.
-        Ask(GooseQuestion.ReadyToFocus, "Welcome back!", message, hint: null,
-            primary: "Ready to focus", secondary: $"{_snoozeMinutes} more minutes");
+        Ask(GooseQuestion.ReadyToFocus, Strings.GooseWelcomeBack, message ?? Strings.GooseReadyAgain, hint: null,
+            primary: Strings.GooseReadyToFocus, secondary: string.Format(Strings.GooseMoreMinutes, _snoozeMinutes));
     }
 
     /// <summary>
@@ -458,7 +437,7 @@ public sealed class GooseBehavior
             _awayLongEnoughForABreak = false;
             StopTalking();
             TookBreakWhileAway?.Invoke(_awaySince);
-            AskIfReady("Looks like you already took a break while I waited. Ready to focus again?");
+            AskIfReady(Strings.GooseBreakWhileAway);
         }
     }
 
@@ -472,9 +451,9 @@ public sealed class GooseBehavior
         var left = _breakEnd - _clock.Now;
         string message = EndBreakEarlyLines[_random.Next(EndBreakEarlyLines.Length)];
         // Resting is the highlighted choice, on purpose.
-        Ask(GooseQuestion.EndBreakEarly, "Hey! I was napping…", message,
-            hint: $"There's still {FormatTimeLeft(left)} of your break left.",
-            primary: "Keep resting", secondary: "End my break");
+        Ask(GooseQuestion.EndBreakEarly, Strings.GooseWokenUp, message,
+            hint: string.Format(Strings.GooseBreakLeftHint, FormatTimeLeft(left)),
+            primary: Strings.GooseKeepResting, secondary: Strings.GooseEndMyBreak);
     }
 
     private void Ask(GooseQuestion question, string title, string message, string? hint, string primary, string secondary)
@@ -511,7 +490,7 @@ public sealed class GooseBehavior
     private void NapLonger()
     {
         StopTalking();
-        StartSleeping(TimeSpan.FromMinutes(_snoozeMinutes), "A little longer, then");
+        StartSleeping(TimeSpan.FromMinutes(_snoozeMinutes), Strings.GooseALittleLonger);
         BreakExtended?.Invoke(_breakEnd);
     }
 
@@ -585,7 +564,7 @@ public sealed class GooseBehavior
         if (Phase == GoosePhase.Peeking)
         {
             // The user is done finishing up: come back and ask again.
-            ComeBack("All finished up and saved? Then you're ready for your break!");
+            ComeBack(Strings.GooseAllFinishedUp);
             return;
         }
         if (Phase == GoosePhase.Sleeping)

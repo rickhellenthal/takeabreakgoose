@@ -1,0 +1,771 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    The app's texts in Dutch: the same names as in Strings.resx, the English default.
+    Placeholders like {0} are filled in by the code; {0:HH:mm} is a time like 17:00.
+  -->
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- The goose: break reminders -->
+  <data name="GooseHonk" xml:space="preserve">
+    <value>GAK!</value>
+  </data>
+  <data name="GooseBreakTime" xml:space="preserve">
+    <value>Oké, pauzetijd!</value>
+  </data>
+  <data name="GooseBreakHint" xml:space="preserve">
+    <value>Neem {0}. Daarna begin ik weer te tellen.</value>
+  </data>
+  <data name="GooseFinishUp" xml:space="preserve">
+    <value>Even afronden</value>
+  </data>
+  <data name="GooseSnooze" xml:space="preserve">
+    <value>{0} min snoozen</value>
+  </data>
+  <data name="GoosePeekToolTip" xml:space="preserve">
+    <value>Klik op me als je klaar bent voor je pauze</value>
+  </data>
+  <data name="GooseDoneFinishingUp" xml:space="preserve">
+    <value>Klaar met afronden? Je pauze wacht op je!</value>
+  </data>
+  <data name="GooseAllFinishedUp" xml:space="preserve">
+    <value>Alles afgerond en opgeslagen? Dan ben je klaar voor je pauze!</value>
+  </data>
+
+  <!-- The goose: napping -->
+  <data name="GooseEnjoyYourBreak" xml:space="preserve">
+    <value>Geniet van je pauze</value>
+  </data>
+  <data name="GooseNappingDuringBreak" xml:space="preserve">
+    <value>Dutje tijdens je pauze</value>
+  </data>
+  <data name="GooseTimeLeft" xml:space="preserve">
+    <value>nog {0}</value>
+  </data>
+  <data name="GooseNapToolTip" xml:space="preserve">
+    <value>Ik doe een dutje tot {0:HH:mm}. Klik op me als je je pauze eerder wilt stoppen.</value>
+  </data>
+  <data name="GooseBreakLeftHint" xml:space="preserve">
+    <value>Er is nog {0} over van je pauze.</value>
+  </data>
+  <data name="GoosePsst" xml:space="preserve">
+    <value>Psst…</value>
+  </data>
+  <data name="GooseImGoing" xml:space="preserve">
+    <value>Ik ga al!</value>
+  </data>
+  <data name="GooseEndMyBreak" xml:space="preserve">
+    <value>Pauze stoppen</value>
+  </data>
+  <data name="GooseReally" xml:space="preserve">
+    <value>Echt?</value>
+  </data>
+  <data name="GooseFineIllGo" xml:space="preserve">
+    <value>Oké, ik ga al</value>
+  </data>
+  <data name="GooseYesEndMyBreak" xml:space="preserve">
+    <value>Ja, stop mijn pauze</value>
+  </data>
+  <data name="GooseBreakOverToolTip" xml:space="preserve">
+    <value>Pauze voorbij. Ik word wakker als je terug bent.</value>
+  </data>
+  <data name="GooseWaitingForYou" xml:space="preserve">
+    <value>Wacht tot je terug bent</value>
+  </data>
+  <data name="GooseBreakOver" xml:space="preserve">
+    <value>Pauze voorbij</value>
+  </data>
+  <data name="GooseReadyAgain" xml:space="preserve">
+    <value>Pauze voorbij. Klaar om weer te focussen?</value>
+  </data>
+  <data name="GooseWelcomeBack" xml:space="preserve">
+    <value>Welkom terug!</value>
+  </data>
+  <data name="GooseReadyToFocus" xml:space="preserve">
+    <value>Klaar om te focussen</value>
+  </data>
+  <data name="GooseMoreMinutes" xml:space="preserve">
+    <value>Nog {0} minuten</value>
+  </data>
+  <data name="GooseBreakWhileAway" xml:space="preserve">
+    <value>Zo te zien heb je al pauze genomen terwijl ik wachtte. Klaar om weer te focussen?</value>
+  </data>
+  <data name="GooseWokenUp" xml:space="preserve">
+    <value>Hé! Ik deed een dutje…</value>
+  </data>
+  <data name="GooseKeepResting" xml:space="preserve">
+    <value>Verder rusten</value>
+  </data>
+  <data name="GooseALittleLonger" xml:space="preserve">
+    <value>Nog heel even dan</value>
+  </data>
+  <data name="GooseEndBreakEarlyLines" xml:space="preserve">
+    <value>Je pauze inkorten? Gewaagd. Je toekomstige zelf gaat dit onthouden.
+Nu al terug? Je pauze is nog niet voorbij, maar wie ben ik om te oordelen. (Ik oordeel.)
+Gak. Sommigen van ons nemen hun pauzes heel serieus.
+Prima, prima. Maar kom niet bij mij uithuilen als je focus op is.
+Heb je me hiervoor wakker gemaakt? Je brein genoot er juist zo van.</value>
+  </data>
+  <data name="GooseStillOnBreakLines" xml:space="preserve">
+    <value>Ik hoor je klikken. Neem je nou echt pauze?
+Dat klinkt mij niet als pauze in de oren. Ga je benen strekken!
+Zit je nog steeds achter de computer? Je pauze wacht daar op je, weg van het scherm.
+Pauzes werken beter als je opstaat. Zeg ik maar even.
+Gak. Ik kan niet slapen met al dat getyp.</value>
+  </data>
+  <data name="GooseEndBreakAnywayLines" xml:space="preserve">
+    <value>Ik ben niet boos. Alleen teleurgesteld.
+Wauw. Oké. Ik ga hier gewoon zitten en dit onthouden.
+Je pauze stoppen om door te werken? Gewaagd. Je rug gaat hier een klacht over indienen.
+Jouw pauze, jouw keuze. Ik ben maar een gans die in je geloofde.
+Prima. Maar kom niet bij mij aangegakt als je focus op is.</value>
+  </data>
+
+  <!-- The goose: other visits -->
+  <data name="GooseTaDa" xml:space="preserve">
+    <value>Tadaa!</value>
+  </data>
+  <data name="GooseLookingGood" xml:space="preserve">
+    <value>Ziet er goed uit!</value>
+  </data>
+  <data name="GooseThatsAWrap" xml:space="preserve">
+    <value>Klaar is Kees!</value>
+  </data>
+  <data name="GooseSessionDone" xml:space="preserve">
+    <value>Deze focussessie zit erop: {0} gefocust sinds {1:HH:mm}. Tijd om af te ronden en je brein wat rust te gunnen.</value>
+  </data>
+  <data name="GooseByeGoose" xml:space="preserve">
+    <value>Doei, gans!</value>
+  </data>
+
+  <!-- The goose's messages (the defaults of the user's list) -->
+  <data name="DefaultMessages" xml:space="preserve">
+    <value>Tijd om op te staan en je benen te strekken.
+Kijk 20 seconden naar iets in de verte. Je ogen zullen je dankbaar zijn.
+Drinkcheck! Haal even een glas water.
+Stap even weg van het scherm. Waar je ook mee bezig bent, het is er over vijf minuten nog steeds.
+Schouders omlaag, kaken los, en haal diep adem.
+Maak een korte wandeling. Zelfs ganzen waggelen af en toe een rondje.
+Hyperfocus is een superkracht, maar zelfs superhelden nemen pauze.
+Heb je vandaag al iets gegeten?</value>
+  </data>
+
+  <!-- Outfits -->
+  <data name="OutfitRaincoatName" xml:space="preserve">
+    <value>Regenjas voor natte dagen</value>
+  </data>
+  <data name="OutfitRaincoatDescription" xml:space="preserve">
+    <value>Om je naar buiten te gakken, wat voor weer het ook is.</value>
+  </data>
+  <data name="OutfitRaincoatShowOff" xml:space="preserve">
+    <value>Even mijn regenjas showen! Regen of zon, ik blijf je eraan herinneren om pauze te nemen.</value>
+  </data>
+  <data name="OutfitBonnetName" xml:space="preserve">
+    <value>Zondags hoedje</value>
+  </data>
+  <data name="OutfitBonnetDescription" xml:space="preserve">
+    <value>Chic genoeg voor een rondje om het blok.</value>
+  </data>
+  <data name="OutfitBonnetShowOff" xml:space="preserve">
+    <value>Wat vind je van mijn zondagse hoedje? Heel chic, ik weet het.</value>
+  </data>
+  <data name="OutfitBandanaName" xml:space="preserve">
+    <value>Bandana met stippen</value>
+  </data>
+  <data name="OutfitBandanaDescription" xml:space="preserve">
+    <value>Klaar voor een klein avontuur, weg van het scherm.</value>
+  </data>
+  <data name="OutfitBandanaShowOff" xml:space="preserve">
+    <value>Moet je mijn bandana met stippen zien! Klaar voor een klein avontuur.</value>
+  </data>
+  <data name="OutfitPartyHatName" xml:space="preserve">
+    <value>Feesthoedje</value>
+  </data>
+  <data name="OutfitPartyHatDescription" xml:space="preserve">
+    <value>Elke pauze verdient een klein feestje.</value>
+  </data>
+  <data name="OutfitPartyHatShowOff" xml:space="preserve">
+    <value>Feesthoedje op! Elke pauze verdient een klein feestje.</value>
+  </data>
+  <data name="OutfitShowOffOther" xml:space="preserve">
+    <value>Wat vind je van mijn outfit?</value>
+  </data>
+
+  <!-- Status (tray tooltip and the window header) -->
+  <data name="StatusGooseHere" xml:space="preserve">
+    <value>De gans is er!</value>
+  </data>
+  <data name="StatusInACall" xml:space="preserve">
+    <value>In gesprek</value>
+  </data>
+  <data name="StatusDoNotDisturb" xml:space="preserve">
+    <value>Niet storen</value>
+  </data>
+  <data name="StatusSessionDone" xml:space="preserve">
+    <value>{0} · je sessie is klaar</value>
+  </data>
+  <data name="StatusBreakWaiting" xml:space="preserve">
+    <value>{0} · er wacht een pauze</value>
+  </data>
+  <data name="StatusNextBreakAt" xml:space="preserve">
+    <value>{0} · volgende pauze om {1:HH:mm}</value>
+  </data>
+  <data name="StatusOnBreakUntil" xml:space="preserve">
+    <value>Pauze tot {0:HH:mm}</value>
+  </data>
+  <data name="StatusBreakOverWaiting" xml:space="preserve">
+    <value>Pauze voorbij, de gans wacht op je</value>
+  </data>
+  <data name="StatusAway" xml:space="preserve">
+    <value>Weg van het toetsenbord</value>
+  </data>
+  <data name="StatusFocusSession" xml:space="preserve">
+    <value>Focussessie</value>
+  </data>
+  <data name="StatusSnoozed" xml:space="preserve">
+    <value>Gesnoozed</value>
+  </data>
+  <data name="StatusNoSession" xml:space="preserve">
+    <value>Geen focussessie bezig</value>
+  </data>
+
+  <!-- Times, durations and counts -->
+  <data name="TimeAt" xml:space="preserve">
+    <value>om {0:HH:mm}</value>
+  </data>
+  <data name="TimeTomorrowAt" xml:space="preserve">
+    <value>morgen om {0:HH:mm}</value>
+  </data>
+  <data name="TimeUnderAMinute" xml:space="preserve">
+    <value>minder dan een minuut</value>
+  </data>
+  <data name="TimeSeconds" xml:space="preserve">
+    <value>{0} sec</value>
+  </data>
+  <data name="TimeMinutes" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="TimeMinutesSeconds" xml:space="preserve">
+    <value>{0} min {1} sec</value>
+  </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{0} uur</value>
+  </data>
+  <data name="TimeHoursMinutes" xml:space="preserve">
+    <value>{0} uur {1} min</value>
+  </data>
+  <data name="TimeSecondsLabel" xml:space="preserve">
+    <value>sec</value>
+  </data>
+  <data name="TimeMinutesLabel" xml:space="preserve">
+    <value>min</value>
+  </data>
+  <data name="TimeHoursLabel" xml:space="preserve">
+    <value>uur</value>
+  </data>
+  <data name="WordsSecondOne" xml:space="preserve">
+    <value>{0} seconde</value>
+  </data>
+  <data name="WordsSecondMany" xml:space="preserve">
+    <value>{0} seconden</value>
+  </data>
+  <data name="WordsMinuteOne" xml:space="preserve">
+    <value>{0} minuut</value>
+  </data>
+  <data name="WordsMinuteMany" xml:space="preserve">
+    <value>{0} minuten</value>
+  </data>
+  <data name="WordsAnd" xml:space="preserve">
+    <value>{0} en {1}</value>
+  </data>
+  <data name="BreakOne" xml:space="preserve">
+    <value>pauze</value>
+  </data>
+  <data name="BreakMany" xml:space="preserve">
+    <value>pauzes</value>
+  </data>
+  <data name="NumberWords" xml:space="preserve">
+    <value>geen
+één
+twee
+drie
+vier
+vijf
+zes
+zeven
+acht
+negen
+tien
+elf
+twaalf</value>
+  </data>
+  <data name="SummaryNoBreaks" xml:space="preserve">
+    <value>Wel zonder pauzes deze keer. Volgende keer beter!</value>
+  </data>
+  <data name="SummaryQuickBreaks" xml:space="preserve">
+    <value>Je nam onderweg {0} korte {1}.</value>
+  </data>
+  <data name="SummaryBreaks" xml:space="preserve">
+    <value>Je nam onderweg {0} {1}, samen {2} rust.</value>
+  </data>
+  <data name="SummaryAboutAMinute" xml:space="preserve">
+    <value>ongeveer een minuut</value>
+  </data>
+  <data name="SummaryAboutMinutes" xml:space="preserve">
+    <value>ongeveer {0} minuten</value>
+  </data>
+  <data name="SummaryOverAnHour" xml:space="preserve">
+    <value>ruim een uur</value>
+  </data>
+  <data name="SummaryOverHours" xml:space="preserve">
+    <value>ruim {0} uur</value>
+  </data>
+
+  <!-- The app window -->
+  <data name="TabFocusSession" xml:space="preserve">
+    <value>Focussessie</value>
+  </data>
+  <data name="TabWardrobe" xml:space="preserve">
+    <value>Kledingkast</value>
+  </data>
+  <data name="TabSettings" xml:space="preserve">
+    <value>Instellingen</value>
+  </data>
+  <data name="TabSettingsWithNews" xml:space="preserve">
+    <value>Instellingen •</value>
+  </data>
+  <data name="BackToSettings" xml:space="preserve">
+    <value>←  Instellingen</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Opslaan</value>
+  </data>
+  <data name="Saved" xml:space="preserve">
+    <value>Opgeslagen ✓</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Annuleren</value>
+  </data>
+  <data name="Other" xml:space="preserve">
+    <value>Anders…</value>
+  </data>
+  <data name="WholeNumberBetween" xml:space="preserve">
+    <value>{0} moet een heel getal zijn tussen {1} en {2}.</value>
+  </data>
+
+  <!-- Focus session tab -->
+  <data name="SessionRunning" xml:space="preserve">
+    <value>Focussessie bezig</value>
+  </data>
+  <data name="SessionDoNotDisturb" xml:space="preserve">
+    <value>Niet storen</value>
+  </data>
+  <data name="SessionStop" xml:space="preserve">
+    <value>Sessie stoppen</value>
+  </data>
+  <data name="TakeABreakNow" xml:space="preserve">
+    <value>Nu pauze nemen</value>
+  </data>
+  <data name="SessionBreaksThisSession" xml:space="preserve">
+    <value>Pauzes deze sessie</value>
+  </data>
+  <data name="SessionTurnOffDoNotDisturb" xml:space="preserve">
+    <value>Niet storen uitzetten</value>
+  </data>
+  <data name="SessionDoneTitle" xml:space="preserve">
+    <value>Je focussessie is klaar</value>
+  </data>
+  <data name="SessionStartTitle" xml:space="preserve">
+    <value>Start een focussessie</value>
+  </data>
+  <data name="SessionStartHint" xml:space="preserve">
+    <value>De gans herinnert je aan je pauzes terwijl je werkt, en laat weten wanneer de sessie voorbij is.</value>
+  </data>
+  <data name="SessionRemindEvery" xml:space="preserve">
+    <value>Herinner me aan een pauze, elke</value>
+  </data>
+  <data name="SessionEvery" xml:space="preserve">
+    <value>Elke</value>
+  </data>
+  <data name="SessionMinutes" xml:space="preserve">
+    <value>minuten</value>
+  </data>
+  <data name="SessionEachBreakLasts" xml:space="preserve">
+    <value>Elke pauze duurt</value>
+  </data>
+  <data name="SessionEndAfter" xml:space="preserve">
+    <value>Stop na</value>
+  </data>
+  <data name="SessionEndAt" xml:space="preserve">
+    <value>Stop om</value>
+  </data>
+  <data name="SessionEndTimeToolTip" xml:space="preserve">
+    <value>Een tijd zoals 17:00, in de tijd van je computer. Met pijltje omhoog en omlaag verschuif je die 5 min, met Shift erbij 1 min.</value>
+  </data>
+  <data name="SessionEarlier15" xml:space="preserve">
+    <value>−15 min</value>
+  </data>
+  <data name="SessionLater15" xml:space="preserve">
+    <value>+15 min</value>
+  </data>
+  <data name="SessionStart" xml:space="preserve">
+    <value>Sessie starten</value>
+  </data>
+  <data name="SessionHonk" xml:space="preserve">
+    <value>Gak!</value>
+  </data>
+  <data name="SessionGooseOnScreen" xml:space="preserve">
+    <value>De gans staat nu op je scherm.</value>
+  </data>
+  <data name="SessionWelcomeBack" xml:space="preserve">
+    <value>Welkom terug</value>
+  </data>
+  <data name="SessionBreakOverCaption" xml:space="preserve">
+    <value>Je pauze is voorbij. Laat de gans weten wanneer je klaar bent om weer te focussen.</value>
+  </data>
+  <data name="SessionBreakTime" xml:space="preserve">
+    <value>Pauzetijd</value>
+  </data>
+  <data name="SessionBreakWaitingCaption" xml:space="preserve">
+    <value>Je pauze wacht op je. De gans komt zodra je Niet storen uitzet.</value>
+  </data>
+  <data name="SessionAway" xml:space="preserve">
+    <value>Weg</value>
+  </data>
+  <data name="SessionAwayCaption" xml:space="preserve">
+    <value>Tijd weg van het toetsenbord telt als pauze.</value>
+  </data>
+  <data name="SessionBreakLeftCaption" xml:space="preserve">
+    <value>over van je pauze. Geniet ervan!</value>
+  </data>
+  <data name="SessionUntilNextBreak" xml:space="preserve">
+    <value>tot je volgende pauze (elke {0} min, pauzes van {1})</value>
+  </data>
+  <data name="SessionUntilNextBreakNoLength" xml:space="preserve">
+    <value>tot je volgende pauze (elke {0} min)</value>
+  </data>
+  <data name="SessionStartedAutomaticallyAt" xml:space="preserve">
+    <value>Automatisch gestart om {0:HH:mm}</value>
+  </data>
+  <data name="SessionStartedAt" xml:space="preserve">
+    <value>Gestart om {0:HH:mm}</value>
+  </data>
+  <data name="SessionEnds" xml:space="preserve">
+    <value>{0} · stopt {1} (nog {2})</value>
+  </data>
+  <data name="SessionNoEnd" xml:space="preserve">
+    <value>{0} · geen eindtijd, stop wanneer je klaar bent.</value>
+  </data>
+  <data name="DoNotDisturbHintCalls" xml:space="preserve">
+    <value>Houd de gans even op afstand. Tijdens een gesprek gaat dit vanzelf aan.</value>
+  </data>
+  <data name="DoNotDisturbHint" xml:space="preserve">
+    <value>Houd de gans even op afstand, bijvoorbeeld tijdens een vergadering.</value>
+  </data>
+  <data name="DoNotDisturbInCallBreakWaiting" xml:space="preserve">
+    <value>Aan omdat je in gesprek bent. Je pauze wacht tot het gesprek voorbij is.</value>
+  </data>
+  <data name="DoNotDisturbInCall" xml:space="preserve">
+    <value>Aan omdat je in gesprek bent, en weer uit als het voorbij is. Je timer loopt gewoon door.</value>
+  </data>
+  <data name="DoNotDisturbOnBreakWaiting" xml:space="preserve">
+    <value>Je pauze wacht tot je dit uitzet.</value>
+  </data>
+  <data name="DoNotDisturbOn" xml:space="preserve">
+    <value>De gans blijft weg tot je dit uitzet. Je timer loopt gewoon door.</value>
+  </data>
+  <data name="SignOffWaitingInCall" xml:space="preserve">
+    <value>Niet storen staat nog aan omdat je in gesprek bent. De gans komt gedag zeggen als het gesprek voorbij is, of als je Niet storen uitzet.</value>
+  </data>
+  <data name="SignOffWaiting" xml:space="preserve">
+    <value>Niet storen staat nog aan. De gans komt gedag zeggen zodra je het uitzet.</value>
+  </data>
+  <data name="AutoStartNoteOn" xml:space="preserve">
+    <value>Als de app opstart, begint er vanzelf een focussessie (elke {0} min een pauze). Je kunt dit aanpassen bij Instellingen.</value>
+  </data>
+  <data name="AutoStartNoteOff" xml:space="preserve">
+    <value>Buiten een focussessie houdt de gans zich stil. Wil je dat er vanzelf een begint? Dat kun je aanzetten bij Instellingen.</value>
+  </data>
+  <data name="HistoryUntilNow" xml:space="preserve">
+    <value>{0:HH:mm} – nu</value>
+  </data>
+  <data name="HistoryOnBreak" xml:space="preserve">
+    <value>Met pauze</value>
+  </data>
+  <data name="HistoryAway" xml:space="preserve">
+    <value>Weg van de computer</value>
+  </data>
+  <data name="HistoryEndedEarly" xml:space="preserve">
+    <value>Eerder gestopt</value>
+  </data>
+  <data name="HistoryNapped" xml:space="preserve">
+    <value>Gedut met de gans</value>
+  </data>
+  <data name="HistoryJustStarted" xml:space="preserve">
+    <value>net begonnen</value>
+  </data>
+  <data name="HistorySoFar" xml:space="preserve">
+    <value>{0} tot nu toe</value>
+  </data>
+  <data name="HistorySummary" xml:space="preserve">
+    <value>{0} {1} · {2} in totaal</value>
+  </data>
+  <data name="EndTimeRemove" xml:space="preserve">
+    <value>Eindtijd weghalen ▴</value>
+  </data>
+  <data name="EndTimeSet" xml:space="preserve">
+    <value>Eindtijd instellen ▾</value>
+  </data>
+  <data name="EndTimeInvalid" xml:space="preserve">
+    <value>Vul de eindtijd in zoals 17:00.</value>
+  </data>
+  <data name="EndLengthInvalid" xml:space="preserve">
+    <value>Vul in hoe lang de sessie duurt, zoals 2 uur 0 min.</value>
+  </data>
+  <data name="EndLengthTooShort" xml:space="preserve">
+    <value>De sessie moet minstens een minuut duren.</value>
+  </data>
+  <data name="EndPreview" xml:space="preserve">
+    <value>De sessie stopt {0}, over {1}.</value>
+  </data>
+  <data name="FieldBreakInterval" xml:space="preserve">
+    <value>De tijd tussen pauzes</value>
+  </data>
+  <data name="FieldBreakMinutes" xml:space="preserve">
+    <value>Het aantal minuten van de pauze</value>
+  </data>
+  <data name="FieldBreakSeconds" xml:space="preserve">
+    <value>Het aantal seconden van de pauze</value>
+  </data>
+
+  <!-- Wardrobe tab -->
+  <data name="WardrobeHint" xml:space="preserve">
+    <value>De gans kiest bij elk bezoek een van deze outfits. Stuur er een langs om hem in actie te zien. Hij komt alleen even pronken, dus de timer van je focussessie loopt gewoon door.</value>
+  </data>
+  <data name="WardrobeBusy" xml:space="preserve">
+    <value>De gans is nu bezig met je focussessie. Zodra hij weg is, kun je er een langs sturen.</value>
+  </data>
+  <data name="WardrobeBusyToolTip" xml:space="preserve">
+    <value>Er staat al een gans op je scherm. Zodra die weg is, kun je er nog een sturen.</value>
+  </data>
+  <data name="WardrobeSend" xml:space="preserve">
+    <value>Stuur deze gans</value>
+  </data>
+
+  <!-- Settings tab -->
+  <data name="SettingsGeneral" xml:space="preserve">
+    <value>Algemeen</value>
+  </data>
+  <data name="SettingsLanguage" xml:space="preserve">
+    <value>Taal</value>
+  </data>
+  <data name="SettingsLanguageHint" xml:space="preserve">
+    <value>De standaardberichten van de gans veranderen mee. Berichten die je zelf hebt geschreven of aangepast, blijven zoals ze zijn.</value>
+  </data>
+  <data name="SettingsStartWithWindows" xml:space="preserve">
+    <value>Start Take a Break Goose als mijn computer opstart</value>
+  </data>
+  <data name="SettingsStartWithWindowsHint" xml:space="preserve">
+    <value>De gans start zodra je inlogt bij Windows. Je vindt hem ook onder Opstart-apps in Taakbeheer.</value>
+  </data>
+  <data name="SettingsStartAtLogin" xml:space="preserve">
+    <value>Start Take a Break Goose als ik inlog</value>
+  </data>
+  <data name="SettingsStartAtLoginHint" xml:space="preserve">
+    <value>De gans start zodra je inlogt op je Mac. Je vindt hem ook onder Inlogonderdelen in Systeeminstellingen.</value>
+  </data>
+  <data name="SettingsAutoStart" xml:space="preserve">
+    <value>Start een focussessie als de app opstart</value>
+  </data>
+  <data name="SettingsAutoStartEvery" xml:space="preserve">
+    <value>met een pauze elke</value>
+  </data>
+  <data name="SettingsAutoStartUntilStopped" xml:space="preserve">
+    <value>minuten, tot je hem stopt</value>
+  </data>
+  <data name="SettingsAutoStartHintWindows" xml:space="preserve">
+    <value>Samen met de optie hierboven houdt de gans je in de gaten vanaf het moment dat je inlogt, zonder dat je zelf een sessie hoeft te starten.</value>
+  </data>
+  <data name="SettingsAutoStartHintMac" xml:space="preserve">
+    <value>Samen met de optie hierboven houdt de gans je in de gaten vanaf het moment dat je inlogt, zonder dat je zelf een sessie hoeft te starten.</value>
+  </data>
+  <data name="SettingsCalls" xml:space="preserve">
+    <value>Zet Niet storen aan tijdens gesprekken</value>
+  </data>
+  <data name="SettingsCallsHint" xml:space="preserve">
+    <value>De gans merkt dat je in gesprek bent als je camera aanstaat, of als een vergaderapp zoals Teams, Zoom of Google Meet je microfoon gebruikt. Voicechat in games en Discord telt niet mee. Niet storen gaat weer uit als het gesprek voorbij is.</value>
+  </data>
+  <data name="SettingsShortcut" xml:space="preserve">
+    <value>Sneltoets om dit venster te openen</value>
+  </data>
+  <data name="SettingsShortcutToolTipWindows" xml:space="preserve">
+    <value>Klik hier en druk op de toetscombinatie die je wilt, bijvoorbeeld Ctrl+Alt+G</value>
+  </data>
+  <data name="SettingsShortcutToolTipMac" xml:space="preserve">
+    <value>Klik hier en druk op de toetscombinatie die je wilt, bijvoorbeeld ⌃⌥G</value>
+  </data>
+  <data name="SettingsShortcutNeedsModifierWindows" xml:space="preserve">
+    <value>De sneltoets heeft Ctrl, Alt of Win nodig, zodat hij gewoon typen niet in de weg zit.</value>
+  </data>
+  <data name="SettingsShortcutNeedsModifierMac" xml:space="preserve">
+    <value>De sneltoets heeft Control of Command nodig, zodat hij gewoon typen niet in de weg zit.</value>
+  </data>
+  <data name="SettingsBreaks" xml:space="preserve">
+    <value>Pauzes</value>
+  </data>
+  <data name="SettingsSnooze" xml:space="preserve">
+    <value>Laat me snoozen voor</value>
+  </data>
+  <data name="SettingsSnoozeHint" xml:space="preserve">
+    <value>min · zet dit uit om de snoozeknop te verbergen als het pauzetijd is</value>
+  </data>
+  <data name="SettingsAwayHint" xml:space="preserve">
+    <value>Minstens 5 minuten weg van je computer, of je hele pauze als die langer is? Dan telt dat als je pauze, en begint het aftellen naar de volgende opnieuw als je terug bent.</value>
+  </data>
+  <data name="SettingsEditMessages" xml:space="preserve">
+    <value>Berichten bewerken</value>
+  </data>
+  <data name="SettingsMessages" xml:space="preserve">
+    <value>Berichten</value>
+  </data>
+  <data name="SettingsMessagesHint" xml:space="preserve">
+    <value>De gans kiest er willekeurig een uit als het tijd is voor een pauze.</value>
+  </data>
+  <data name="MessageCountOne" xml:space="preserve">
+    <value>{0} bericht</value>
+  </data>
+  <data name="MessageCountMany" xml:space="preserve">
+    <value>{0} berichten</value>
+  </data>
+  <data name="SettingsEnjoying" xml:space="preserve">
+    <value>Blij met de gans?</value>
+  </data>
+  <data name="SettingsBuyMeACoffee" xml:space="preserve">
+    <value>Trakteer me op een koffie</value>
+  </data>
+  <data name="SettingsDownload" xml:space="preserve">
+    <value>Downloaden</value>
+  </data>
+  <data name="SettingsUpdateAvailable" xml:space="preserve">
+    <value>Versie {0} is beschikbaar.</value>
+  </data>
+  <data name="FieldAutoStartInterval" xml:space="preserve">
+    <value>De tijd tussen pauzes in de automatische sessie</value>
+  </data>
+  <data name="FieldSnoozeLength" xml:space="preserve">
+    <value>De snoozetijd</value>
+  </data>
+  <data name="ShortcutTakenWindows" xml:space="preserve">
+    <value>{0} wordt al gebruikt door een ander programma. Kies een andere sneltoets.</value>
+  </data>
+  <data name="ShortcutTakenMac" xml:space="preserve">
+    <value>{0} wordt al gebruikt door een andere app. Kies een andere sneltoets.</value>
+  </data>
+  <data name="SettingsNotSaved" xml:space="preserve">
+    <value>De instellingen zijn toegepast, maar konden niet worden opgeslagen: {0}</value>
+  </data>
+  <data name="StartAtLoginNeedsNewerMac" xml:space="preserve">
+    <value>Starten bij inloggen kan pas vanaf macOS 13.</value>
+  </data>
+  <data name="StartAtLoginNotAllowed" xml:space="preserve">
+    <value>macOS stond het niet toe.</value>
+  </data>
+
+  <!-- Messages page -->
+  <data name="MessagesResetToDefaults" xml:space="preserve">
+    <value>Standaard terugzetten</value>
+  </data>
+  <data name="MessagesHint" xml:space="preserve">
+    <value>De gans kiest er willekeurig een uit als het tijd is voor een pauze. Klik op een bericht om het te bewerken.</value>
+  </data>
+  <data name="MessagesRemove" xml:space="preserve">
+    <value>Dit bericht verwijderen</value>
+  </data>
+  <data name="MessagesAdd" xml:space="preserve">
+    <value>Toevoegen</value>
+  </data>
+  <data name="MessagesAddPlaceholder" xml:space="preserve">
+    <value>Voeg een bericht toe…</value>
+  </data>
+  <data name="MessagesResetTitle" xml:space="preserve">
+    <value>Berichten terugzetten</value>
+  </data>
+  <data name="MessagesResetHeading" xml:space="preserve">
+    <value>De berichten terugzetten?</value>
+  </data>
+  <data name="MessagesResetMessage" xml:space="preserve">
+    <value>Dit vervangt je lijst door de {0} standaardberichten van de gans. Je eigen berichten zijn weg zodra je opslaat.</value>
+  </data>
+  <data name="MessagesResetConfirm" xml:space="preserve">
+    <value>Terugzetten</value>
+  </data>
+  <data name="MessagesAtLeastOne" xml:space="preserve">
+    <value>Geef de gans minstens één bericht om te zeggen.</value>
+  </data>
+  <data name="MessagesUnsaved" xml:space="preserve">
+    <value>Je hebt de berichten aangepast, maar nog niet opgeslagen.</value>
+  </data>
+
+  <!-- Unsaved changes -->
+  <data name="UnsavedTitle" xml:space="preserve">
+    <value>Niet-opgeslagen wijzigingen</value>
+  </data>
+  <data name="UnsavedHeading" xml:space="preserve">
+    <value>Je wijzigingen opslaan?</value>
+  </data>
+  <data name="UnsavedSettings" xml:space="preserve">
+    <value>Je hebt instellingen aangepast, maar nog niet opgeslagen.</value>
+  </data>
+  <data name="UnsavedKeepEditing" xml:space="preserve">
+    <value>Verder bewerken</value>
+  </data>
+  <data name="UnsavedDiscard" xml:space="preserve">
+    <value>Niet opslaan</value>
+  </data>
+
+  <!-- Tray icon and menu bar -->
+  <data name="MenuOpen" xml:space="preserve">
+    <value>Take a Break Goose openen</value>
+  </data>
+  <data name="MenuDoNotDisturb" xml:space="preserve">
+    <value>Niet storen</value>
+  </data>
+  <data name="MenuDoNotDisturbInCall" xml:space="preserve">
+    <value>Niet storen (je bent in gesprek)</value>
+  </data>
+  <data name="MenuStopSession" xml:space="preserve">
+    <value>Focussessie stoppen</value>
+  </data>
+  <data name="MenuQuit" xml:space="preserve">
+    <value>Afsluiten</value>
+  </data>
+  <data name="NoticeAlreadyRunning" xml:space="preserve">
+    <value>Take a Break Goose draait al. Zoek de gans in het systeemvak.</value>
+  </data>
+  <data name="NoticeShortcutTakenWindows" xml:space="preserve">
+    <value>{0} wordt al gebruikt door een ander programma. Open de gans via dit pictogram om een andere sneltoets te kiezen.</value>
+  </data>
+  <data name="NoticeShortcutTakenMac" xml:space="preserve">
+    <value>{0} wordt al gebruikt door een andere app. Open de gans via de menubalk om een andere sneltoets te kiezen.</value>
+  </data>
+  <data name="NoticeSessionStarted" xml:space="preserve">
+    <value>Focussessie gestart. De gans herinnert je elke {0} min aan een pauze.</value>
+  </data>
+  <data name="NoticeGooseIsHere" xml:space="preserve">
+    <value>De gans is er. Druk op {0} om een focussessie te starten.</value>
+  </data>
+  <data name="NoticeInACall" xml:space="preserve">
+    <value>Je bent in gesprek, dus de gans blijft weg tot het voorbij is. Je kunt dit uitzetten bij Instellingen.</value>
+  </data>
+</root>

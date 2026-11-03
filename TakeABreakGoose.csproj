@@ -22,6 +22,7 @@
     <Compile Remove="Core\**;Mac\**;tests\**" />
     <None Remove="Core\**;Mac\**;tests\**" />
     <Page Remove="Core\**;Mac\**;tests\**" />
+    <EmbeddedResource Remove="Core\**;Mac\**;tests\**" />
     <InternalsVisibleTo Include="TakeABreakGoose.Windows.Tests" />
   </ItemGroup>
 

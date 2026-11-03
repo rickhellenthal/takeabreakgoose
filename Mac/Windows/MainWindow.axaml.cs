@@ -146,10 +146,17 @@ public partial class MainWindow : Window
         Close();
     }
 
+    /// <summary>Shows Settings, saved: for a window that replaces one in another language.</summary>
+    public void ShowSavedSettings()
+    {
+        SettingsTab.IsChecked = true;
+        SettingsView.ShowSaved();
+    }
+
     private void ShowUpdate(AvailableUpdate? update)
     {
         if (update == null) return;
         SettingsView.ShowUpdate(update);
-        SettingsTab.Content = "Settings •"; // a small hint that there's something new to see there
+        SettingsTab.Content = Strings.TabSettingsWithNews; // a small hint that there's something new to see there
     }
 }

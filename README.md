@@ -95,6 +95,7 @@ The **Wardrobe** tab shows the goose's outfits. It picks one at random for each 
 
 ## Settings
 
+- **Language**: English or Nederlands (Dutch). The app switches as soon as you save. The goose's own messages switch along, and messages you wrote or changed yourself stay as they are
 - **Start with Windows**, and **start a focus session automatically** when the app starts, so the goose keeps an eye on you without you having to do anything
 - **Do not disturb during calls**, on unless you turn it off
 - **Snooze length**, or turn snoozing off altogether

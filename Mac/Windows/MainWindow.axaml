@@ -1,5 +1,6 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:s="using:TakeABreakGoose"
         xmlns:local="clr-namespace:TakeABreakGoose"
         x:Class="TakeABreakGoose.MainWindow"
         Title="Take a Break Goose"
@@ -19,15 +20,15 @@
 
         <Grid Grid.Row="1" Margin="0,0,0,14">
             <StackPanel x:Name="Tabs" Orientation="Horizontal">
-                <RadioButton x:Name="SessionTab" Content="Focus session" GroupName="Tabs"
+                <RadioButton x:Name="SessionTab" Content="{x:Static s:Strings.TabFocusSession}" GroupName="Tabs"
                              Classes="TabPill" IsChecked="True" IsCheckedChanged="Tab_Checked" />
-                <RadioButton x:Name="WardrobeTab" Content="Wardrobe" GroupName="Tabs"
+                <RadioButton x:Name="WardrobeTab" Content="{x:Static s:Strings.TabWardrobe}" GroupName="Tabs"
                              Classes="TabPill" IsCheckedChanged="Tab_Checked" />
-                <RadioButton x:Name="SettingsTab" Content="Settings" GroupName="Tabs"
+                <RadioButton x:Name="SettingsTab" Content="{x:Static s:Strings.TabSettings}" GroupName="Tabs"
                              Classes="TabPill" IsCheckedChanged="Tab_Checked" />
             </StackPanel>
             <!-- Instead of the tabs while a page within Settings is open. -->
-            <Button x:Name="BackButton" Content="←  Settings" Classes="BackButton"
+            <Button x:Name="BackButton" Content="{x:Static s:Strings.BackToSettings}" Classes="BackButton"
                     HorizontalAlignment="Left" IsVisible="False" Click="Back_Click" />
         </Grid>
 

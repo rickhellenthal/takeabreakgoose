@@ -23,7 +23,9 @@ Core/
 ├── Settings/    GooseSettings (what's in settings.json) and SettingsStore (reading and writing it)
 ├── AppWindow/   IGooseHost (what the app window may ask of the app), EditableMessage
 ├── Platform/    what the core needs from the computer: IClock and IUserActivity
-├── Text/        TimeText: durations in words ("5 min", "1 min 30 sec", "about 20 minutes")
+├── Text/        every text the app shows, in English and Dutch (Strings.resx, Strings.nl.resx),
+│                Languages (which one the app speaks), and TimeText: durations in words
+│                ("5 min", "1 min 30 sec", "about 20 minutes")
 └── Updates/     UpdateChecker: asks GitHub whether a newer release is out
 ```
 
@@ -109,6 +111,38 @@ loading. For example, `BreakMinutes` (a default break length in whole minutes) b
 
 The start form remembers the last session's choices (`LastSession…`), and sessions that start
 automatically use the same break length.
+
+## Languages
+
+The app speaks English (the default) or Dutch, picked under **Language** in Settings and saved as
+`Language` in settings.json (`"en"` or `"nl"`; anything else becomes English).
+
+- **The texts** live in the core, in `Core/Text/Strings.resx` (English) and `Strings.nl.resx`
+  (Dutch, with the same names). The build turns them into the `Strings` class, with a property per
+  text, and puts the Dutch ones in a satellite assembly (`nl/TakeABreakGoose.Core.resources.dll`,
+  bundled into the single-file `.exe`). The core, both apps and the tests all use `Strings`:
+  - In code: `Strings.GooseHonk`, or `string.Format(Strings.GooseSnooze, minutes)` for a text with
+    placeholders. Clock times are placeholders too (`{0:HH:mm}`), so they stay on the 24-hour clock.
+  - In XAML, the same in WPF and Avalonia: `Text="{x:Static s:Strings.SessionStart}"`, with
+    `xmlns:s` pointing at the `TakeABreakGoose` namespace (in WPF: `assembly=TakeABreakGoose.Core`).
+  - Counts and plurals have a text for one and one for more (`WordsMinuteOne` "1 minute",
+    `WordsMinuteMany` "5 minutes"), which `TimeText` and `SessionSummary` pick from. Lists, like the
+    goose's lines and the number words, are one text with an item per line (`Languages.Lines`).
+- **Which language** the texts are in is `Languages.Current`, one setting for the whole app
+  (`Strings.Culture`). It's English from the start, also before the settings are loaded and in the
+  tests, rather than following the computer's own language. Each app calls `Languages.Use(...)`
+  with the saved language at startup, and again when it's changed in Settings.
+- **Switching** applies right away when Settings is saved: the tray or menu bar menu and the status
+  update, the next goose speaks the new language, and the app window is swapped for a new one in the
+  same place, back on Settings (`ReopenMainWindow` in each app). XAML texts are read once, when a
+  window opens, so a new window is the simple way to show them all in the new language. A goose
+  that's on screen at that moment finishes its visit in the old one.
+- **The messages** the goose picks from are the user's own list, so they aren't texts in `Strings`,
+  but the list starts as the goose's default messages (`DefaultMessages` in the resources, in the
+  same order in every language). `GooseSettings.TranslateDefaultMessages()` puts every message that
+  is still exactly one of the defaults, in any language, in the settings' language; messages the
+  user wrote or changed are left alone. It runs when the language changes and on every load (so a
+  hand-edited file catches up too). **Reset to defaults** gives the defaults in the current language.
 
 ## Updates
 

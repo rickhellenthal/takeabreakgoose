@@ -20,11 +20,10 @@ public partial class UnsavedChangesDialog : Window
     /// Closing the dialog any other way (Esc, closing the window) counts as "keep editing".
     /// Modal, but unlike WPF's ShowDialog it doesn't block: await it.
     /// </summary>
-    public static async Task<UnsavedChangesChoice> AskAsync(Window owner,
-        string message = "You changed some settings but didn't save them yet.")
+    public static async Task<UnsavedChangesChoice> AskAsync(Window owner, string? message = null)
     {
         var dialog = new UnsavedChangesDialog();
-        dialog.MessageText.Text = message;
+        dialog.MessageText.Text = message ?? Strings.UnsavedSettings;
         await dialog.ShowDialog(owner);
         return dialog._choice;
     }

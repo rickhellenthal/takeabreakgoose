@@ -37,6 +37,27 @@ public class GooseBehaviorTests
     }
 
     [Fact]
+    public void It_speaks_the_apps_language()
+    {
+        using var _ = InLanguage.Dutch();
+        var g = new GooseHarness();
+
+        g.WalkIn();
+        Assert.Equal("Even afronden", g.View.Bubble!.SecondaryButton);
+        Assert.Equal("5 min snoozen", g.View.Bubble.LinkButton);
+
+        g.Goose.PrimaryClicked();
+        Assert.Equal("Geniet van je pauze", g.View.BreakTitle);
+        Assert.StartsWith($"Ik doe een dutje tot {g.Now + BreakLength:HH:mm}.", g.View.ToolTip);
+
+        g.Goose.FigureClicked();
+        var bubble = g.View.Bubble!;
+        Assert.Equal("Hé! Ik deed een dutje…", bubble.Title);
+        Assert.Equal("Er is nog 5:00 over van je pauze.", bubble.Hint);
+        Assert.Contains(bubble.Message, Languages.Lines(Strings.GooseEndBreakEarlyLines));
+    }
+
+    [Fact]
     public void It_can_come_in_from_the_right()
     {
         var g = new GooseHarness(fromRight: true);

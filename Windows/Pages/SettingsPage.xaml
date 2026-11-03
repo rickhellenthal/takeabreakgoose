@@ -1,6 +1,7 @@
 <UserControl x:Class="TakeABreakGoose.SettingsPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:s="clr-namespace:TakeABreakGoose;assembly=TakeABreakGoose.Core">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -11,66 +12,74 @@
             <StackPanel>
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
-                        <TextBlock Text="General" Style="{StaticResource CardTitle}" Margin="0,0,0,10" />
-                        <CheckBox x:Name="StartWithWindowsCheck" Content="Start Take a Break Goose when my computer starts" />
-                        <TextBlock Style="{StaticResource Hint}" Margin="22,2,0,0"
-                                   Text="It starts as soon as you sign in to Windows. It's also listed under Startup apps in Task Manager." />
+                        <TextBlock Text="{x:Static s:Strings.SettingsGeneral}" Style="{StaticResource CardTitle}" Margin="0,0,0,10" />
+                        <!-- One chip per language, each in its own language (filled in from code). -->
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{x:Static s:Strings.SettingsLanguage}" Style="{StaticResource Label}" />
+                            <StackPanel x:Name="LanguageChoices" Orientation="Horizontal" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource Hint}" Margin="0,6,0,14"
+                                   Text="{x:Static s:Strings.SettingsLanguageHint}" />
 
-                        <CheckBox x:Name="AutoStartCheck" Content="Start a focus session when the app starts"
+                        <CheckBox x:Name="StartWithWindowsCheck" Content="{x:Static s:Strings.SettingsStartWithWindows}" />
+                        <TextBlock Style="{StaticResource Hint}" Margin="22,2,0,0"
+                                   Text="{x:Static s:Strings.SettingsStartWithWindowsHint}" />
+
+                        <CheckBox x:Name="AutoStartCheck" Content="{x:Static s:Strings.SettingsAutoStart}"
                                   Margin="0,10,0,0" />
                         <StackPanel Orientation="Horizontal" Margin="22,8,0,0"
                                     IsEnabled="{Binding IsChecked, ElementName=AutoStartCheck}">
-                            <TextBlock Text="with a break every" Style="{StaticResource Label}" Margin="0,0,8,0" />
+                            <TextBlock Text="{x:Static s:Strings.SettingsAutoStartEvery}" Style="{StaticResource Label}" Margin="0,0,8,0" />
                             <TextBox x:Name="AutoStartIntervalBox" Width="56" />
-                            <TextBlock Text="minutes, until you stop it" Style="{StaticResource Label}" Margin="8,0,0,0" />
+                            <TextBlock Text="{x:Static s:Strings.SettingsAutoStartUntilStopped}" Style="{StaticResource Label}" Margin="8,0,0,0" />
                         </StackPanel>
                         <TextBlock Style="{StaticResource Hint}" Margin="22,6,0,0"
-                                   Text="Together with the option above, the goose keeps an eye on you from the moment you sign in, without you having to start a session." />
+                                   Text="{x:Static s:Strings.SettingsAutoStartHintWindows}" />
 
-                        <CheckBox x:Name="CallDoNotDisturbCheck" Content="Turn on Do not disturb during calls"
+                        <CheckBox x:Name="CallDoNotDisturbCheck" Content="{x:Static s:Strings.SettingsCalls}"
                                   Margin="0,14,0,0" />
                         <TextBlock Style="{StaticResource Hint}" Margin="22,6,0,0"
-                                   Text="The goose notices a call when your camera is in use, or when a meeting app like Teams, Zoom or Google Meet uses your microphone. Voice chat in games and Discord doesn't count. Do not disturb turns off again when the call is over." />
+                                   Text="{x:Static s:Strings.SettingsCallsHint}" />
 
                         <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
-                            <TextBlock Text="Shortcut to open this window" Style="{StaticResource Label}" />
+                            <TextBlock Text="{x:Static s:Strings.SettingsShortcut}" Style="{StaticResource Label}" />
                             <TextBox x:Name="HotkeyBox" Width="150" IsReadOnly="True" IsReadOnlyCaretVisible="False"
                                      Cursor="Arrow" PreviewKeyDown="HotkeyBox_PreviewKeyDown"
-                                     ToolTip="Click here and press the key combination you want, e.g. Ctrl+Alt+G" />
+                                     ToolTip="{x:Static s:Strings.SettingsShortcutToolTipWindows}" />
                         </StackPanel>
                     </StackPanel>
                 </Border>
 
                 <Border Style="{StaticResource Card}">
                     <StackPanel>
-                        <TextBlock Text="Breaks" Style="{StaticResource CardTitle}" Margin="0,0,0,10" />
+                        <TextBlock Text="{x:Static s:Strings.SettingsBreaks}" Style="{StaticResource CardTitle}" Margin="0,0,0,10" />
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <CheckBox x:Name="AllowSnoozeCheck" Content="Let me snooze for"
+                            <CheckBox x:Name="AllowSnoozeCheck" Content="{x:Static s:Strings.SettingsSnooze}"
                                       VerticalAlignment="Center" Margin="0,0,12,0" />
-                            <TextBox Grid.Column="1" x:Name="SnoozeBox" Width="56"
+                            <TextBox Grid.Column="1" x:Name="SnoozeBox" Width="56" VerticalAlignment="Center"
                                      IsEnabled="{Binding IsChecked, ElementName=AllowSnoozeCheck}" />
                             <TextBlock Grid.Column="2" Style="{StaticResource Hint}" Margin="8,0,0,0"
                                        VerticalAlignment="Center"
-                                       Text="min · turn off to hide the Snooze button when it's time for a break" />
+                                       Text="{x:Static s:Strings.SettingsSnoozeHint}" />
                         </Grid>
                         <TextBlock Style="{StaticResource Hint}" Margin="0,12,0,0"
-                                   Text="Away from your computer for at least 5 minutes, or your whole break if it's longer? That counts as your break, and the countdown to the next one starts fresh when you're back." />
+                                   Text="{x:Static s:Strings.SettingsAwayHint}" />
                     </StackPanel>
                 </Border>
 
                 <Border Style="{StaticResource Card}">
                     <DockPanel>
-                        <Button DockPanel.Dock="Right" Content="Edit messages" Style="{StaticResource BaseButton}"
+                        <Button DockPanel.Dock="Right" Content="{x:Static s:Strings.SettingsEditMessages}" Style="{StaticResource BaseButton}"
                                 VerticalAlignment="Center" Margin="12,0,0,0" Click="EditMessages_Click" />
                         <StackPanel>
-                            <TextBlock Text="Messages" Style="{StaticResource CardTitle}" />
+                            <TextBlock Text="{x:Static s:Strings.SettingsMessages}" Style="{StaticResource CardTitle}" />
                             <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,0"
-                                       Text="The goose picks one of these at random when it's time for a break." />
+                                       Text="{x:Static s:Strings.SettingsMessagesHint}" />
                             <TextBlock x:Name="MessageCountText" Margin="0,6,0,0" />
                         </StackPanel>
                     </DockPanel>
@@ -80,20 +89,20 @@
                 <StackPanel HorizontalAlignment="Center" Margin="0,2,0,6">
                     <TextBlock x:Name="VersionText" Style="{StaticResource Hint}" HorizontalAlignment="Center" />
                     <TextBlock Style="{StaticResource Hint}" HorizontalAlignment="Center" Margin="0,4,0,0">
-                        <Run Text="Enjoying the goose?" />
-                        <Hyperlink Foreground="#5E7773" Click="KoFi_Click">Buy me a coffee</Hyperlink>
+                        <Run Text="{x:Static s:Strings.SettingsEnjoying}" />
+                        <Hyperlink Foreground="#5E7773" Click="KoFi_Click"><Run Text="{x:Static s:Strings.SettingsBuyMeACoffee}" /></Hyperlink>
                     </TextBlock>
                     <TextBlock x:Name="UpdateText" Visibility="Collapsed" HorizontalAlignment="Center"
                                FontSize="12" Foreground="#B85F12" Margin="0,4,0,0">
                         <Run x:Name="UpdateRun" />
-                        <Hyperlink Foreground="#B85F12" Click="DownloadUpdate_Click">Download</Hyperlink>
+                        <Hyperlink Foreground="#B85F12" Click="DownloadUpdate_Click"><Run Text="{x:Static s:Strings.SettingsDownload}" /></Hyperlink>
                     </TextBlock>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>
 
         <DockPanel Grid.Row="1" Margin="0,12,0,0" LastChildFill="False">
-            <Button DockPanel.Dock="Right" Content="Save" Style="{StaticResource PrimaryButton}" Padding="24,7"
+            <Button DockPanel.Dock="Right" Content="{x:Static s:Strings.Save}" Style="{StaticResource PrimaryButton}" Padding="24,7"
                     Click="SaveSettings_Click" />
             <TextBlock x:Name="SettingsStatus" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,12,0"
                        TextWrapping="Wrap" MaxWidth="260" />
