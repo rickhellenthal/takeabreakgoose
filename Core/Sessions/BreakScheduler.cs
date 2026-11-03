@@ -83,11 +83,14 @@ public sealed class BreakScheduler
     public TimeSpan CurrentBreakLength => Session?.BreakLength ?? TimeSpan.FromSeconds(_settings.LastSessionBreakSeconds);
 
     /// <summary>
-    /// How long being away counts as a break: the break's length, but at least a minute, so a short
-    /// eye break doesn't turn every pause into one.
+    /// How long being away counts as a break: the break's length, but at least <see cref="MinimumAway"/>,
+    /// so sitting still while reading or watching a video doesn't count as a short eye break.
     /// </summary>
     public static TimeSpan AwayCountsAsBreakAfter(TimeSpan breakLength) =>
-        breakLength > TimeSpan.FromMinutes(1) ? breakLength : TimeSpan.FromMinutes(1);
+        breakLength > MinimumAway ? breakLength : MinimumAway;
+
+    /// <summary>Not touching the mouse or keyboard for less than this is too common to be a sign of a break.</summary>
+    public static readonly TimeSpan MinimumAway = TimeSpan.FromMinutes(5);
 
     public void StartSession(int intervalMinutes, TimeSpan breakLength, DateTime? endsAt, bool automatically = false)
     {

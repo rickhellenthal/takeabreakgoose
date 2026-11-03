@@ -150,18 +150,18 @@ public class BreakSchedulerTests
     }
 
     [Fact]
-    public void With_a_short_break_being_away_only_counts_after_a_minute()
+    public void With_a_short_break_being_away_only_counts_after_five_minutes()
     {
         _h.StartSession(intervalMinutes: 20, breakLength: TimeSpan.FromSeconds(20));
         var firstBreak = _h.Scheduler.NextBreakAt;
         _h.Work(Minutes(5));
 
-        _h.BeAway(TimeSpan.FromSeconds(40)); // longer than the break, but just reading something
+        _h.BeAway(Minutes(4)); // much longer than the break, but just reading something or watching a video
         _h.ComeBack();
         Assert.Equal(firstBreak, _h.Scheduler.NextBreakAt);
         Assert.Empty(_h.Scheduler.Breaks);
 
-        _h.BeAway(Minutes(2));
+        _h.BeAway(Minutes(5));
         _h.ComeBack();
         Assert.Single(_h.Scheduler.Breaks);
         Assert.Equal(_h.Now + Minutes(20), _h.Scheduler.NextBreakAt);

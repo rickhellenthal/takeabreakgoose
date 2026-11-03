@@ -436,13 +436,15 @@ public sealed class GooseBehavior
     /// <summary>
     /// While the goose asks the user to take a break (or waits at the edge while they finish up, which
     /// they may have forgotten about): if they were away from the mouse and keyboard
-    /// for at least a break's length, they've had their break, so once they're back the goose
-    /// skips ahead to asking whether they're ready to focus. Only time since the goose asked counts;
-    /// sitting still before it showed up (reading, watching a video) isn't a break.
+    /// for at least a break's length (and <see cref="BreakScheduler.MinimumAway"/>), they've had their
+    /// break, so once they're back the goose skips ahead to asking whether they're ready to focus.
+    /// Only time since the goose asked counts; sitting still before it showed up (reading, watching a
+    /// video) isn't a break.
     /// </summary>
     private void WatchForBreakWhileAway()
     {
-        if (_breakLength is not { } length || length <= TimeSpan.Zero) return;
+        if (_breakLength is not { } breakLength || breakLength <= TimeSpan.Zero) return;
+        var length = BreakScheduler.AwayCountsAsBreakAfter(breakLength);
         var idle = _activity.IdleTime();
         var sinceAsked = _clock.Now - _askedAt;
         var awayWhileAsking = idle < sinceAsked ? idle : sinceAsked;

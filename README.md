@@ -83,7 +83,7 @@ Open the goose with **Ctrl+Alt+G**, the Start menu, or by clicking its icon in t
 3. **During your break** the goose naps on the taskbar. Need to cut the break short? Click it. It's not thrilled about being woken up, but it'll let you. Still using your computer instead? The goose half wakes up, and if you keep at it, it asks whether you're actually taking your break.
 4. **When you're back**, the goose wakes up and asks if you're ready to focus. The countdown to your next break only starts once you say so.
 
-Away from your computer for at least a break's length (and at least a minute), for example at lunch or while the goose was waiting? That counts as your break. The countdown to the next one starts fresh when you're back.
+Away from your computer for at least 5 minutes, or your whole break if it's longer, for example at lunch or while the goose was waiting? That counts as your break. The countdown to the next one starts fresh when you're back.
 
 In a meeting? The goose stays away during calls by itself: when your camera is in use, or when a meeting app like Teams, Zoom or Google Meet uses your microphone, **Do not disturb** turns on, and it turns off again when the call is over. Voice chat in games and Discord doesn't count, so the goose still comes by while you're gaming. You can turn this off in Settings, or turn Do not disturb on yourself in your session (or from the tray icon).
 

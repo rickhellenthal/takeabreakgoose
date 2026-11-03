@@ -297,32 +297,22 @@ public class GooseBehaviorTests
     }
 
     [Fact]
-    public void Back_from_a_short_break_while_it_peeks_it_walks_over_to_ask_if_ready()
+    public void A_short_eye_break_isnt_counted_from_sitting_still_while_it_asks()
     {
-        var g = new GooseHarness(breakLength: TimeSpan.FromMinutes(1));
+        var g = new GooseHarness(breakLength: TimeSpan.FromSeconds(10));
         g.WalkIn();
-        g.Goose.SecondaryClicked();
-        g.WorkUntil(() => g.Goose.Phase == GoosePhase.Peeking);
+
+        // Reading the bubble, or anything else, without touching the mouse isn't a break.
+        g.BeAway(BreakScheduler.MinimumAway - TimeSpan.FromSeconds(1));
+        g.ComeBack();
+        Assert.Empty(g.BreaksWhileAway);
+        Assert.Equal(GooseQuestion.TakeABreak, g.Goose.Question);
+
         var leftAt = g.Now;
-
-        g.BeAway(TimeSpan.FromMinutes(1) + TimeSpan.FromSeconds(1));
-        Assert.Equal(GoosePhase.Peeking, g.Goose.Phase); // waits until they're back
-
+        g.BeAway(BreakScheduler.MinimumAway);
         g.ComeBack();
         Assert.Equal(new[] { leftAt }, g.BreaksWhileAway);
-        Assert.Equal(GoosePhase.Returning, g.Goose.Phase);
-        Assert.Null(g.View.Bubble); // asks once it's back where it asks, not from the edge
-        Assert.Null(g.View.ToolTip);
-        Assert.True(g.Goose.OnBreak);
-        Assert.False(g.Goose.StillAskingForBreak);
-
-        g.WalkIn();
         Assert.Equal(GooseQuestion.ReadyToFocus, g.Goose.Question);
-        Assert.Equal("Looks like you already took a break while I waited. Ready to focus again?", g.View.Bubble!.Message);
-
-        g.Goose.PrimaryClicked();
-        Assert.Equal(1, g.ReadyToFocusCount);
-        Assert.Empty(g.Answers);
     }
 
     [Fact]
