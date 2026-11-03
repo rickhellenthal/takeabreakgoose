@@ -36,10 +36,12 @@
 
 ### On Windows
 
-1. Download **`TakeABreakGoose-Setup-x.y.z.exe`** from the [latest release](https://github.com/rickhellenthal/takeabreakgoose/releases/latest).
-2. Run it. No admin rights needed. You can choose to add a desktop shortcut and to start the goose when your computer starts.
+1. Download **`TakeABreakGoose-win-Setup.exe`** from the [latest release](https://github.com/rickhellenthal/takeabreakgoose/releases/latest).
+2. Run it. No admin rights needed: it installs the goose, puts it in the Start menu and starts it. To have the goose start with Windows, turn on **Start with Windows** in its Settings tab.
 
-Prefer not to install anything? Download **`TakeABreakGoose-x.y.z-portable.zip`** instead, unzip it anywhere and run `TakeABreakGoose.exe`.
+Prefer not to install anything? Download **`TakeABreakGoose-win-Portable.zip`** instead, unzip it anywhere and run `Take a Break Goose.exe`. It keeps itself up to date too.
+
+> **Coming from version 1.10.0 or older?** Those were installed differently. Uninstall the old goose first (*Settings → Apps → Installed apps*), then install the new one. Your settings stay, but turn **Start with Windows** on again if you had it on.
 
 > **"Windows protected your PC"?** The app isn't code-signed, so Windows SmartScreen may warn you the first time. Click **More info**, then **Run anyway**.
 
@@ -50,19 +52,21 @@ To uninstall, go to *Settings → Apps → Installed apps* and remove **Take a B
 > [!NOTE]
 > The Mac version is an extra. It's made on Windows and we can't test it on a Mac ourselves, so use it with care: bugs are more likely than on Windows. Found one? Please [open an issue](https://github.com/rickhellenthal/takeabreakgoose/issues).
 
-1. Download the file for your Mac from the [latest release](https://github.com/rickhellenthal/takeabreakgoose/releases/latest): **`…-mac-apple-silicon.dmg`** for a Mac with an Apple chip (M1 or later), **`…-mac-intel.dmg`** for an Intel Mac. Not sure? Apple menu  → **About This Mac**.
-2. Open it and drag **Take a Break Goose** onto **Applications**.
-3. Open it from Applications. The goose lives in the menu bar, not in the Dock. It needs macOS 12 or later.
+1. Download the installer for your Mac from the [latest release](https://github.com/rickhellenthal/takeabreakgoose/releases/latest): **`TakeABreakGoose-osx-arm64-Setup.pkg`** for a Mac with an Apple chip (M1 or later), **`TakeABreakGoose-osx-x64-Setup.pkg`** for an Intel Mac. Not sure? Apple menu  → **About This Mac**.
+2. Open it. The installer isn't signed by Apple, so macOS blocks it the first time: go to **System Settings → Privacy & Security**, scroll down and click **Open Anyway** (or right-click the file and choose **Open**).
+3. Go through the installer. It puts the goose in Applications and starts it. The goose lives in the menu bar, not in the Dock. It needs macOS 12 or later.
 
-**"Take a Break Goose can't be opened"?** The app isn't signed by Apple, so macOS blocks it the first time. Open **Terminal** and run this once; after that it opens like any other app:
+**Still "Take a Break Goose can't be opened"?** Open **Terminal** and run this once; after that it opens like any other app, updates included:
 
 ```bash
 xattr -dr com.apple.quarantine "/Applications/Take a Break Goose.app" && open "/Applications/Take a Break Goose.app"
 ```
 
-Or, if macOS offers it: **System Settings → Privacy & Security**, scroll down and click **Open Anyway**.
-
 To uninstall, quit the goose from its menu bar icon and drag it from Applications to the Trash.
+
+### Updating
+
+The goose keeps itself up to date. When a new version is out, it tells you once, and you can update whenever it suits you: from its tray or menu bar menu, or at the bottom of the Settings tab. It never updates in the middle of a break. After a moment it's back, and shows you what's new. Don't want it to look for new versions? Turn that off in Settings.
 
 ## How it works
 
@@ -100,6 +104,7 @@ The **Wardrobe** tab shows the goose's outfits. It picks one at random for each 
 - **Do not disturb during calls**, on unless you turn it off
 - **Snooze length**, or turn snoozing off altogether
 - **The shortcut** that opens the app, and **the messages** the goose picks from
+- **Look for new versions**: now and then the goose asks GitHub whether there's a newer version. Only its own version number goes along
 
 Your settings are saved in `%APPDATA%\TakeABreakGoose\settings.json`. At the bottom of the Settings tab you can see which version you have, and whether a newer one is available.
 

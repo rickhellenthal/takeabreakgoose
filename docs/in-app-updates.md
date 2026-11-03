@@ -1,277 +1,145 @@
 # In-app updates
 
-The plan for letting people install the goose once and update it from inside the app, on Windows and
-on macOS. On a Mac that also means no more `xattr -dr com.apple.quarantine …` for every new version.
+People install the goose once and update it from inside the app, on Windows and on macOS. On a Mac
+that also means no more `xattr -dr com.apple.quarantine …` for every new version. This document
+describes how that works, from the release workflow to the restart, and why it's done this way.
 
-**Status:** a trial (spike) with [Velopack](https://velopack.io) is ready to run: the app can
-update itself when Velopack installed it, and `.github/workflows/velopack-spike.yml` publishes test
-builds as GitHub pre-releases. Whether Velopack becomes the way the goose is released depends on
-how that goes on a real Mac. See [The spike](#the-spike) below.
+## In short
 
-## How it works today
+- The app is packed and updated with [Velopack](https://velopack.io) (MIT licensed), with the
+  GitHub releases as the source. Releases are made as before, by pushing a tag
+  ([Making a release](development.md#making-a-release)).
+- The app looks for a newer version now and then, tells the user once, and updates when the user
+  says so: never in the middle of a break. It restarts by itself and shows what's new.
+- Neither the Windows nor the Mac app is signed by Microsoft or Apple. On Windows nothing changes
+  for that (SmartScreen still warns about the installer). On a Mac the installer has to be opened
+  with **Open Anyway** once; updates aren't quarantined, so they open without asking.
+
+## Installing
 
 | | Windows | macOS |
 |---|---|---|
-| Download | `TakeABreakGoose-Setup-x.y.z.exe` (Inno Setup, ~40 MB) or `…-portable.zip` | `…-mac-apple-silicon.dmg` / `…-mac-intel.dmg` (~50 MB), ad hoc signed |
-| Installed in | `%LOCALAPPDATA%\Programs\Take a Break Goose\TakeABreakGoose.exe` (per user, no admin) | wherever the user drags it, normally `/Applications/Take a Break Goose.app` |
-| Settings | `%APPDATA%\TakeABreakGoose` | `~/Library/Application Support/TakeABreakGoose` |
-| Start at sign-in | `Run` key value `"<exe path>" --autostart` (`Autostart`) | `SMAppService.mainAppService` (`LoginItem`) |
-| Update check | `UpdateChecker`: GitHub's `releases/latest`, once per run; Settings shows "a newer version is available" with a link to the release page | same |
-| Updating | download the new installer and run it over the old one | download the new `.dmg`, drag it over the old app, run `xattr` again |
+| Installer | `TakeABreakGoose-win-Setup.exe` | `TakeABreakGoose-osx-arm64-Setup.pkg` (Apple Silicon), `TakeABreakGoose-osx-x64-Setup.pkg` (Intel) |
+| Without installing | `TakeABreakGoose-win-Portable.zip` | `TakeABreakGoose-osx-<arch>-Portable.zip` |
+| Installed in | `%LOCALAPPDATA%\TakeABreakGoose`, per user, no admin rights | `/Applications/Take a Break Goose.app` |
+| What's there | `current\TakeABreakGoose.exe` (the app, replaced as a whole on every update), `Update.exe`, and `Take a Break Goose.exe` (a small stub for the Start menu shortcut) | the app bundle, with Velopack's `UpdateMac` in `Contents/MacOS` |
+| Settings | `%APPDATA%\TakeABreakGoose`, apart from the install | `~/Library/Application Support/TakeABreakGoose` |
+| Start at sign-in | The `Run` value points into `current\`, whose path stays the same across updates | `SMAppService`; turned on again after an update if macOS lost it (see below) |
+| Uninstalling | *Settings → Apps*; removes the start with Windows entry too (`OnBeforeUninstallFastCallback` in `Program`) | Drag the app to the Trash |
 
-## The options
+Each platform has its own Velopack channel (`win`, `osx-arm64`, `osx-x64`): the file names carry
+it, so all three fit in one GitHub release, and an installed app only looks at its own.
 
-### Velopack
+## Releasing
 
-Velopack (the successor of Squirrel, MIT licensed) packs the app with its `vpk` tool into its own
-installer and update packages. The app updates itself through `UpdateManager`, with GitHub
-Releases as the source.
+`.github/workflows/release.yml` (on a `v*` tag) and `mac-build.yml` (which it calls):
 
-| | |
-|---|---|
-| **Windows** | `TakeABreakGoose-win-Setup.exe` installs per user, without admin rights, into `%LOCALAPPDATA%\TakeABreakGoose`: the app in `current\` (replaced as a whole on every update), `Update.exe`, and a small `Take a Break Goose.exe` that starts the app in `current\`, for the Start menu shortcut. |
-| **macOS** | `TakeABreakGoose-osx-<arch>-Setup.pkg` installs into `/Applications`; Velopack adds its updater (`UpdateMac`) to the bundle. When the app's folder isn't writable, the updater asks for an admin password with AppleScript. Velopack's docs assume a signed and notarized app; with ad hoc signing we're off its documented path, which is what the spike checks. |
-| **Release workflow** | `vpk download github` (the previous release, for small delta updates), `vpk pack` per platform with its own channel (`win`, `osx-arm64`, `osx-x64`), `vpk upload github` into one release. Inno Setup and the `.dmg` go. Packing for macOS has to run on a Mac (the GitHub runner already does). |
-| **Downloads** | Per platform a setup (`.exe` / `.pkg`), a portable `.zip`, the update packages (`.nupkg`) and a small `releases.<channel>.json`. The asset names carry the channel, so all three platforms fit in one release. |
-| **Start at sign-in** | Windows: the `Run` value points into `current\`, which keeps its path across updates. Mac: see below. |
-| **Size of updates** | Delta packages: a small change is a few MB instead of ~40-50 MB. |
-| **What we maintain** | The `vpk` steps in the workflow, the Velopack version, and a thin `Updater` in the app (~100 lines). Replacing the app, restarting it, rolling back a failed update and asking for admin rights are Velopack's, shared with every other app that uses it. |
+1. **Windows**: publish the app, fetch the previous release (`vpk download github`, for a small
+   delta update), `vpk pack`, then `vpk upload github` creates the release and
+   `gh release edit --notes-file` makes `release-notes/vX.Y.Z.md` its description.
+2. **Mac**, for each architecture: `App/package.sh` builds and signs the app ad hoc, `vpk pack`
+   packs it, a check makes sure the packed app is validly signed and keeps running, and
+   `vpk upload github --merge` adds it to the release.
 
-### An updater of our own
+A tag with a dash (`v1.11.0-beta.1`) becomes a pre-release (`--pre`). A normal release only
+updates to normal releases; a pre-release also to newer pre-releases (`Updater` decides from its own
+version). That's the way to try a release, updates included, before everyone gets it.
 
-The app downloads the same installer or `.app` a person would download by hand, checks its SHA-256
-(GitHub publishes one for every release asset) and swaps it in: on Windows by running the Inno
-installer silently, on a Mac with `ditto`, `codesign --verify` and a small script that replaces
-the bundle once the app has quit.
+The Mac files are added a few minutes after the release is created. A Mac that checks in between
+doesn't see an update for itself yet and finds it at its next check.
 
-| | |
-|---|---|
-| **Release workflow** | Small additions: a zipped `.app` per Mac architecture next to the `.dmg`, and a silent restart entry in the Inno script. |
-| **Install location, start at sign-in** | Unchanged on both. |
-| **Size of updates** | The full download every time. |
-| **What we maintain** | ~500-700 lines: the download and check, the Windows silent install, and the whole Mac swap (the script, the admin-password fallback, App Translocation, the login item), and keeping that working as Apple changes Gatekeeper and App Management over the years. |
+## In the app
 
-### Why Velopack
+| Piece | Where | What it does |
+|---|---|---|
+| Velopack's hooks | `Program.Main` | `VelopackApp.Build().Run()` first of all: handles install, update and uninstall events |
+| Updating | `App/Platform/Updater.cs` | Velopack's `UpdateManager` with `GithubSource`; checks, downloads, saves the release notes, restarts |
+| When to check | `UpdateSchedule` (Core) | A minute after starting, every 12 hours, and when the window opens unless it checked within the hour |
+| Turned off | `GooseSettings.CheckForUpdates` | **Look for new versions** in Settings: no checks at all when off |
+| Telling the user | `App`, `StatusIcon`, `SettingsPage` | **Update now** at the bottom of Settings, **Update to version …** in the tray / menu bar menu, and a notice once per version (`GooseSettings.UpdateNoticeShownFor`) |
+| Not now | `UpdateMoment` (Core) | No restart while a goose is on screen, during a break, while a break waits for Do not disturb, or during a call |
+| Downloading | `MainWindow.InstallUpdate` | Unsaved settings first; then a card over the window with the progress and **Cancel** (closing the window cancels too) |
+| After the restart | `WhatsNew`, `ReleaseNotes`, `ReleaseHistory` (Core), `WhatsNewWindow` | What's new, once |
+| A copy Velopack didn't install | `UpdateChecker` (Core) | A Debug build, or a version from before 1.11: only a link to the release page |
 
-The first version of this document recommended our own updater, mostly to spare existing users a
-reinstall and a move to a new folder. With hardly any users yet, that cost is close to nothing, and
-it's cheaper now than it will ever be again. What's left weighs towards Velopack:
+### What's new
 
-- **The updater is the one piece of code an update can't fix.** When it breaks, people are stuck on
-  the old version until they notice and reinstall by hand. Our own updater would only be tried by
-  us, one developer without a Mac, so its bugs would show up late. Velopack's replacing, restarting
-  and rolling back is used by many other apps.
-- **The hard part is the Mac swap**, and that's the part we can't test ourselves. With Velopack it's
-  maintained by someone else; with our own, it's ours for good.
-- **Smaller updates and a simpler app**: the app only has to ask "is there one?" and "install it".
+The first time a new version runs (`GooseSettings.LastRunVersion`), it shows what's new over its
+window. A new install shows nothing.
 
-The risk is the one thing Velopack isn't built for: an app signed ad hoc instead of with a
-Developer ID. That's what the spike is for. If it fails, our own updater is the fallback, with
-the maintenance above taken on knowingly.
+- **Which notes.** Velopack goes straight to the newest version and only brings its notes along.
+  So while the update downloads, the app also fetches GitHub's list of releases and keeps the notes
+  of every version since the installed one, newest first, at most three (`ReleaseHistory`). With
+  more than one, each block says which version it's from; with more than three, the older ones are
+  on the release page. If fetching the list fails, only the newest version's notes, from Velopack.
+- **Handing them over.** Velopack 1.2 doesn't let the new version read its own notes, so the old
+  version saves them as `whats-new.json` in the settings folder just before restarting, and the new
+  one reads and deletes it.
+- **In short** (`ReleaseNotes`): the headings stay, a bullet becomes its bold start, a bullet without
+  one stays whole, a section without bullets gets its first sentence, and the Install section is
+  left out. So every bullet in the release notes starts with a short bold phrase.
+- The release notes are in English, also for someone using the app in Dutch.
 
-## macOS: quarantine and signing
+## macOS: signing and quarantine
 
-**Quarantine.** macOS only marks a file as quarantined when the app that wrote it asks for that:
-browsers do, and so does any app with `LSFileQuarantineEnabled` in its `Info.plist`. Ours doesn't,
-and Velopack's updater downloads with its own code, so an update shouldn't be quarantined. Gatekeeper
-only checks quarantined apps, so the new version should open without a warning and without `xattr`.
+**Signing.** Apple Silicon Macs only run signed code, and an ad hoc signature counts. `package.sh`
+signs every file and the bundle ad hoc. Velopack then adds `UpdateMac` and a version file, which
+would break the bundle's signature, and without a signing identity it doesn't sign at all. So
+`vpk pack` gets `--signAppIdentity "-"` (ad hoc) with `--signDisableDeep`: it only signs what it
+added and the bundle around it. Velopack always signs with the hardened runtime, so the app gets
+`App/TakeABreakGoose.entitlements`, which lets .NET generate code and load the app's own ad hoc
+signed libraries.
 
-The first install is different: the downloaded `.pkg` is quarantined and unsigned, so macOS blocks
-it the first time (*System Settings → Privacy & Security → Open Anyway*, or right-click → **Open**).
-The app that the installer puts in `/Applications` normally doesn't carry the quarantine mark, so
-`xattr` may not be needed even for the first install. That needs checking on a real Mac.
+**Quarantine.** macOS only marks a file as quarantined when the app that wrote it asks for that
+(browsers do; an app with `LSFileQuarantineEnabled` does). The goose doesn't, so the updates it
+downloads aren't quarantined, and Gatekeeper, which only checks quarantined apps, lets them open.
+The first download is different: the `.pkg` from the browser is quarantined and unsigned, so it
+needs **Open Anyway** once. The app the installer puts in `/Applications` normally isn't
+quarantined, so the `xattr` command shouldn't be needed any more; the README keeps it as a way out.
 
-**Ad hoc signing.** Apple Silicon Macs only need *a* valid signature to run code; an ad hoc one
-counts. Velopack adds `UpdateMac` and a version file to the bundle after `package.sh` signed it,
-which would break the bundle's signature, and without a signing identity Velopack doesn't sign at
-all. So the spike passes `--signAppIdentity "-"` (ad hoc) with `--signDisableDeep`: Velopack only
-signs what it added and the bundle around it. Velopack always signs with the hardened runtime, so
-the app gets `App/TakeABreakGoose.entitlements`, which lets .NET generate code and load the app's
-own ad hoc signed libraries.
+**Start at login.** `SMAppService` knows login items by bundle and signature, and an ad hoc
+signature changes with every build. In case macOS drops the login item after an update, the old
+version notes it was on (`GooseSettings.RestoreStartAtLogin`) and the new one turns it on again.
 
-**Where it can still go wrong:**
+**Writing to `/Applications`.** When the app's folder isn't writable (a standard, non-admin
+account), Velopack asks for an admin password with AppleScript.
 
-- **App Management** (macOS 13 and later) stops apps from changing other apps' bundles. An app
-  replacing its own bundle should be fine, but an ad hoc signed app has no developer ID for macOS to
-  match on. If macOS blocks it, it asks to allow it under *Privacy & Security → App Management*.
-- **The login item.** `SMAppService` keeps login items by bundle ID and signature, and an ad hoc
-  signature changes with every build. After an update macOS might show "Login item added" again, or
-  report it as not registered. If so, the app can register it again after an update when it was on.
-- **Standard (non-admin) accounts** can't write to `/Applications`; Velopack then asks for an admin
-  password.
+## Why Velopack
 
-None of the app's other features need a permission tied to the signature (the shortcut uses
-Carbon's `RegisterEventHotKey`, the call check reads device state), so there's nothing else for an
-update to reset.
+Before this, the app only showed a link to the new release, and on a Mac every update meant the
+`xattr` command again. Two ways to update from inside the app were compared:
 
-## The spike
+- **An updater of our own**: download the same installer or app a person would, check it, and swap
+  it in. That keeps the old installers and install folders, but the hard part, replacing the app on
+  a Mac, would be ours to write, test without a Mac, and keep working as Apple changes things.
+- **Velopack**: replacing, restarting, rolling back a failed update and asking for admin rights are
+  done by a library many other apps use, and updates are small deltas. The cost was a new install
+  folder on Windows (a one-time reinstall) and a release workflow built around `vpk`.
 
-### What's in it
+With hardly any users yet, the one-time reinstall cost next to nothing, and the updater is the one
+piece of code an update can't fix, so Velopack won. The risk was that Velopack's Mac support is built
+for apps signed with a Developer ID; a trial with an ad hoc signed app (1.11.0-spike.1 and .2)
+showed it works: a valid signature, no quarantine, and the app runs, updates included on Windows.
 
-- `App/Platform/Updater.cs`: Velopack's `UpdateManager` with GitHub as the source. Only when
-  Velopack installed the app; otherwise (a build folder, the Inno install, the old portable `.exe`)
-  the app falls back to `UpdateChecker` and its link to the release page. A test build (a version
-  like `1.11.0-spike.3`) also looks for newer pre-releases; a normal release only for releases.
-- `Program.Main` starts with `VelopackApp.Build().Run()`, which handles Velopack's install, update
-  and uninstall events.
-- Settings: when an update is found, the link says **Update now**. It refuses while a goose is on
-  screen, during a break, while a break waits for Do not disturb, or during a call (`UpdateMoment`,
-  tested in `UpdateMomentTests`), and says to try again after the break. Unsaved settings are dealt
-  with first, as when closing the window.
-- While it downloads, a card covers the app window (so nothing else can be clicked or typed in)
-  with the progress and a **Cancel** button. Closing the window cancels too. Once downloaded, the
-  card says the goose restarts in a moment, and it can't be cancelled any more.
-- After the restart, the new version shows **what's new** once, over its window: each heading of
-  its release notes with the bold start of each point (`ReleaseNotes`, tested in
-  `ReleaseNotesTests`), and a link to the release page.
-  - **Skipped versions too.** Velopack goes straight to the newest version and only brings its
-    notes along. So while the update downloads, the app also fetches GitHub's list of releases and
-    keeps the notes of every version since the installed one, newest first, at most three
-    (`ReleaseHistory`, tested in `ReleaseHistoryTests`). With more than one, each block says which
-    version it's from; with more than three, it says the older ones are on the release page. A
-    release's description on GitHub is its release notes, so these have to stay in sync. If
-    fetching the list fails, it shows only the newest version's notes, from Velopack
-    (`vpk pack --releaseNotes`).
-  - Velopack 1.2 doesn't let the new version read its own notes, so the old version saves them as
-    `whats-new.json` in the settings folder just before restarting, and the new one reads and
-    deletes it. Whether to show it is decided by
-  `GooseSettings.LastRunVersion` (`WhatsNew`, tested in `WhatsNewTests`): a new install shows
-  nothing, an update or a first run after an older version does.
-- `.github/workflows/velopack-spike.yml`: on every push to the `spike/velopack` branch, packs the app
-  as `1.11.0-spike.<run number>` for Windows, Apple Silicon and Intel, and publishes it as one
-  GitHub **pre-release**. Its release notes are the test build's number and the commit's message,
-  followed by `release-notes/spike.md`, so each version's notes differ. The Mac jobs also check the packed app (signature, quarantine, the `.pkg`,
-  whether it starts and keeps running) and put the answers on the run's summary page.
+## Moving over from 1.10.0 and older
 
-Pre-releases don't reach normal users: `UpdateChecker` asks for `releases/latest`, which skips
-them, and the release page shows them marked as pre-release.
+Those were installed with Inno Setup into `%LOCALAPPDATA%\Programs\Take a Break Goose`, or dragged
+from a `.dmg` on a Mac.
 
-What's not in the spike yet: checking regularly instead of each time the window opens, the menu
-item and notice, and keeping the focus session across the restart. Those are in
-[The experience](#the-experience) below and come with the real thing. The release notes are in
-English only, also for someone using the app in Dutch; that's fine.
-
-### Results so far
-
-`1.11.0-spike.1` (Apple Silicon, on the GitHub runner):
-
-- `codesign --verify --strict --deep`: valid, including Velopack's `UpdateMac`. Signed ad hoc with
-  the hardened runtime (`flags=adhoc,runtime`, no team ID) and the three entitlements.
-- No quarantine attributes in the bundle. `spctl` rejects it, as expected without notarization.
-- The `.pkg` is unsigned and installs into `/Applications`.
-- The app starts and is still running after 20 seconds.
-- Sizes: `.pkg` 44.6 MB, portable `.zip` 45.0 MB, update package 46.2 MB (the 1.10.0 `.dmg` was
-  49.6 MB). Windows `Setup.exe` is 50.1 MB, against 40.2 MB for the Inno installer.
-
-Still to see on a real Mac: the first install from a browser download, the in-app update, and
-the login item.
-
-### Running it
-
-1. Push this branch as `spike/velopack`. The workflow publishes `1.11.0-spike.N`.
-2. Read the Mac jobs' summary pages: `codesign --verify` should pass and the app should be running
-   after 20 seconds. If not, the problem shows up here, before anyone installs anything.
-3. Install that version (Windows: `TakeABreakGoose-win-Setup.exe`; Mac: the `.pkg` for the Mac's
-   chip).
-4. Push again (any small change) to publish `1.11.0-spike.N+1`.
-5. In the installed goose: **Settings**, then **Update now** at the bottom. The test build checks
-   each time its window opens, so close and reopen it from the tray or menu bar if it was open
-   before the new version came out.
-
-The progress card and saving the release notes belong to the version that's running, showing
-what's new to the version it updates to. So all of it shows from `spike.3` on: install `spike.3`,
-then update to `spike.4`. Updating from `spike.1` or `spike.2` to `spike.3` shows no card, and
-what's new only with the link to the release page.
-
-On Windows the test build runs next to the Inno-installed goose's settings: both use
-`%APPDATA%\TakeABreakGoose`, and only one runs at a time. Quit the normal goose first.
-
-### For the friend with the MacBook
-
-After installing `1.11.0-spike.N`:
-
-1. **Install:** did macOS block the `.pkg`? How did you get past it (Open Anyway, right-click →
-   Open)? Did the goose start after the installer finished?
-2. In Terminal: `xattr -l "/Applications/Take a Break Goose.app"`. Is there a
-   `com.apple.quarantine` line? (None would mean no Terminal command at all, ever.)
-3. Turn on **Start at login** in Settings and save.
-
-After the second version is out:
-
-4. **Settings → Update now.** Does the goose quit and come back by itself as `1.11.0-spike.N+1`
-   (shown at the bottom of Settings)? Any warning or prompt from macOS, such as App Management or
-   a password?
-5. `codesign --verify --strict "/Applications/Take a Break Goose.app"`: no output means valid.
-6. `xattr -l "/Applications/Take a Break Goose.app"` again: still no quarantine?
-7. Is **Start at login** still on in Settings and in *System Settings → General → Login Items*? Log
-   out and in: does the goose start? Did a "Login item added" notice appear?
-8. Optional: try **Update now** with the network off. The goose should say it didn't work and carry
-   on as before.
-
-## The experience
-
-For the real version, after the spike:
-
-**When to check.** At start-up (after a minute, so it doesn't compete with starting the session) and
-then every 12 hours while the app runs. Today's check runs once per run, which misses updates on
-computers that are never restarted. Offline or anything unexpected still means no news, quietly.
-
-**Telling the user.** No popups. The **Update now** link in Settings (as in the spike), an item in
-the tray / menu bar menu (*"Update to 1.11.0"*), and once per new version a notice like the one at
-sign-in: *"There's a new goose in town! Version 1.11.0 is ready. Update from the menu whenever it
-suits you."* Optionally, later, a setting to install updates by itself at a quiet moment.
-
-**Never at a bad moment.** `UpdateMoment` decides, as in the spike. Rather than refusing, the real
-version can wait: *"I'll update as soon as your break is done."*
-
-**Keeping the session.** Just before restarting, the app writes a small `resume.json` next to the
-settings with the running session (interval, break length, start, end, next break, the breaks so
-far). The new version, started with `--updated`, picks it up if it's less than ten minutes old and
-deletes it, then says *"Updated to 1.11.0. Your focus session is still running."*, or without a
-session *"Updated to 1.11.0. Honk!"*. The `BreakScheduler` gets a way to resume a session, with tests.
-
-**When it fails.** Velopack leaves the old version in place. The app says so quietly and offers the
-release page as the way out.
-
-**Texts.** In `Strings.resx` and `Strings.nl.resx`, friendly and short, the Dutch with an informal
-"je". `LanguageTests` checks they're all there.
-
-## Moving over from Inno Setup and the `.dmg`
-
-With hardly any users, a one-time manual step is acceptable:
-
-- **Windows.** The Velopack version installs next to the Inno one, in a different folder. The
-  release notes ask to uninstall the old one (*Settings → Apps*) first. The settings are kept: they
-  live in `%APPDATA%`, apart from both installs. Uninstalling the Inno version removes the start
-  with Windows entry; turning it on again in the goose's Settings fixes that. (The app could also
-  detect the Inno install and offer to remove it, but that isn't worth it for a handful of people.)
-- **Mac.** The `.pkg` installs over the dragged app at the same place; nothing else to do.
+- **Windows**: uninstall the old goose first, then install the new one. The settings stay (they're
+  in `%APPDATA%`, apart from both). Uninstalling the old one removes its start with Windows entry,
+  so that has to be turned on again in Settings. The README and the first release's notes say so.
+- **Mac**: the `.pkg` installs over the dragged app, at the same place.
 - **Older versions** keep showing "a newer version is available" with the link, so they find the
   new release by themselves.
 
-## Release workflow changes (if the spike works out)
+## Still to check on a real Mac
 
-- `release.yml`: replace the Inno Setup and zip steps with `vpk download github`, `vpk pack` and
-  `vpk upload github`, as in `velopack-spike.yml`, without `--pre`. Keep `release-notes/vX.Y.Z.md`
-  as the release's description (`vpk pack --releaseNotes`, or `gh release edit` afterwards).
-- `mac-build.yml`: after `package.sh`, `vpk pack` and `vpk upload github --merge`. `package.sh` can
-  stop making the `.dmg`.
-- Remove `installer/TakeABreakGoose.iss`, the portable `.exe` zip, and the `AppMutex` remarks in
-  `SingleInstance`.
-- README install sections: the new file names, and on the Mac the `.pkg` with "Open Anyway"
-  instead of dragging and `xattr`.
-- `development.md`: the new release steps.
-
-## Work estimate
-
-| Part | Estimate |
-|---|---|
-| The spike (done): Velopack in the app, Update now, the spike workflow | 0.5 day |
-| Running it, reading the results, a round of fixes | 0.5 day, plus waiting for the Mac test |
-| Regular checks, menu item, notices, texts in English and Dutch | 0.5 day |
-| Keeping the session across the restart (`BreakScheduler`, `resume.json`, tests) | 0.5 day |
-| The real release workflow, README and `docs/` | 0.5 day |
-| A second round on a real Mac | spread out |
-
-About **2-3 days** in all if the spike works, against 4-5 days for our own updater, which would
-also keep needing attention afterwards.
+- The first install from a browser download: the **Open Anyway** step, and whether the installed
+  app is free of the quarantine mark (`xattr -l "/Applications/Take a Break Goose.app"`).
+- **Update now**: the goose quits and comes back as the new version, with no warning, no App
+  Management prompt (macOS 13+ guards apps against being changed by others), and a valid signature
+  (`codesign --verify --strict`).
+- Start at login: still on after an update, in Settings and in *System Settings → General → Login
+  Items*, and after logging out and in. Did a "Login item added" notice appear?
+- From a standard (non-admin) account: the password prompt.
