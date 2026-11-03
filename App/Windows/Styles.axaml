@@ -78,13 +78,10 @@
             </ControlTemplate>
         </Setter>
     </Style>
-    <!-- The same warm tint as the choice chips; a slightly deeper orange for PrimaryButton (below). -->
+    <!-- The same warm tint as the choice chips; a slightly deeper orange for PrimaryButton (further down). -->
     <Style Selector="Button.BaseButton:pointerover, Button.ChipButton:pointerover">
         <Setter Property="Background" Value="#F7F2EA" />
         <Setter Property="BorderBrush" Value="#C9BFAF" />
-    </Style>
-    <Style Selector="Button.PrimaryButton:pointerover">
-        <Setter Property="Background" Value="#E57E1E" />
     </Style>
     <Style Selector="Button.BaseButton:disabled /template/ Border#Chrome, Button.PrimaryButton:disabled /template/ Border#Chrome, Button.ChipButton:disabled /template/ Border#Chrome">
         <Setter Property="Opacity" Value="0.4" />
@@ -95,6 +92,10 @@
         <Setter Property="BorderBrush" Value="{StaticResource AccentEdge}" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <!-- After the style above: of two styles that set the same property, the later one wins. -->
+    <Style Selector="Button.PrimaryButton:pointerover">
+        <Setter Property="Background" Value="#E57E1E" />
     </Style>
 
     <Style Selector="Button.ChipButton">
