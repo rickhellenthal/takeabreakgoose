@@ -1,3 +1,5 @@
+using System;
+
 namespace TakeABreakGoose;
 
 /// <summary>What the app window needs from the app.</summary>
@@ -28,6 +30,18 @@ public interface IGooseHost
 
     /// <summary>Do not disturb is on because of a call, and goes off again when the call is over.</summary>
     bool DoNotDisturbForCall { get; }
+
+    /// <summary>A newer version the app found, if any (see UpdateSchedule for when it looks).</summary>
+    AvailableUpdate? AvailableUpdate { get; }
+
+    /// <summary>The app found a newer version: <see cref="AvailableUpdate"/>.</summary>
+    event Action? UpdateFound;
+
+    /// <summary>Looks for a newer version now, unless that was done not long ago.</summary>
+    void CheckForUpdateSoon();
+
+    /// <summary>Just before the app restarts for an update: saves what the new version needs.</summary>
+    void PrepareForUpdate();
 
     /// <summary>Applies and saves new settings; returns an error message, or null on success.</summary>
     /// <param name="startAtLogin">Start the app when the user signs in to the computer.</param>

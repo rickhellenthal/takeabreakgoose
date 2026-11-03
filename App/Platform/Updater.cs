@@ -57,7 +57,8 @@ public static class Updater
     /// Only returns when that didn't work; throws OperationCanceledException when cancelled.
     /// </summary>
     /// <param name="progress">How far the download is, 0 to 100. Called from a background thread.</param>
-    public static async Task DownloadAndRestartAsync(Action<int> progress, CancellationToken cancel)
+    /// <param name="beforeRestart">Once downloaded, just before the app quits.</param>
+    public static async Task DownloadAndRestartAsync(Action<int> progress, Action beforeRestart, CancellationToken cancel)
     {
         if (Manager is not { } manager || _update is not { } update)
             throw new InvalidOperationException("There's no update to install.");
@@ -66,6 +67,7 @@ public static class Updater
         await manager.DownloadUpdatesAsync(update, progress, cancel);
         SaveReleaseNotes(await notes);
         cancel.ThrowIfCancellationRequested();
+        beforeRestart();
         manager.ApplyUpdatesAndRestart(update, new[] { UpdatedArgument });
     }
 

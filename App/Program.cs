@@ -11,8 +11,14 @@ internal static class Program
     public static void Main(string[] args)
     {
         // First of all: when Velopack's installer or updater starts the app to let it know about an
-        // install, update or uninstall, this handles that and quits.
-        VelopackApp.Build().Run();
+        // install, update or uninstall, this handles that and quits. Uninstalling on Windows also
+        // removes the entry that starts the goose with Windows, which would point to nothing after.
+        VelopackApp.Build()
+            .OnBeforeUninstallFastCallback(_ =>
+            {
+                if (OperatingSystem.IsWindows()) Autostart.SetEnabled(false);
+            })
+            .Run();
 
         // Before Avalonia starts, which can't quit again before its main loop runs.
         using var singleInstance = new SingleInstance(App.SettingsFolder());

@@ -22,6 +22,10 @@ public partial class App : Application, IGooseHost
     private DispatcherTimer? _callCheck;
     private SettingsStore _settingsStore = null!;
     private bool _whatsNewPending;
+    private DispatcherTimer? _updateCheck;
+    private DateTime _startedAt;
+    private DateTime? _lastUpdateCheck;
+    private bool _checkingForUpdate;
 
     public GooseSettings Settings { get; private set; } = new();
     public BreakScheduler Scheduler { get; private set; } = null!;
@@ -55,6 +59,7 @@ public partial class App : Application, IGooseHost
             _whatsNewPending = WhatsNew.ShouldShow(Settings.LastRunVersion, version, hadSettings);
             Settings.LastRunVersion = version;
         }
+        if (Settings.RestoreStartAtLogin) RestoreStartAtLogin();
         TrySave(); // writes back settings carried over from older versions, and the version
 
         Scheduler = new BreakScheduler(Settings, SystemClock.Instance, UserActivity.Instance);
@@ -83,6 +88,14 @@ public partial class App : Application, IGooseHost
         _callCheck.Start();
         _goose.CallStarted += ExplainCallsOnce;
 
+        _startedAt = DateTime.Now;
+        _updateCheck = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
+        _updateCheck.Tick += (_, _) =>
+        {
+            if (UpdateSchedule.IsDue(DateTime.Now, _startedAt, _lastUpdateCheck)) CheckForUpdate();
+        };
+        _updateCheck.Start();
+
         _hotkey = new HotkeyManager();
         _hotkey.Pressed += ShowMainWindow;
         bool hotkeyOk = _hotkey.Register(Settings.HotkeyModifiers, Settings.HotkeyKey);
@@ -91,6 +104,7 @@ public partial class App : Application, IGooseHost
         {
             _callCheck.Stop();
             _schedulerTick.Stop();
+            _updateCheck.Stop();
             Calls.Stop();
             _hotkey.Dispose();
             statusIcon.Dispose();
@@ -142,6 +156,21 @@ public partial class App : Application, IGooseHost
     }
 
     public void StopSession() => _goose.StopSession();
+
+    public AvailableUpdate? AvailableUpdate { get; private set; }
+
+    public event Action? UpdateFound;
+
+    public void CheckForUpdateSoon()
+    {
+        if (UpdateSchedule.IsDueOnOpen(DateTime.Now, _lastUpdateCheck)) CheckForUpdate();
+    }
+
+    public void PrepareForUpdate()
+    {
+        Settings.RestoreStartAtLogin = OperatingSystem.IsMacOS() && StartAtLogin.IsEnabled;
+        TrySave();
+    }
 
     public void SummonBreakGoose() => _goose.SummonBreakGoose();
 
@@ -196,6 +225,37 @@ public partial class App : Application, IGooseHost
     }
 
     // ---- Helpers ----
+
+    /// <summary>
+    /// Asks GitHub for a newer version: with Velopack when it installed the app, otherwise only to
+    /// link to the release page. Quietly finds nothing when offline.
+    /// </summary>
+    private async void CheckForUpdate()
+    {
+        if (_checkingForUpdate) return;
+        _checkingForUpdate = true;
+        _lastUpdateCheck = DateTime.Now;
+        var update = Updater.CanUpdate ? await Updater.CheckAsync() : await UpdateChecker.CheckAsync();
+        _checkingForUpdate = false;
+        if (update == null || update == AvailableUpdate) return;
+        AvailableUpdate = update;
+        UpdateFound?.Invoke();
+    }
+
+    /// <summary>After an update on a Mac: start at login again if macOS forgot it was on.</summary>
+    private void RestoreStartAtLogin()
+    {
+        Settings.RestoreStartAtLogin = false;
+        if (!OperatingSystem.IsMacOS() || !StartAtLogin.IsAvailable || StartAtLogin.IsEnabled) return;
+        try
+        {
+            StartAtLogin.SetEnabled(true);
+        }
+        catch (Exception)
+        {
+            // Then it's off, as the Settings tab will show; the user can turn it on again there.
+        }
+    }
 
     private void ShowMainWindow()
     {

@@ -57,6 +57,13 @@ public sealed class GooseSettings
     /// </summary>
     public string? LastRunVersion { get; set; }
 
+    /// <summary>
+    /// Start at login was on just before updating. On a Mac, the new version turns it on again if
+    /// macOS lost it: an ad hoc signed app looks like another app to macOS after an update.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool RestoreStartAtLogin { get; set; }
+
     // The last session the user started, used to pre-fill the start form.
     public int LastSessionIntervalMinutes { get; set; } = 45;
 

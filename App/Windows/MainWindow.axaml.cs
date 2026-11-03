@@ -41,7 +41,14 @@ public partial class MainWindow : Window
         SettingsView.EditMessagesRequested += OpenMessages;
         SettingsView.UpdateRequested += InstallUpdate;
         MessagesView.Saved += SettingsView.ShowMessageCount;
-        Loaded += async (_, _) => ShowUpdate(Updater.CanUpdate ? await Updater.CheckAsync() : await UpdateChecker.CheckAsync());
+        // What the app already found, and a fresh look unless it just looked.
+        Loaded += (_, _) =>
+        {
+            ShowUpdate();
+            host.CheckForUpdateSoon();
+        };
+        host.UpdateFound += ShowUpdate;
+        Closed += (_, _) => host.UpdateFound -= ShowUpdate;
 
         _host.Scheduler.StateChanged += RefreshStatus;
         Closed += (_, _) => _host.Scheduler.StateChanged -= RefreshStatus;
@@ -158,9 +165,9 @@ public partial class MainWindow : Window
         SettingsView.ShowSaved();
     }
 
-    private void ShowUpdate(AvailableUpdate? update)
+    private void ShowUpdate()
     {
-        if (update == null) return;
+        if (_host.AvailableUpdate is not { } update) return;
         SettingsView.ShowUpdate(update);
         SettingsTab.Content = Strings.TabSettingsWithNews; // a small hint that there's something new to see there
     }
@@ -186,7 +193,7 @@ public partial class MainWindow : Window
         try
         {
             await Updater.DownloadAndRestartAsync(
-                percent => Dispatcher.UIThread.Post(() => ShowUpdateProgress(percent)), download.Token);
+                percent => Dispatcher.UIThread.Post(() => ShowUpdateProgress(percent)), _host.PrepareForUpdate, download.Token);
         }
         catch (OperationCanceledException)
         {
