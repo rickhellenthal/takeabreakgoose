@@ -150,6 +150,10 @@ Running apps find the new release by themselves and offer to update (see [In-app
 **To try a release first**, tag it with a dash: `v1.11.0-beta.1` becomes a pre-release. Normal
 releases never update to a pre-release, but a pre-release updates to newer pre-releases and
 releases, so installing one is a way to test the whole update on a real computer.
+Pre-releases of the same version are ordered by the word after the dash, alphabetically, then by
+number: `1.11.0-alpha.2` < `1.11.0-beta.1` < `1.11.0-rc.1` < `1.11.0`. So keep to one word per
+version, or pick a later one: a `beta` after a `spike` counts as older, and Velopack refuses to
+pack it.
 
 Pushing to any other branch than `main` also runs the Mac build, so a branch's Mac installers can
 be downloaded from the run's Artifacts.
