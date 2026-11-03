@@ -176,10 +176,19 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Downloads the update with the window covered by a progress card, then the app restarts as the
-    /// new version. Not while the goose is busy; unsaved settings are dealt with first.
+    /// new version. Not while the goose is busy; unsaved settings are dealt with first. An app that
+    /// can't update itself opens the release page instead.
     /// </summary>
-    private async void InstallUpdate()
+    public async void InstallUpdate()
     {
+        if (_host.AvailableUpdate is not { } update || _updateDownload != null) return;
+        if (!Updater.CanUpdate)
+        {
+            UpdateChecker.OpenInBrowser(update.Url);
+            return;
+        }
+        // From the menu: show where the answer will be.
+        SettingsTab.IsChecked = true;
         // Restarting the app takes the goose off the screen and forgets the break.
         if (!UpdateMoment.IsGood(_host.Scheduler, _host.GooseOnScreen, _host.DoNotDisturbForCall))
         {

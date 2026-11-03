@@ -76,6 +76,11 @@ public partial class App : Application, IGooseHost
         statusIcon.StopSessionRequested += _goose.StopSession;
         statusIcon.DoNotDisturbToggled += () => _goose.SetDoNotDisturb(!Scheduler.DoNotDisturb);
         statusIcon.QuitRequested += () => desktop.Shutdown();
+        statusIcon.UpdateRequested += () =>
+        {
+            ShowMainWindow();
+            _mainWindow?.InstallUpdate();
+        };
 
         if (Settings.AutoStartSession)
             Scheduler.StartSession(Settings.AutoStartIntervalMinutes, TimeSpan.FromSeconds(Settings.LastSessionBreakSeconds),
@@ -92,7 +97,7 @@ public partial class App : Application, IGooseHost
         _updateCheck = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
         _updateCheck.Tick += (_, _) =>
         {
-            if (UpdateSchedule.IsDue(DateTime.Now, _startedAt, _lastUpdateCheck)) CheckForUpdate();
+            if (Settings.CheckForUpdates && UpdateSchedule.IsDue(DateTime.Now, _startedAt, _lastUpdateCheck)) CheckForUpdate();
         };
         _updateCheck.Start();
 
@@ -163,7 +168,7 @@ public partial class App : Application, IGooseHost
 
     public void CheckForUpdateSoon()
     {
-        if (UpdateSchedule.IsDueOnOpen(DateTime.Now, _lastUpdateCheck)) CheckForUpdate();
+        if (Settings.CheckForUpdates && UpdateSchedule.IsDueOnOpen(DateTime.Now, _lastUpdateCheck)) CheckForUpdate();
     }
 
     public void PrepareForUpdate()
@@ -198,12 +203,14 @@ public partial class App : Application, IGooseHost
         bool languageChanged = newSettings.Language != Settings.Language;
         if (languageChanged) newSettings.TranslateDefaultMessages();
         bool autoStartTurnedOn = newSettings.AutoStartSession && !Settings.AutoStartSession;
+        bool updateChecksTurnedOn = newSettings.CheckForUpdates && !Settings.CheckForUpdates;
         Settings = newSettings;
         Scheduler.ApplySettings(Settings);
         // Turning it on shouldn't mean waiting for the next restart to see it work.
         if (autoStartTurnedOn && Scheduler.Session == null)
             Scheduler.StartSession(Settings.AutoStartIntervalMinutes, TimeSpan.FromSeconds(Settings.LastSessionBreakSeconds),
                 endsAt: null, automatically: true);
+        if (updateChecksTurnedOn) CheckForUpdateSoon();
         if (languageChanged)
         {
             Languages.Use(Settings.Language);
@@ -240,6 +247,12 @@ public partial class App : Application, IGooseHost
         if (update == null || update == AvailableUpdate) return;
         AvailableUpdate = update;
         UpdateFound?.Invoke();
+        UpdateStatusIcon();
+        // Once per new version, a word from the tray or menu bar, for a goose whose window is closed.
+        if (Settings.UpdateNoticeShownFor == update.DisplayName) return;
+        Settings.UpdateNoticeShownFor = update.DisplayName;
+        TrySave();
+        _statusIcon?.ShowNotice(string.Format(Strings.NoticeUpdateAvailable, update.DisplayName));
     }
 
     /// <summary>After an update on a Mac: start at login again if macOS forgot it was on.</summary>
@@ -327,5 +340,6 @@ public partial class App : Application, IGooseHost
 
     private void UpdateStatusIcon() =>
         _statusIcon?.Update(Scheduler.Describe(_goose.DoNotDisturbForCall), Scheduler.DoNotDisturb,
-            _goose.DoNotDisturbForCall, Scheduler.Session != null, Settings.HotkeyModifiers, Settings.HotkeyKey);
+            _goose.DoNotDisturbForCall, Scheduler.Session != null, Settings.HotkeyModifiers, Settings.HotkeyKey,
+            AvailableUpdate is { } update ? string.Format(Strings.MenuUpdate, update.DisplayName) : null);
 }

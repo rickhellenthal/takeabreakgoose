@@ -733,6 +733,20 @@ twelve</value>
   <data name="WhatsNewOk" xml:space="preserve">
     <value>Nice!</value>
   </data>
+  <data name="MenuUpdate" xml:space="preserve">
+    <value>Update to version {0}</value>
+    <comment>{0} is the new version, like 1.12.0.</comment>
+  </data>
+  <data name="NoticeUpdateAvailable" xml:space="preserve">
+    <value>There's a new goose in town! Version {0} is ready. Update from the menu whenever it suits you.</value>
+    <comment>{0} is the new version, like 1.12.0.</comment>
+  </data>
+  <data name="SettingsCheckForUpdates" xml:space="preserve">
+    <value>Look for new versions</value>
+  </data>
+  <data name="SettingsCheckForUpdatesHint" xml:space="preserve">
+    <value>Now and then the goose asks GitHub whether there's a newer version. Only its own version number goes along.</value>
+  </data>
   <data name="FieldAutoStartInterval" xml:space="preserve">
     <value>The automatic session interval</value>
     <comment>Fills in {0} of "{0} must be a whole number between …".</comment>

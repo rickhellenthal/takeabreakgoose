@@ -705,6 +705,18 @@ twaalf</value>
   <data name="WhatsNewOk" xml:space="preserve">
     <value>Leuk!</value>
   </data>
+  <data name="MenuUpdate" xml:space="preserve">
+    <value>Bijwerken naar versie {0}</value>
+  </data>
+  <data name="NoticeUpdateAvailable" xml:space="preserve">
+    <value>Er is een nieuwe gans in de stad! Versie {0} staat klaar. Werk bij via het menu wanneer het jou uitkomt.</value>
+  </data>
+  <data name="SettingsCheckForUpdates" xml:space="preserve">
+    <value>Zoeken naar nieuwe versies</value>
+  </data>
+  <data name="SettingsCheckForUpdatesHint" xml:space="preserve">
+    <value>Af en toe vraagt de gans aan GitHub of er een nieuwere versie is. Alleen zijn eigen versienummer gaat mee.</value>
+  </data>
   <data name="FieldAutoStartInterval" xml:space="preserve">
     <value>De tijd tussen pauzes in de automatische sessie</value>
   </data>

@@ -24,7 +24,7 @@ internal sealed unsafe partial class WindowsTrayIcon : IDisposable
     private const uint MF_STRING = 0x0000, MF_CHECKED = 0x0008, MF_SEPARATOR = 0x0800;
     private const uint TPM_BOTTOMALIGN = 0x0020, TPM_NONOTIFY = 0x0080, TPM_RETURNCMD = 0x0100, TPM_RIGHTBUTTON = 0x0002;
 
-    private enum Command { Open = 1, BreakNow, DoNotDisturb, StopSession, Quit }
+    private enum Command { Open = 1, BreakNow, DoNotDisturb, StopSession, Update, Quit }
 
     private readonly HiddenWindow _window = new();
     private readonly IntPtr _icon;
@@ -36,12 +36,14 @@ internal sealed unsafe partial class WindowsTrayIcon : IDisposable
     private bool _inCall;
     private bool _sessionRunning;
     private string _hotkeyText = "";
+    private string? _updateText;
 
     public event Action? OpenRequested;
     public event Action? SummonRequested;
     public event Action? StopSessionRequested;
     public event Action? DoNotDisturbToggled;
     public event Action? QuitRequested;
+    public event Action? UpdateRequested;
 
     public WindowsTrayIcon()
     {
@@ -52,12 +54,14 @@ internal sealed unsafe partial class WindowsTrayIcon : IDisposable
 
     /// <param name="inCall">Do not disturb is on because the user is in a call.</param>
     /// <param name="hotkeyText">The global shortcut, shown next to Open.</param>
-    public void Update(string status, bool doNotDisturb, bool inCall, bool sessionRunning, string hotkeyText)
+    /// <param name="updateText">The menu item for a newer version, or null when there's none.</param>
+    public void Update(string status, bool doNotDisturb, bool inCall, bool sessionRunning, string hotkeyText, string? updateText)
     {
         _doNotDisturb = doNotDisturb;
         _inCall = inCall;
         _sessionRunning = sessionRunning;
         _hotkeyText = hotkeyText;
+        _updateText = updateText;
         // The menu is made each time it opens, from these; the tooltip changes right away.
         string toolTip = $"Take a Break Goose\n{status}";
         if (toolTip == _toolTip) return;
@@ -122,6 +126,7 @@ internal sealed unsafe partial class WindowsTrayIcon : IDisposable
                     _inCall ? Strings.MenuDoNotDisturbInCall : Strings.MenuDoNotDisturb);
             if (_sessionRunning) AppendMenuW(menu, MF_STRING, (nuint)Command.StopSession, Strings.MenuStopSession);
             AppendMenuW(menu, MF_SEPARATOR, 0, null);
+            if (_updateText != null) AppendMenuW(menu, MF_STRING, (nuint)Command.Update, _updateText);
             AppendMenuW(menu, MF_STRING, (nuint)Command.Quit, Strings.MenuQuit);
             // Open is what a click on the icon does: bold, like in other tray menus.
             SetMenuDefaultItem(menu, (uint)Command.Open, 0);
@@ -138,6 +143,7 @@ internal sealed unsafe partial class WindowsTrayIcon : IDisposable
                 case Command.BreakNow: SummonRequested?.Invoke(); break;
                 case Command.DoNotDisturb: DoNotDisturbToggled?.Invoke(); break;
                 case Command.StopSession: StopSessionRequested?.Invoke(); break;
+                case Command.Update: UpdateRequested?.Invoke(); break;
                 case Command.Quit: QuitRequested?.Invoke(); break;
             }
         }
