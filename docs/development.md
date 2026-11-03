@@ -31,7 +31,6 @@ Useful while trying things out:
 |---|---|
 | `-- --summon` | The break goose walks in right away, without a session |
 | `-- --autostart` | Starts as it does when the computer starts: in the tray, without opening the window |
-| `TAKEABREAKGOOSE_BREAK_SECONDS=20` | In Debug builds only: the goose naps for 20 seconds instead of the break's length |
 | A break length of a few seconds | Set under **Other…** on the Focus session tab, to try breaks quickly |
 
 The app uses your real settings file (`%APPDATA%\TakeABreakGoose\settings.json`). Back it up before

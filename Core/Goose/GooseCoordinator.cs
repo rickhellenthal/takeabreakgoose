@@ -118,16 +118,6 @@ public sealed class GooseCoordinator
             Outfit: GooseOutfit.PartyHat));
     }
 
-    private TimeSpan BreakLength()
-    {
-#if DEBUG
-        // For testing breaks without waiting minutes: set TAKEABREAKGOOSE_BREAK_SECONDS (debug builds only).
-        if (int.TryParse(Environment.GetEnvironmentVariable("TAKEABREAKGOOSE_BREAK_SECONDS"), out int seconds))
-            return TimeSpan.FromSeconds(seconds);
-#endif
-        return _scheduler.CurrentBreakLength;
-    }
-
     private void Summon(GooseVisit visit)
     {
         if (_goose != null)
@@ -140,7 +130,7 @@ public sealed class GooseCoordinator
 
         bool naps = visit.StartsBreak && _scheduler.CurrentBreakLength > TimeSpan.Zero;
         _currentVisit = visit;
-        _goose = _newGoose(visit, _settings().SnoozeMinutes, naps ? BreakLength() : null);
+        _goose = _newGoose(visit, _settings().SnoozeMinutes, naps ? _scheduler.CurrentBreakLength : null);
         if (!visit.JustVisiting)
         {
             _goose.Answered += outcome =>
