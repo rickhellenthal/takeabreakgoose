@@ -12,8 +12,7 @@ namespace TakeABreakGoose;
 /// second copy (macOS brings the running one forward instead, see App), but running it with
 /// `open -n` or from Terminal does: that copy asks the first one to open its window, and quits.
 /// On Windows the same goes for starting it again from the Start menu. There it also holds the
-/// mutex the installer looks for (AppMutex in TakeABreakGoose.iss), to ask the user to close the
-/// goose before updating it.
+/// mutex that versions from before the lock file used, so those don't run next to this one.
 /// </summary>
 public sealed class SingleInstance : IDisposable
 {

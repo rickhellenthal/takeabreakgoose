@@ -1,11 +1,11 @@
 #!/bin/bash
-# Builds the macOS app into a .dmg: publishes it, puts it in a "Take a Break Goose.app" bundle,
-# signs it ad hoc (Apple Silicon Macs won't run unsigned code at all) and wraps it in a disk image
-# with a link to Applications. Runs on a Mac, since it needs codesign and hdiutil.
+# Builds the macOS app: publishes it, puts it in a "Take a Break Goose.app" bundle and signs it ad
+# hoc (Apple Silicon Macs won't run unsigned code at all). Runs on a Mac, since it needs codesign.
+# Velopack then packs the bundle into the installer and the update (see .github/workflows/mac-build.yml).
 #
 # Usage: App/package.sh <arm64|x64> [version]
 #   arm64 is for Apple Silicon Macs, x64 for Intel Macs. The version defaults to the one in
-#   Directory.Build.props. The .dmg ends up in dist/.
+#   Directory.Build.props. The app ends up in dist/mac-<arch>/.
 set -euo pipefail
 
 # On GitHub Actions, a failure also shows the command and its last output as an annotation on the
@@ -19,8 +19,7 @@ fi
 
 arch="${1:-}"
 case "$arch" in
-    arm64) label="apple-silicon" ;;
-    x64) label="intel" ;;
+    arm64 | x64) ;;
     *) echo "Usage: $0 <arm64|x64> [version]" >&2; exit 1 ;;
 esac
 
@@ -28,7 +27,6 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 version="${2:-$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' "$root/Directory.Build.props")}"
 work="$root/dist/mac-$arch"
 app="$work/Take a Break Goose.app"
-dmg="$root/dist/TakeABreakGoose-$version-mac-$label.dmg"
 
 rm -rf "$work"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
@@ -50,10 +48,4 @@ find "$app/Contents/MacOS" -type f ! -name "TakeABreakGoose" -exec codesign --fo
 codesign --force --sign - "$app"
 codesign --verify --strict "$app"
 
-staging="$work/dmg"
-mkdir -p "$staging"
-cp -R "$app" "$staging/"
-ln -s /Applications "$staging/Applications"
-hdiutil create -volname "Take a Break Goose" -srcfolder "$staging" -ov -format UDZO "$dmg"
-
-echo "Built $dmg"
+echo "Built $app"
