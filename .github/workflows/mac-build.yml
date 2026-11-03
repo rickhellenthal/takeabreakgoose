@@ -1,7 +1,7 @@
 # Builds the macOS app and packs it with Velopack, for Apple Silicon and for Intel Macs: an installer
-# (.pkg), a portable .zip and the update package.
-# - The release workflow calls it with the release's tag, and the files are added to that release.
-# - On every push to a branch other than main it builds them to try out, under the run's Artifacts.
+# (.pkg), a portable .zip and the update package, under the run's Artifacts (mac-arm64, mac-x64).
+# - The release workflow calls it with the release's tag; it then publishes them with the rest.
+# - On every push to a branch other than main it builds them to try out.
 #   (GitHub only offers "Run workflow" by hand for workflows that are on main; once it is, that
 #   works too: Actions → Mac build → Run workflow.)
 name: Mac build
@@ -106,11 +106,3 @@ jobs:
           name: mac-${{ matrix.arch }}
           path: Releases/*
 
-      - name: Add it to the GitHub release
-        if: inputs.release-tag != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: >
-          vpk upload github --repoUrl $REPO_URL --token $GH_TOKEN --channel osx-${{ matrix.arch }} -o Releases
-          ${{ steps.version.outputs.pre }} --publish --merge --tag "$TAG"
-          --releaseName "Take a Break Goose ${{ steps.version.outputs.version }}"

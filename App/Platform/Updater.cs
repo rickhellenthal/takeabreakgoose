@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using Velopack;
 using Velopack.Sources;
 
@@ -53,22 +55,32 @@ public static class Updater
     }
 
     /// <summary>
-    /// Downloads the update found by <see cref="CheckAsync"/>, then quits and starts the new version.
-    /// Only returns when that didn't work; throws OperationCanceledException when cancelled.
+    /// Downloads the update found by <see cref="CheckAsync"/>, then quits, and Velopack starts the new
+    /// version. Returns true when the app is quitting for it, false when <paramref name="canRestart"/>
+    /// said not now (the download is kept, so trying again is quick). Throws
+    /// OperationCanceledException when cancelled during the download, and anything else that went wrong.
     /// </summary>
     /// <param name="progress">How far the download is, 0 to 100. Called from a background thread.</param>
-    /// <param name="beforeRestart">Once downloaded, just before the app quits.</param>
-    public static async Task DownloadAndRestartAsync(Action<int> progress, Action beforeRestart, CancellationToken cancel)
+    /// <param name="canRestart">Asked again once downloaded: the goose may have become busy meanwhile.</param>
+    /// <param name="beforeRestart">Just before the app quits.</param>
+    public static async Task<bool> DownloadAndRestartAsync(Action<int> progress, Func<bool> canRestart, Action beforeRestart,
+        CancellationToken cancel)
     {
         if (Manager is not { } manager || _update is not { } update)
             throw new InvalidOperationException("There's no update to install.");
         // Meanwhile: the release notes of every version since this one, for the new one to show.
         var notes = NotesSinceAsync(manager.CurrentVersion?.ToString(), update.TargetFullRelease, cancel);
         await manager.DownloadUpdatesAsync(update, progress, cancel);
-        SaveReleaseNotes(await notes);
-        cancel.ThrowIfCancellationRequested();
+        // Downloaded: from here on it goes ahead, as the progress card says. Cancelling now only
+        // cuts the release notes short.
+        var releaseNotes = await notes;
+        if (!canRestart()) return false;
+        SaveReleaseNotes(releaseNotes);
         beforeRestart();
-        manager.ApplyUpdatesAndRestart(update, new[] { UpdatedArgument });
+        // Velopack swaps the app once this one has quit, properly: tray icon and shortcut tidied up.
+        manager.WaitExitThenApplyUpdates(update, silent: false, restart: true, new[] { UpdatedArgument });
+        (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Shutdown();
+        return true;
     }
 
     /// <summary>
@@ -112,7 +124,10 @@ public static class Updater
         }
     }
 
-    /// <summary>The release notes the previous version saved just before updating to this one, once.</summary>
+    /// <summary>
+    /// The release notes the previous version saved just before updating to this one, once. Only
+    /// when they're for this version: notes left from an update that didn't go ahead don't count.
+    /// </summary>
     public static UpdateNotes? TakeReleaseNotes()
     {
         try
@@ -120,7 +135,8 @@ public static class Updater
             if (!File.Exists(ReleaseNotesFile)) return null;
             string json = File.ReadAllText(ReleaseNotesFile);
             File.Delete(ReleaseNotesFile);
-            return JsonSerializer.Deserialize<UpdateNotes>(json);
+            var notes = JsonSerializer.Deserialize<UpdateNotes>(json);
+            return notes?.Versions.Count > 0 && notes.Versions[0].Version == CurrentVersionName ? notes : null;
         }
         catch (Exception)
         {

@@ -136,12 +136,14 @@ Pushing a `v*` tag runs `.github/workflows/release.yml`:
    that installs per user into `%LOCALAPPDATA%\TakeABreakGoose` without admin rights, a portable
    `.zip`, and the update package, with a small delta update from the previous release when there
    is one.
-4. Creates the GitHub release, with `release-notes/vX.Y.Z.md` as its description. The app reads the
-   descriptions too, for the versions it skips when updating, so they have to stay the notes.
-5. Then calls `.github/workflows/mac-build.yml`, which runs the core tests on macOS, builds the ad
-   hoc signed app for Apple Silicon and for Intel Macs with `App/package.sh`, packs each with
-   Velopack (a `.pkg`, a portable `.zip` and the update), checks that the packed app is validly
-   signed and keeps running, and adds them to the release.
+4. Calls `.github/workflows/mac-build.yml`, which runs the core tests on macOS, builds the ad hoc
+   signed app for Apple Silicon and for Intel Macs with `App/package.sh`, packs each with Velopack
+   (a `.pkg`, a portable `.zip` and the update), and checks that the packed app is validly signed
+   and keeps running.
+5. Once all of that worked, creates the GitHub release with everything in it, and
+   `release-notes/vX.Y.Z.md` as its description. The app reads the descriptions too, for the
+   versions it skips when updating, so they have to stay the notes. When a build fails, nothing is
+   published.
 
 Running apps find the new release by themselves and offer to update (see [In-app updates](in-app-updates.md)).
 

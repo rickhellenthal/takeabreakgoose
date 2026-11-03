@@ -73,4 +73,15 @@ public class UpdateMomentTests
         Assert.True(_h.Scheduler.BreakWaiting);
         Assert.False(IsGood());
     }
+
+    [Fact]
+    public void Not_while_the_goodbye_waits_for_Do_not_disturb_to_end()
+    {
+        _h.StartSession(intervalMinutes: 60, endsAfter: Minutes(30));
+        _h.Scheduler.SetDoNotDisturb(true);
+        _h.Work(Minutes(30));
+
+        Assert.NotNull(_h.Scheduler.SignOffWaiting);
+        Assert.False(IsGood());
+    }
 }

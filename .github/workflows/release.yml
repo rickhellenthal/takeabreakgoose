@@ -1,6 +1,6 @@
-# Packs the app with Velopack for Windows and publishes it as a GitHub release; then adds the macOS
-# app to it, for Apple Silicon and for Intel Macs (mac-build.yml). Installed apps update themselves
-# from these releases (App/Platform/Updater.cs; see docs/in-app-updates.md).
+# Packs the app with Velopack for Windows, and for Apple Silicon and Intel Macs (mac-build.yml), and
+# only once all three are packed, publishes them together as a GitHub release. Installed apps update
+# themselves from these releases (App/Platform/Updater.cs; see docs/in-app-updates.md).
 # Runs when a version tag is pushed, e.g.:  git tag v1.11.0 && git push origin v1.11.0
 # A tag with a dash (v1.11.0-beta.1) becomes a pre-release: only pre-releases update to those, so
 # it's a way to try a release before everyone gets it.
@@ -92,18 +92,57 @@ jobs:
           -i Assets/goose.ico --shortcuts StartMenuRoot -r win-x64 --channel win -o Releases
           --releaseNotes notes.md
 
-      - name: Create the GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          vpk upload github --repoUrl $REPO_URL --token $GH_TOKEN --channel win -o Releases \
-            ${{ steps.version.outputs.pre }} --publish --tag "$TAG" --targetCommitish "$GITHUB_SHA" \
-            --releaseName "Take a Break Goose ${{ steps.version.outputs.version }}"
-          gh release edit "$TAG" --repo "${{ github.repository }}" --notes-file notes.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win
+          path: Releases/*
 
-  # After the release exists: packs the macOS app and adds it to the release (see mac-build.yml).
+  # The Mac app, packed for both kinds of Mac (see mac-build.yml).
   mac:
     needs: release
     uses: ./.github/workflows/mac-build.yml
     with:
       release-tag: ${{ github.ref_name }}
+
+  # Everything at once, so the release never goes out without the Mac files, and not at all when a
+  # build failed.
+  publish:
+    needs: [release, mac]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Work out the version from the tag
+        id: version
+        run: |
+          version="${TAG#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$version" == *-* ]]; then echo "pre=--pre" >> "$GITHUB_OUTPUT"; else echo "pre=" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "{win,mac-arm64,mac-x64}"
+          merge-multiple: true
+          path: Releases
+
+      - name: Install Velopack
+        run: dotnet tool install -g vpk --version $VPK_VERSION
+
+      # The first upload creates the release; the others add their files to it.
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for channel in win osx-arm64 osx-x64; do
+            merge=$([[ $channel == win ]] || echo --merge)
+            vpk upload github --repoUrl $REPO_URL --token $GH_TOKEN --channel $channel -o Releases \
+              ${{ steps.version.outputs.pre }} --publish $merge --tag "$TAG" --targetCommitish "$GITHUB_SHA" \
+              --releaseName "Take a Break Goose ${{ steps.version.outputs.version }}"
+          done
+          gh release edit "$TAG" --repo "${{ github.repository }}" --notes-file notes.md

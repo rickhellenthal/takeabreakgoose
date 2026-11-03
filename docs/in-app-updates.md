@@ -35,18 +35,19 @@ it, so all three fit in one GitHub release, and an installed app only looks at i
 `.github/workflows/release.yml` (on a `v*` tag) and `mac-build.yml` (which it calls):
 
 1. **Windows**: publish the app, fetch the previous release (`vpk download github`, for a small
-   delta update), `vpk pack`, then `vpk upload github` creates the release and
-   `gh release edit --notes-file` makes `release-notes/vX.Y.Z.md` its description.
+   delta update) and `vpk pack`.
 2. **Mac**, for each architecture: `App/package.sh` builds and signs the app ad hoc, `vpk pack`
-   packs it, a check makes sure the packed app is validly signed and keeps running, and
-   `vpk upload github --merge` adds it to the release.
+   packs it, and a check makes sure the packed app is validly signed and keeps running.
+3. **Publishing**, once all three are packed: `vpk upload github` creates the release with the
+   Windows files and adds the Mac ones (`--merge`), and `gh release edit --notes-file` makes
+   `release-notes/vX.Y.Z.md` its description. When a build fails, nothing is published.
 
 A tag with a dash (`v1.11.0-beta.1`) becomes a pre-release (`--pre`). A normal release only
 updates to normal releases; a pre-release also to newer pre-releases (`Updater` decides from its own
 version). That's the way to try a release, updates included, before everyone gets it.
 
-The Mac files are added a few minutes after the release is created. A Mac that checks in between
-doesn't see an update for itself yet and finds it at its next check.
+A Mac whose files aren't in a release yet (in the seconds between the uploads) doesn't see an
+update for itself and finds it at its next check.
 
 ## In the app
 

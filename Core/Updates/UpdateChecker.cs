@@ -19,8 +19,6 @@ public static class UpdateChecker
     private const string LatestReleaseApi =
         "https://api.github.com/repos/rickhellenthal/takeabreakgoose/releases/latest";
 
-    private static Task<AvailableUpdate?>? _check;
-
     // The app's version, not this library's: the app is what gets released.
     public static Version CurrentVersion { get; } =
         (Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly()).GetName().Version ?? new Version(0, 0, 0);
@@ -28,8 +26,8 @@ public static class UpdateChecker
     /// <summary>"1.3.0" rather than "1.3.0.0".</summary>
     public static string Display(Version version) => version.ToString(3);
 
-    /// <summary>The newer release, if there is one. Only asks GitHub once per run of the app.</summary>
-    public static Task<AvailableUpdate?> CheckAsync() => _check ??= FetchAsync();
+    /// <summary>The newer release, if there is one. The app decides how often to ask (UpdateSchedule).</summary>
+    public static Task<AvailableUpdate?> CheckAsync() => FetchAsync();
 
     // Shell-executing a URL opens the default browser on Windows, and runs `open` on macOS.
     public static void OpenInBrowser(string url) =>

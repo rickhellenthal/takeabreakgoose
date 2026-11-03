@@ -201,8 +201,13 @@ public partial class MainWindow : Window
         ShowUpdateOverlay(true);
         try
         {
-            await Updater.DownloadAndRestartAsync(
-                percent => Dispatcher.UIThread.Post(() => ShowUpdateProgress(percent)), _host.PrepareForUpdate, download.Token);
+            bool restarting = await Updater.DownloadAndRestartAsync(
+                percent => Dispatcher.UIThread.Post(() => ShowUpdateProgress(percent)),
+                // A break or a call may have started while it downloaded.
+                () => UpdateMoment.IsGood(_host.Scheduler, _host.GooseOnScreen, _host.DoNotDisturbForCall),
+                _host.PrepareForUpdate, download.Token);
+            if (restarting) return;
+            SettingsView.ShowUpdateStatus(Strings.SettingsUpdateNotNow, error: false);
         }
         catch (OperationCanceledException)
         {
