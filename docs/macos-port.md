@@ -1,7 +1,7 @@
 # Porting the goose to macOS
 
-The plan for bringing Take a Break Goose to macOS, worked on in a branch of its own so `main`
-(the Windows app) stays releasable. Each step is reviewed before the next one starts.
+How Take a Break Goose came to macOS, step by step. The port was built in a branch of its own,
+so `main` (the Windows app) stayed releasable, and merged into `main` for release 1.8.0.
 
 The macOS app is built with [Avalonia](https://avaloniaui.net/): its XAML is close to WPF's, the
 goose's vector paths carry over, and Linux could follow later from the same code. It is shared
