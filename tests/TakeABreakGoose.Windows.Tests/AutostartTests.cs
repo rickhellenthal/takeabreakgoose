@@ -12,7 +12,8 @@ public sealed class AutostartTests : IDisposable
     private const string ScratchRoot = @"Software\TakeABreakGoose.Tests";
     private const string RunKey = @"Software\Microsoft\Windows\CurrentVersion\Run";
     private const string StartupApprovedKey = @"Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run";
-    private const string ValueName = "TakeABreakGoose";
+    // "TakeABreakGoose", or "TakeABreakGoose.Debug" when the tests run on a Debug build.
+    private static string ValueName => Autostart.ValueName;
     private const string ExePath = @"C:\Apps\TakeABreakGoose.exe";
 
     private readonly string _scratchPath = $@"{ScratchRoot}\{Guid.NewGuid():N}";

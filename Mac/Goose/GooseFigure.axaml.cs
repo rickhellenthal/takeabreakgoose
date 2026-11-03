@@ -213,7 +213,7 @@ public partial class GooseFigure : UserControl
         if (!show) return;
 
         // Over the head, on the side the goose faces.
-        Huh.Margin = new Thickness(Facing > 0 ? 86 : Width - 86 - 9, 18, 0, 0);
+        Huh.Margin = new Thickness(Facing > 0 ? 86 : Width - 86 - 9, 28, 0, 0);
         _huhOpacity.Animate(new Tween { From = 0, To = 1, Duration = TimeSpan.FromMilliseconds(400) });
         _huhBob.Animate(new Tween
         {
@@ -242,7 +242,7 @@ public partial class GooseFigure : UserControl
         {
             var z = letters[i];
             Canvas.SetLeft(z, startX);
-            Canvas.SetTop(z, 44);
+            Canvas.SetTop(z, 54);
             var begin = TimeSpan.FromSeconds(i * 0.9);
             var duration = TimeSpan.FromSeconds(2.7);
             var (opacity, x, y) = _snoreLetters[i];

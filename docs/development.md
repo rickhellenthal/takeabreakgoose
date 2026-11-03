@@ -15,15 +15,17 @@ From the repository root:
 dotnet run
 ```
 
-That's the Windows app. The Mac app also runs on Windows (without its macOS-only parts), which is
-handy for working on its windows and pages:
+That's the WPF Windows app. The Avalonia app (`Mac/`) is on its way to replacing it on Windows too
+(see [One app](avalonia-on-windows.md)), and runs on both:
 
 ```bash
 dotnet run --project Mac/TakeABreakGoose.Mac.csproj
 ```
 
-**Quit the installed goose first** (tray icon → **Quit**). Only one copy runs at a time, so a second
-one just says the goose is already running.
+For the WPF app, **quit the installed goose first** (tray icon → **Quit**). Only one copy runs at a
+time, so a second one just says the goose is already running. A Debug build of the Avalonia app on
+Windows keeps apart from the installed goose instead: its own settings
+(`%APPDATA%\TakeABreakGoose.Debug`), its own lock, and its own Start with Windows entry.
 
 Useful while trying things out:
 
@@ -33,8 +35,8 @@ Useful while trying things out:
 | `-- --autostart` | Starts as it does when the computer starts: in the tray, without opening the window |
 | A break length of a few seconds | Set under **Other…** on the Focus session tab, to try breaks quickly |
 
-The app uses your real settings file (`%APPDATA%\TakeABreakGoose\settings.json`). Back it up before
-testing something that changes settings, and put it back afterwards.
+The WPF app uses your real settings file (`%APPDATA%\TakeABreakGoose\settings.json`). Back it up
+before testing something that changes settings, and put it back afterwards.
 
 To try a release build of the Windows app, without installing it:
 
@@ -60,9 +62,9 @@ dotnet test tests/TakeABreakGoose.Windows.Tests
     `BeAway(...)` and `ComeBack()` move time forward and call `Tick()` along the way.
   - `GooseBehaviorTests` has a `GooseHarness` with a fake view, which runs a visit frame by frame
     (`WalkIn()`, `WorkUntil(...)`), records what the goose shows and answers, and clicks its buttons.
-- **`TakeABreakGoose.Windows.Tests`** (`net8.0-windows`) covers the Windows-only parts: starting
-  with Windows (on a scratch registry key, not the real one) and which programs count as meeting
-  apps.
+- **`TakeABreakGoose.Windows.Tests`** (`net8.0-windows`) covers the Avalonia app's Windows-only
+  parts: starting with Windows (on a scratch registry key, not the real one), which programs count
+  as meeting apps, and the shortcut's keys.
 
 What happens on screen (the windows, the goose's walk, the tray, calls) isn't covered by tests:
 try it in the app.
@@ -112,7 +114,7 @@ Every text the app shows is in `Core/Text/Strings.resx` (English) and `Core/Text
 Pushing a `v*` tag runs `.github/workflows/release.yml`:
 
 1. Runs both test projects.
-2. Publishes the Windows app as one self-contained `.exe`, so users don't need .NET installed.
+2. Publishes the Avalonia app for Windows as one self-contained `.exe`, so users don't need .NET installed.
 3. Builds the installer with Inno Setup (`installer/TakeABreakGoose.iss`): a per-user install into
    `%LOCALAPPDATA%\Programs`, with no admin rights needed, and a Start menu shortcut. It optionally
    adds a desktop shortcut and starts the goose with Windows.

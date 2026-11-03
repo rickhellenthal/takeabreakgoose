@@ -12,12 +12,31 @@ public sealed partial class UserActivity : IUserActivity
     private const int CombinedSessionState = 0;
     private const uint AnyInputEvent = ~0u;
 
-    public TimeSpan IdleTime() =>
-        // Elsewhere (trying the app out on Windows) the user counts as always there.
-        OperatingSystem.IsMacOS()
-            ? TimeSpan.FromSeconds(CGEventSourceSecondsSinceLastEventType(CombinedSessionState, AnyInputEvent))
-            : TimeSpan.Zero;
+    public TimeSpan IdleTime()
+    {
+        if (OperatingSystem.IsMacOS())
+            return TimeSpan.FromSeconds(CGEventSourceSecondsSinceLastEventType(CombinedSessionState, AnyInputEvent));
+        if (OperatingSystem.IsWindows())
+        {
+            var info = new LastInputInfo { Size = (uint)Marshal.SizeOf<LastInputInfo>() };
+            if (!GetLastInputInfo(ref info)) return TimeSpan.Zero;
+            return TimeSpan.FromMilliseconds(unchecked((uint)Environment.TickCount - info.Time));
+        }
+        // Elsewhere the user counts as always there.
+        return TimeSpan.Zero;
+    }
 
     [LibraryImport("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics")]
     private static partial double CGEventSourceSecondsSinceLastEventType(int sourceState, uint eventType);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct LastInputInfo
+    {
+        public uint Size;
+        public uint Time;
+    }
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetLastInputInfo(ref LastInputInfo info);
 }

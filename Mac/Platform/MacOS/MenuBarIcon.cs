@@ -6,8 +6,8 @@ using Avalonia.Platform;
 
 namespace TakeABreakGoose;
 
-/// <summary>The goose in the menu bar and its menu, like the tray icon in the Windows app.</summary>
-public sealed class MenuBarIcon : IDisposable
+/// <summary>The goose in the menu bar and its menu.</summary>
+internal sealed class MenuBarIcon : IDisposable
 {
     private readonly TrayIcon _icon;
     private readonly NativeMenuItem _openItem;

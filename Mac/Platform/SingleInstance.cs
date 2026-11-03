@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Pipes;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 
@@ -10,12 +11,16 @@ namespace TakeABreakGoose;
 /// Keeps to one goose at a time. Opening the .app again from Finder or Launchpad doesn't start a
 /// second copy (macOS brings the running one forward instead, see App), but running it with
 /// `open -n` or from Terminal does: that copy asks the first one to open its window, and quits.
+/// On Windows the same goes for starting it again from the Start menu. There it also holds the
+/// mutex the installer looks for (AppMutex in TakeABreakGoose.iss), to ask the user to close the
+/// goose before updating it.
 /// </summary>
 public sealed class SingleInstance : IDisposable
 {
-    private const string PipeName = "TakeABreakGoose";
+    private static string PipeName => AppIdentity.Name;
 
     private readonly FileStream? _lock;
+    private readonly Mutex? _mutex;
     private bool _disposed;
 
     /// <summary>A second copy asked this one to open its window.</summary>
@@ -34,6 +39,18 @@ public sealed class SingleInstance : IDisposable
         catch (IOException)
         {
             _lock = null;
+        }
+        if (_lock != null && OperatingSystem.IsWindows())
+        {
+            _mutex = new Mutex(true, $@"Local\{AppIdentity.Name}", out bool createdNew);
+            if (!createdNew)
+            {
+                // An older goose (before the lock file) is running.
+                _mutex.Dispose();
+                _mutex = null;
+                _lock.Dispose();
+                _lock = null;
+            }
         }
         if (IsFirst) Task.Run(ListenAsync);
     }
@@ -76,6 +93,11 @@ public sealed class SingleInstance : IDisposable
     public void Dispose()
     {
         _disposed = true;
+        if (_mutex != null)
+        {
+            _mutex.ReleaseMutex();
+            _mutex.Dispose();
+        }
         _lock?.Dispose();
     }
 }

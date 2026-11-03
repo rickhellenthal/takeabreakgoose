@@ -7,7 +7,7 @@ namespace TakeABreakGoose;
 /// Tells whether any app is using a camera, from CoreMediaIO's "running somewhere" on each video
 /// device. That only says whether a camera is on, not what it sees, so it needs no permission.
 /// </summary>
-public static unsafe partial class CameraActivity
+public static unsafe partial class MacCameraActivity
 {
     private const uint SystemObject = 1;
     private const uint Devices = 0x64657623;                // 'dev#'

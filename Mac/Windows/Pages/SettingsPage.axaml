@@ -46,7 +46,7 @@
                             <TextBox x:Name="AutoStartIntervalBox" Width="56" />
                             <TextBlock Text="{x:Static s:Strings.SettingsAutoStartUntilStopped}" Classes="Label" Margin="8,0,0,0" />
                         </StackPanel>
-                        <TextBlock Classes="Hint" Margin="28,6,0,0"
+                        <TextBlock x:Name="AutoStartHint" Classes="Hint" Margin="28,6,0,0"
                                    Text="{x:Static s:Strings.SettingsAutoStartHintMac}" />
 
                         <CheckBox x:Name="CallDoNotDisturbCheck" Content="{x:Static s:Strings.SettingsCalls}"

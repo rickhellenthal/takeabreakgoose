@@ -1,10 +1,14 @@
+using System;
 using System.Text;
 
 namespace TakeABreakGoose;
 
-/// <summary>How the app window shows the global shortcut on a Mac.</summary>
+/// <summary>How the app shows the global shortcut: "Ctrl+Alt+G" on Windows, "⌃⌥G" on a Mac.</summary>
 internal static class HotkeyText
 {
+    public static string Format(HotkeyModifiers modifiers, string key) =>
+        OperatingSystem.IsMacOS() ? Mac(modifiers, key) : GooseSettings.FormatHotkey(modifiers, key);
+
     /// <summary>
     /// The shortcut the way macOS menus write it, e.g. "⌃⌥G" or "⌘⇧5": the modifier symbols in
     /// Apple's order (Control, Option, Shift, Command), then the key. Windows in the settings means Command.

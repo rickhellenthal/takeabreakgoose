@@ -9,12 +9,12 @@ using Avalonia.Threading;
 namespace TakeABreakGoose;
 
 /// <summary>
-/// Starts the app and wires it together: settings, the scheduler, the goose, the menu bar icon,
-/// the global shortcut and the app window, like App.xaml.cs in the Windows app.
+/// Starts the app and wires it together: settings, the scheduler, the goose, the tray or menu bar
+/// icon, the global shortcut and the app window.
 /// </summary>
 public partial class App : Application, IGooseHost
 {
-    private MenuBarIcon? _menuBar;
+    private StatusIcon? _statusIcon;
     private HotkeyManager? _hotkey;
     private GooseCoordinator _goose = null!;
     private MainWindow? _mainWindow;
@@ -36,7 +36,7 @@ public partial class App : Application, IGooseHost
         if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop) return;
 
         if (SingleInstance != null) SingleInstance.OpenRequested += ShowMainWindow;
-        // Opening the app again from Finder or Launchpad brings this copy forward: show its window.
+        // On a Mac, opening the app again from Finder or Launchpad brings this copy forward: show its window.
         if (TryGetFeature(typeof(IActivatableLifetime)) is IActivatableLifetime activatable)
             activatable.Activated += (_, e) =>
             {
@@ -52,22 +52,23 @@ public partial class App : Application, IGooseHost
         _schedulerTick = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
         _schedulerTick.Tick += (_, _) => Scheduler.Tick();
         _schedulerTick.Start();
-        Scheduler.StateChanged += UpdateMenuBar;
+        Scheduler.StateChanged += UpdateStatusIcon;
         _goose = new GooseCoordinator(Scheduler, () => Settings,
             (visit, snoozeMinutes, breakLength) => new GooseWindow(visit, snoozeMinutes, breakLength));
 
-        _menuBar = new MenuBarIcon();
-        _menuBar.OpenRequested += ShowMainWindow;
-        _menuBar.SummonRequested += _goose.SummonBreakGoose;
-        _menuBar.StopSessionRequested += _goose.StopSession;
-        _menuBar.DoNotDisturbToggled += () => _goose.SetDoNotDisturb(!Scheduler.DoNotDisturb);
-        _menuBar.QuitRequested += () => desktop.Shutdown();
+        var statusIcon = _statusIcon = new StatusIcon();
+        statusIcon.OpenRequested += ShowMainWindow;
+        statusIcon.SummonRequested += _goose.SummonBreakGoose;
+        statusIcon.StopSessionRequested += _goose.StopSession;
+        statusIcon.DoNotDisturbToggled += () => _goose.SetDoNotDisturb(!Scheduler.DoNotDisturb);
+        statusIcon.QuitRequested += () => desktop.Shutdown();
 
         if (Settings.AutoStartSession)
             Scheduler.StartSession(Settings.AutoStartIntervalMinutes, TimeSpan.FromSeconds(Settings.LastSessionBreakSeconds),
                 endsAt: null, automatically: true);
-        UpdateMenuBar();
+        UpdateStatusIcon();
 
+        Calls.Start();
         _callCheck = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _callCheck.Tick += (_, _) => _goose.CheckForCall(Calls.InProgress());
         _callCheck.Start();
@@ -81,19 +82,32 @@ public partial class App : Application, IGooseHost
         {
             _callCheck.Stop();
             _schedulerTick.Stop();
+            Calls.Stop();
             _hotkey.Dispose();
-            _menuBar.Dispose();
+            statusIcon.Dispose();
         };
 
-        // A login item can't be told apart from being opened by hand, so the window always opens;
-        // closing it leaves the goose in the menu bar.
-        ShowMainWindow();
+        // Started with Windows: stays in the tray, and says so. (A Mac login item can't be told apart
+        // from being opened by hand, so there the window always opens.) Closing the window leaves the
+        // goose in the tray or menu bar.
+        string[] args = desktop.Args ?? Array.Empty<string>();
+        bool atLogin = OperatingSystem.IsWindows() && Array.IndexOf(args, Autostart.Argument) >= 0;
+        if (!atLogin) ShowMainWindow();
         if (!hotkeyOk)
-            Notice.Show(string.Format(Strings.NoticeShortcutTakenMac, HotkeyText.Mac(Settings.HotkeyModifiers, Settings.HotkeyKey)));
-        if (Array.IndexOf(desktop.Args ?? Array.Empty<string>(), "--summon") >= 0) _goose.SummonBreakGoose();
+            statusIcon.ShowNotice(string.Format(
+                OperatingSystem.IsMacOS() ? Strings.NoticeShortcutTakenMac : Strings.NoticeShortcutTakenWindows,
+                HotkeyText.Format(Settings.HotkeyModifiers, Settings.HotkeyKey)));
+        else if (atLogin)
+            statusIcon.ShowNotice(Settings.AutoStartSession
+                ? string.Format(Strings.NoticeSessionStarted, Settings.AutoStartIntervalMinutes)
+                : string.Format(Strings.NoticeGooseIsHere, HotkeyText.Format(Settings.HotkeyModifiers, Settings.HotkeyKey)));
+        if (Array.IndexOf(args, "--summon") >= 0) _goose.SummonBreakGoose();
     }
 
-    /// <summary>~/Library/Application Support/TakeABreakGoose, where Mac apps keep their settings.</summary>
+    /// <summary>
+    /// Where the settings are: %APPDATA%\TakeABreakGoose on Windows (TakeABreakGoose.Debug for a Debug
+    /// build), ~/Library/Application Support/TakeABreakGoose on a Mac.
+    /// </summary>
     public static string SettingsFolder()
     {
         if (OperatingSystem.IsMacOS())
@@ -101,8 +115,7 @@ public partial class App : Application, IGooseHost
             string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             return Path.Combine(home, "Library", "Application Support", "TakeABreakGoose");
         }
-        // Trying the Mac app out on Windows: not the Windows app's own settings.
-        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TakeABreakGoose.Mac");
+        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppIdentity.Name);
     }
 
     // ---- IGooseHost: what the app window can ask for ----
@@ -140,7 +153,8 @@ public partial class App : Application, IGooseHost
         if (hotkeyChanged && _hotkey != null && !_hotkey.Register(newSettings.HotkeyModifiers, newSettings.HotkeyKey))
         {
             _hotkey.Register(Settings.HotkeyModifiers, Settings.HotkeyKey);
-            return string.Format(Strings.ShortcutTakenMac, HotkeyText.Mac(newSettings.HotkeyModifiers, newSettings.HotkeyKey));
+            return string.Format(OperatingSystem.IsMacOS() ? Strings.ShortcutTakenMac : Strings.ShortcutTakenWindows,
+                HotkeyText.Format(newSettings.HotkeyModifiers, newSettings.HotkeyKey));
         }
 
         bool languageChanged = newSettings.Language != Settings.Language;
@@ -155,14 +169,14 @@ public partial class App : Application, IGooseHost
         if (languageChanged)
         {
             Languages.Use(Settings.Language);
-            UpdateMenuBar();
+            UpdateStatusIcon();
             // Once the Settings page is done saving, its window makes way for one in the new language.
             Dispatcher.UIThread.Post(ReopenMainWindow);
         }
 
         try
         {
-            if (startAtLogin != LoginItem.IsEnabled) LoginItem.SetEnabled(startAtLogin);
+            if (startAtLogin != StartAtLogin.IsEnabled) StartAtLogin.SetEnabled(startAtLogin);
             _settingsStore.Save(Settings);
         }
         catch (Exception ex)
@@ -216,7 +230,7 @@ public partial class App : Application, IGooseHost
         if (Settings.CallNoticeShown) return;
         Settings.CallNoticeShown = true;
         TrySave();
-        Notice.Show(Strings.NoticeInACall);
+        _statusIcon?.ShowNotice(Strings.NoticeInACall);
     }
 
     private void TrySave()
@@ -231,7 +245,7 @@ public partial class App : Application, IGooseHost
         }
     }
 
-    private void UpdateMenuBar() =>
-        _menuBar?.Update(Scheduler.Describe(_goose.DoNotDisturbForCall), Scheduler.DoNotDisturb,
+    private void UpdateStatusIcon() =>
+        _statusIcon?.Update(Scheduler.Describe(_goose.DoNotDisturbForCall), Scheduler.DoNotDisturb,
             _goose.DoNotDisturbForCall, Scheduler.Session != null, Settings.HotkeyModifiers, Settings.HotkeyKey);
 }

@@ -12,6 +12,8 @@
         <SolidColorBrush x:Key="BubbleEdge" Color="#E4D9C4" />
         <SolidColorBrush x:Key="Accent" Color="#F28C28" />
         <SolidColorBrush x:Key="AccentDark" Color="#D9711A" />
+        <!-- The primary buttons' edge: just darker than the orange, so it doesn't look heavy from a distance. -->
+        <SolidColorBrush x:Key="AccentEdge" Color="#E8822A" />
         <SolidColorBrush x:Key="Slate" Color="#5E7773" />
 
         <!-- Own themes rather than styles on the Fluent button, so none of its hover colours or press effect show. -->
@@ -42,7 +44,7 @@
 
         <ControlTheme x:Key="PrimaryBubbleButton" TargetType="Button" BasedOn="{StaticResource BubbleButton}">
             <Setter Property="Background" Value="{StaticResource Accent}" />
-            <Setter Property="BorderBrush" Value="{StaticResource AccentDark}" />
+            <Setter Property="BorderBrush" Value="{StaticResource AccentEdge}" />
             <Setter Property="Foreground" Value="White" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Style Selector="^:pointerover /template/ Border#Chrome">

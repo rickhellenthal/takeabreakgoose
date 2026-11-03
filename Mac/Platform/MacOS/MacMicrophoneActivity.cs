@@ -10,7 +10,7 @@ namespace TakeABreakGoose;
 /// that the user is in a call. Like the camera, it says who's listening, not what's heard, so it
 /// needs no permission.
 /// </summary>
-public static unsafe partial class MicrophoneActivity
+public static unsafe partial class MacMicrophoneActivity
 {
     private const uint SystemObject = 1;
     private const uint ProcessObjectList = 0x70727323; // 'prs#'

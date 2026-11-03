@@ -115,7 +115,7 @@ public partial class MessagesPage : UserControl
 
         var settings = _host.Settings.Clone();
         settings.Messages = messages;
-        string? error = _host.ApplySettings(settings, LoginItem.IsEnabled);
+        string? error = _host.ApplySettings(settings, StartAtLogin.IsEnabled);
         if (error != null)
         {
             ShowStatus(error, error: true);

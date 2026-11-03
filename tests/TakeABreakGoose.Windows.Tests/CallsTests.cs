@@ -13,7 +13,7 @@ public class CallsTests
     [InlineData("slack")]
     public void Meeting_apps_and_browsers_count(string program)
     {
-        Assert.True(Calls.IsMeetingApp(program));
+        Assert.True(WindowsCalls.IsMeetingApp(program));
     }
 
     [Theory]
@@ -25,6 +25,6 @@ public class CallsTests
     [InlineData("msedgewebview2")] // only counts through the app that started it
     public void Games_voice_chat_and_recording_dont_count(string program)
     {
-        Assert.False(Calls.IsMeetingApp(program));
+        Assert.False(WindowsCalls.IsMeetingApp(program));
     }
 }

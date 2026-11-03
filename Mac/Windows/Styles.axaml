@@ -10,6 +10,8 @@
     <Styles.Resources>
         <SolidColorBrush x:Key="Accent" Color="#F28C28" />
         <SolidColorBrush x:Key="AccentDark" Color="#D9711A" />
+        <!-- The primary buttons' edge: just darker than the orange, so it doesn't look heavy from a distance. -->
+        <SolidColorBrush x:Key="AccentEdge" Color="#E8822A" />
         <SolidColorBrush x:Key="Muted" Color="#7A7A7A" />
     </Styles.Resources>
 
@@ -91,7 +93,7 @@
 
     <Style Selector="Button.PrimaryButton">
         <Setter Property="Background" Value="{StaticResource Accent}" />
-        <Setter Property="BorderBrush" Value="{StaticResource AccentDark}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AccentEdge}" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>

@@ -23,6 +23,14 @@ public partial class SettingsPage : UserControl
         InitializeComponent();
         // Before the text box gets the key, like WPF's PreviewKeyDown.
         HotkeyBox.AddHandler(KeyDownEvent, HotkeyBox_PreviewKeyDown, RoutingStrategies.Tunnel);
+        // The XAML has the Mac's words for these.
+        if (OperatingSystem.IsWindows())
+        {
+            StartAtLoginCheck.Content = Strings.SettingsStartWithWindows;
+            StartAtLoginHint.Text = Strings.SettingsStartWithWindowsHint;
+            AutoStartHint.Text = Strings.SettingsAutoStartHintWindows;
+            ToolTip.SetTip(HotkeyBox, Strings.SettingsShortcutToolTipWindows);
+        }
     }
 
     public void Initialize(IGooseHost host)
@@ -48,13 +56,13 @@ public partial class SettingsPage : UserControl
         AutoStartIntervalBox.Text = settings.AutoStartIntervalMinutes.ToString();
         AllowSnoozeCheck.IsChecked = settings.AllowSnooze;
         SnoozeBox.Text = settings.SnoozeMinutes.ToString();
-        StartAtLoginCheck.IsChecked = LoginItem.IsEnabled;
+        StartAtLoginCheck.IsChecked = StartAtLogin.IsEnabled;
         // Older macOS, or the app run from a build folder rather than its .app: nothing to turn on.
-        StartAtLoginCheck.IsVisible = StartAtLoginHint.IsVisible = LoginItem.IsAvailable;
+        StartAtLoginCheck.IsVisible = StartAtLoginHint.IsVisible = StartAtLogin.IsAvailable;
         CallDoNotDisturbCheck.IsChecked = settings.DoNotDisturbDuringCalls;
         _hotkeyModifiers = settings.HotkeyModifiers;
         _hotkeyKey = settings.HotkeyKey;
-        HotkeyBox.Text = HotkeyText.Mac(settings.HotkeyModifiers, settings.HotkeyKey);
+        HotkeyBox.Text = HotkeyText.Format(settings.HotkeyModifiers, settings.HotkeyKey);
         foreach (var choice in LanguageChoices.Children.OfType<RadioButton>())
             choice.IsChecked = (string?)choice.Tag == settings.Language;
         ShowMessageCount(settings.Messages.Count);
@@ -74,18 +82,26 @@ public partial class SettingsPage : UserControl
         }
 
         KeyModifiers modifiers = e.KeyModifiers;
-        // Option alone isn't enough: it types special characters, and since macOS 15 a shortcut with
-        // only Option can't be registered.
-        if ((modifiers & (KeyModifiers.Control | KeyModifiers.Meta)) == 0)
+        if (OperatingSystem.IsMacOS())
         {
-            ShowStatus(Strings.SettingsShortcutNeedsModifierMac, error: true);
+            // Option alone isn't enough: it types special characters, and since macOS 15 a shortcut with
+            // only Option can't be registered.
+            if ((modifiers & (KeyModifiers.Control | KeyModifiers.Meta)) == 0)
+            {
+                ShowStatus(Strings.SettingsShortcutNeedsModifierMac, error: true);
+                return;
+            }
+        }
+        else if ((modifiers & (KeyModifiers.Control | KeyModifiers.Alt | KeyModifiers.Meta)) == 0)
+        {
+            ShowStatus(Strings.SettingsShortcutNeedsModifierWindows, error: true);
             return;
         }
 
         // Avalonia's KeyModifiers have the same values as HotkeyModifiers (Meta, Command on a Mac, is Windows).
         _hotkeyModifiers = (HotkeyModifiers)modifiers;
         _hotkeyKey = e.Key.ToString();
-        HotkeyBox.Text = HotkeyText.Mac(_hotkeyModifiers, _hotkeyKey);
+        HotkeyBox.Text = HotkeyText.Format(_hotkeyModifiers, _hotkeyKey);
         SettingsStatus.Text = "";
     }
 

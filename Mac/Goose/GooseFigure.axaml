@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="TakeABreakGoose.GooseFigure"
-             Width="120" Height="182">
+             Width="120" Height="192" Margin="0,-10,0,0">
     <UserControl.Resources>
         <SolidColorBrush x:Key="Feathers" Color="#F1EAD2" />
         <SolidColorBrush x:Key="FeatherShade" Color="#E2D8B8" />
@@ -15,14 +15,17 @@
     <!-- Avalonia transforms turn around the middle of an element unless told otherwise; the rotations
          below give their own centres, like in WPF, so those canvases use the top left as origin. -->
     <Grid>
-    <!-- The goose, drawn facing right. Flip mirrors it to face left. -->
-    <Canvas x:Name="Drawing" RenderTransformOrigin="50%,50%" Background="Transparent">
+    <!-- The goose, drawn facing right. Flip mirrors it to face left. No background, so only the
+         goose's own shapes catch the pointer, not the space around them. -->
+    <Canvas x:Name="Drawing" RenderTransformOrigin="50%,50%">
         <Canvas.RenderTransform>
             <ScaleTransform ScaleX="1" />
         </Canvas.RenderTransform>
 
-        <!-- Leaves room above the head for hats. -->
-        <Canvas Canvas.Top="24">
+        <!-- Leaves room above the head for hats. Unlike WPF, Avalonia doesn't draw what sticks out of the
+             figure (the party hat's pompom while walking), so there's room for all of it, and the
+             UserControl's negative top margin keeps the goose where it would be without it. -->
+        <Canvas Canvas.Top="34">
             <Ellipse x:Name="Shadow" Canvas.Left="30" Canvas.Top="149" Width="66" Height="8" Fill="#22000000" />
 
             <!-- Back leg -->

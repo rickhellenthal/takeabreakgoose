@@ -5,18 +5,18 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 
 namespace TakeABreakGoose;
 
 /// <summary>
 /// A transparent, always-on-top window that draws the goose for one visit: walking in from a screen
-/// edge, asking, peeking, napping just above the Dock and walking back out. What the goose does is up
-/// to <see cref="GooseBehavior"/>; this window draws it and passes on its frames and clicks.
-/// Like GooseWindow.xaml in the Windows app.
+/// edge, asking, peeking, napping on the taskbar or just above the Dock and walking back out. What the
+/// goose does is up to <see cref="GooseBehavior"/>; this window draws it and passes on its frames and clicks.
 /// </summary>
 public partial class GooseWindow : Window, IGooseWindow, IGooseView
 {
-    // The screen's working area in DIPs. On macOS it already leaves out the menu bar and the Dock.
+    // The screen's working area in DIPs, without the taskbar, or the menu bar and the Dock.
     private readonly Rect _area;
     private readonly double _scaling;
     private double _left;
@@ -51,7 +51,7 @@ public partial class GooseWindow : Window, IGooseWindow, IGooseView
 
         Figure.Outfit = visit.Outfit ?? GooseOutfits.Random();
 
-        // Screen positions are in pixels; the walking works in DIPs, like the Windows app.
+        // Screen positions are in pixels; the walking works in DIPs.
         if (Screens.Primary is { } screen)
         {
             _scaling = screen.Scaling;
@@ -146,25 +146,23 @@ public partial class GooseWindow : Window, IGooseWindow, IGooseView
     }
 
     /// <summary>
-    /// macOS hands every click on the window to it, even on its transparent parts, so the window lets
-    /// clicks through to whatever is underneath unless the cursor is over the goose, the bubble or the
-    /// break card. (On Windows the transparent parts already let clicks through, and the cursor isn't known.)
+    /// Windows and macOS hand every click on the window to it, even on its transparent parts, so the
+    /// window lets clicks through to whatever is underneath unless the cursor is over something drawn:
+    /// the goose itself (not the gaps around its neck or between its legs), the bubble or the break card.
     /// </summary>
     private void UpdateClickThrough()
     {
         if (OverlayWindow.CursorInWindow(this) is not { } cursor) return;
-        bool overSomething = IsOver(Figure, cursor)
-            || (Bubble.IsVisible && IsOver(Bubble, cursor))
-            || (BreakCard.IsVisible && IsOver(BreakCard, cursor));
+        // Avalonia's own hit test finds the shape under the cursor; the window's transparent background
+        // and empty panels don't count.
+        bool overSomething = this.InputHitTest(cursor) is Visual hit
+                             && (IsPartOf(Figure, hit) || IsPartOf(Bubble, hit) || IsPartOf(BreakCard, hit));
         if (_clickThrough == !overSomething) return;
         _clickThrough = !overSomething;
         OverlayWindow.SetClickThrough(this, !overSomething);
     }
 
-    /// <summary>Whether a point in the window is inside a control as drawn (pop-up scaling included).</summary>
-    private bool IsOver(Control control, Point pointInWindow) =>
-        control.TransformToVisual(this) is { } toWindow
-        && new Rect(control.Bounds.Size).TransformToAABB(toWindow).Contains(pointInWindow);
+    private static bool IsPartOf(Visual part, Visual hit) => hit == part || part.IsVisualAncestorOf(hit);
 
     int IGooseView.Facing { set => Figure.Facing = value; }
 
@@ -244,7 +242,8 @@ public partial class GooseWindow : Window, IGooseWindow, IGooseView
         if (OverlayWindow.CursorInWindow(this) is not { } inWindow) return false;
         var cursor = new Point(Left + inWindow.X, Top + inWindow.Y);
 
-        double figureTop = Top + Height - Figure.Bounds.Height;
+        // (Without the room for hats above the head.)
+        double figureTop = Top + Height - Figure.Bounds.Height - Figure.Margin.Top;
         return cursor.X >= fromX && cursor.X <= toX && cursor.Y >= figureTop && cursor.Y <= Top + Height;
     }
 
