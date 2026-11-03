@@ -75,7 +75,9 @@ that."*, and three answers:
 | **Snooze *n* min** (a link, only when snoozing is allowed in Settings) | The goose walks off; it's back after the snooze length |
 
 There's no timeout: **a goose that's ignored stays and waits** for an answer, and no new countdown
-starts in the meantime.
+starts in the meantime. If the user isn't ignoring it but has left the computer, that's handled
+too: once they're back after long enough, the time away counts as their break (see [Being away
+counts as a break](#being-away-counts-as-a-break)).
 
 ### Finishing up
 

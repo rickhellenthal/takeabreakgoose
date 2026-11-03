@@ -102,6 +102,10 @@ The **Wardrobe** tab shows the goose's outfits. It picks one at random for each 
 
 Your settings are saved in `%APPDATA%\TakeABreakGoose\settings.json`. At the bottom of the Settings tab you can see which version you have, and whether a newer one is available.
 
+## Technical documentation
+
+Curious how the goose works under the hood, or want to build it yourself? See the [technical documentation](docs/README.md).
+
 ## Support
 
 The goose is free to use. If it helps you like it helps me and you would like to contribute a little, I have a link where you can buy me a coffee ☕
