@@ -42,6 +42,7 @@ public partial class GooseWindow : Window, IGooseWindow, IGooseView
     public GooseWindow(GooseVisit visit, int snoozeMinutes, TimeSpan? breakLength)
     {
         InitializeComponent();
+        OverlayWindow.Prepare(this);
         // (Avalonia only finds named controls, not named transforms.)
         var bubbleScale = (ScaleTransform)Bubble.RenderTransform!;
         var breakCardScale = (ScaleTransform)BreakCard.RenderTransform!;

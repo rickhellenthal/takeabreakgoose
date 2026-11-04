@@ -25,10 +25,41 @@ internal static partial class OverlayWindow
 
     // Win32's extended window styles.
     private const int ExStyle = -20;
-    private const int Transparent = 0x00000020;
-    private const int ToolWindow = 0x00000080;
-    private const int Layered = 0x00080000;
-    private const int NoActivate = 0x08000000;
+    private const uint Transparent = 0x00000020;
+    private const uint ToolWindow = 0x00000080;
+    private const uint Layered = 0x00080000;
+    private const uint NoActivate = 0x08000000;
+
+    private const uint MouseActivate = 0x0021; // WM_MOUSEACTIVATE
+    private const nint NoActivateOnClick = 3;  // MA_NOACTIVATE
+
+    /// <summary>
+    /// Call in the window's constructor, before it's shown. On Windows, a game in exclusive full-screen
+    /// drops out of it (back to the desktop) as soon as an ordinary window appears on top of it, even
+    /// for a moment. A layered window doesn't count, so the window is layered from the very start, and
+    /// stays layered whenever Avalonia works out the window's styles again. It's also a no-activate
+    /// tool window, so it never takes the focus, not even when clicked.
+    /// </summary>
+    public static void Prepare(Window window)
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        const uint overlay = NoActivate | ToolWindow | Layered;
+        Win32Properties.AddWindowStylesCallback(window, (style, exStyle) =>
+        {
+            // Keep the click-through of SetClickThrough.
+            uint clickThrough = Hwnd(window) is { } hwnd ? (uint)GetWindowLong(hwnd, ExStyle) & Transparent : 0;
+            return (style, exStyle | overlay | clickThrough);
+        });
+        // The native window already exists (hidden): give it the styles before it's ever shown.
+        if (Hwnd(window) is { } hwnd)
+            SetWindowLong(hwnd, ExStyle, (int)((uint)GetWindowLong(hwnd, ExStyle) | overlay));
+        Win32Properties.AddWndProcHookCallback(window, (IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam, ref bool handled) =>
+        {
+            if (message != MouseActivate) return IntPtr.Zero;
+            handled = true;
+            return NoActivateOnClick;
+        });
+    }
 
     /// <summary>Call once the window is open (it has no native window before that).</summary>
     public static void Configure(Window window)
@@ -36,7 +67,7 @@ internal static partial class OverlayWindow
         if (Hwnd(window) is { } hwnd)
         {
             // Layered, so that WS_EX_TRANSPARENT (SetClickThrough) lets clicks through to other apps.
-            SetWindowLong(hwnd, ExStyle, GetWindowLong(hwnd, ExStyle) | NoActivate | ToolWindow | Layered);
+            SetWindowLong(hwnd, ExStyle, (int)((uint)GetWindowLong(hwnd, ExStyle) | NoActivate | ToolWindow | Layered));
             return;
         }
         if (NativeWindow(window) is not { } nsWindow) return;
@@ -55,7 +86,7 @@ internal static partial class OverlayWindow
         if (Hwnd(window) is { } hwnd)
         {
             int style = GetWindowLong(hwnd, ExStyle);
-            SetWindowLong(hwnd, ExStyle, clickThrough ? style | Transparent : style & ~Transparent);
+            SetWindowLong(hwnd, ExStyle, (int)(clickThrough ? (uint)style | Transparent : (uint)style & ~Transparent));
             return;
         }
         if (NativeWindow(window) is not { } nsWindow) return;

@@ -90,8 +90,19 @@ on recent Windows 11 versions.
 `App/Goose/GooseWindow.axaml` is a 440×360 window at the bottom of the screen's working area, so the
 goose stands on the taskbar.
 
-- `OverlayWindow.Configure` adds `WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW`: it never takes the keyboard
-  focus from what you're doing, and stays out of the taskbar and Alt+Tab.
+- **Games in full-screen**: `OverlayWindow.Prepare`, in the constructor, makes it
+  `WS_EX_LAYERED | WS_EX_NOACTIVATE | WS_EX_TOOLWINDOW` before it's ever shown, and keeps those
+  whenever Avalonia works out the window's styles again (`Win32Properties.AddWindowStylesCallback`).
+  A game in exclusive full-screen drops back to the desktop as soon as an ordinary window appears on
+  top of it, even for a moment; a layered one doesn't count. Adding the styles only once the window
+  was open (as 1.9 up to 1.11.0 did) was too late. `WM_MOUSEACTIVATE` answers `MA_NOACTIVATE`, so it
+  never takes the keyboard focus from what you're doing, not even when clicked, and it stays out of
+  the taskbar and Alt+Tab.
+  To check this, run a small DirectX app in exclusive full-screen and watch for it losing the focus
+  or full-screen while the goose walks in: the goose must leave it alone.
+  The goose can't be seen on top of a game in exclusive full-screen, though: nothing but the game's
+  own overlays can (the WPF goose couldn't either). It waits there until you leave the game. In
+  borderless full-screen ("Fullscreen Window") it walks in on top as usual.
 - **Clicks**: Avalonia draws the transparent window with DirectComposition, and Windows hands every
   click on it to the window, transparent or not. So every frame, the window checks what's under the
   cursor (Avalonia's own hit test): over the goose's shapes, its bubble or its card it takes clicks,

@@ -21,6 +21,7 @@ public partial class Notice : Window
     public Notice(string message)
     {
         InitializeComponent();
+        OverlayWindow.Prepare(this);
         MessageText.Text = message;
         PointerPressed += (_, e) =>
         {
