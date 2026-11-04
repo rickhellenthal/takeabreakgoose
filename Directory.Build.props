@@ -5,7 +5,7 @@
     from the tag (-p:Version=...); bump it here for a new release.
   -->
   <PropertyGroup>
-    <Version>1.11.0</Version>
+    <Version>1.11.1</Version>
   </PropertyGroup>
 
 </Project>
