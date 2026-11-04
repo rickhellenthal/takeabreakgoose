@@ -99,7 +99,7 @@ public partial class App : Application, IGooseHost
         _updateCheck = new DispatcherTimer { Interval = TimeSpan.FromMinutes(1) };
         _updateCheck.Tick += (_, _) =>
         {
-            if (Settings.CheckForUpdates && UpdateSchedule.IsDue(DateTime.Now, _startedAt, _lastUpdateCheck)) CheckForUpdate();
+            if (UpdateSchedule.IsDue(DateTime.Now, _startedAt, _lastUpdateCheck)) CheckForUpdate();
         };
         _updateCheck.Start();
 
@@ -170,7 +170,7 @@ public partial class App : Application, IGooseHost
 
     public void CheckForUpdateSoon()
     {
-        if (Settings.CheckForUpdates && UpdateSchedule.IsDueOnOpen(DateTime.Now, _lastUpdateCheck)) CheckForUpdate();
+        if (UpdateSchedule.IsDueOnOpen(DateTime.Now, _lastUpdateCheck)) CheckForUpdate();
     }
 
     public void PrepareForUpdate()
@@ -213,14 +213,12 @@ public partial class App : Application, IGooseHost
         bool languageChanged = newSettings.Language != Settings.Language;
         if (languageChanged) newSettings.TranslateDefaultMessages();
         bool autoStartTurnedOn = newSettings.AutoStartSession && !Settings.AutoStartSession;
-        bool updateChecksTurnedOn = newSettings.CheckForUpdates && !Settings.CheckForUpdates;
         Settings = newSettings;
         Scheduler.ApplySettings(Settings);
         // Turning it on shouldn't mean waiting for the next restart to see it work.
         if (autoStartTurnedOn && Scheduler.Session == null)
             Scheduler.StartSession(Settings.AutoStartIntervalMinutes, TimeSpan.FromSeconds(Settings.LastSessionBreakSeconds),
                 endsAt: null, automatically: true);
-        if (updateChecksTurnedOn) CheckForUpdateSoon();
         if (languageChanged)
         {
             Languages.Use(Settings.Language);
@@ -320,7 +318,7 @@ public partial class App : Application, IGooseHost
             // Handed over by the version before, when it updated from inside the app. Otherwise (installed
             // over an older version, which can't hand them over) this version's notes from GitHub.
             var notes = Updater.TakeReleaseNotes()
-                        ?? (Settings.CheckForUpdates ? await Updater.FetchReleaseNotesAsync(version) : null);
+                        ?? await Updater.FetchReleaseNotesAsync(version);
             // Nothing to tell, or the window was closed meanwhile: no window.
             if (notes == null || !notes.Versions.Any(v => ReleaseNotes.Highlights(v.Markdown).Count > 0)) return;
             if (!owner.IsVisible) return;

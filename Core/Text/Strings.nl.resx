@@ -571,19 +571,13 @@ twaalf</value>
     <value>Taal</value>
   </data>
   <data name="SettingsLanguageHint" xml:space="preserve">
-    <value>De standaardberichten van de gans veranderen mee. Berichten die je zelf hebt geschreven of aangepast, blijven zoals ze zijn.</value>
+    <value>Berichten die je zelf hebt geschreven of aangepast, blijven zoals ze zijn.</value>
   </data>
   <data name="SettingsStartWithWindows" xml:space="preserve">
     <value>Start Take a Break Goose als mijn computer opstart</value>
   </data>
-  <data name="SettingsStartWithWindowsHint" xml:space="preserve">
-    <value>De gans start zodra je inlogt bij Windows. Je vindt hem ook onder Opstart-apps in Taakbeheer.</value>
-  </data>
   <data name="SettingsStartAtLogin" xml:space="preserve">
     <value>Start Take a Break Goose als ik inlog</value>
-  </data>
-  <data name="SettingsStartAtLoginHint" xml:space="preserve">
-    <value>De gans start zodra je inlogt op je Mac. Je vindt hem ook onder Inlogonderdelen in Systeeminstellingen.</value>
   </data>
   <data name="SettingsAutoStart" xml:space="preserve">
     <value>Start een focussessie als de app opstart</value>
@@ -594,17 +588,11 @@ twaalf</value>
   <data name="SettingsAutoStartUntilStopped" xml:space="preserve">
     <value>minuten, tot je hem stopt</value>
   </data>
-  <data name="SettingsAutoStartHintWindows" xml:space="preserve">
-    <value>Samen met de optie hierboven houdt de gans je in de gaten vanaf het moment dat je inlogt, zonder dat je zelf een sessie hoeft te starten.</value>
-  </data>
-  <data name="SettingsAutoStartHintMac" xml:space="preserve">
-    <value>Samen met de optie hierboven houdt de gans je in de gaten vanaf het moment dat je inlogt, zonder dat je zelf een sessie hoeft te starten.</value>
-  </data>
   <data name="SettingsCalls" xml:space="preserve">
     <value>Zet Niet storen aan tijdens gesprekken</value>
   </data>
   <data name="SettingsCallsHint" xml:space="preserve">
-    <value>De gans merkt dat je in gesprek bent als je camera aanstaat, of als een vergaderapp zoals Teams, Zoom of Google Meet je microfoon gebruikt. Voicechat in games en Discord telt niet mee. Niet storen gaat weer uit als het gesprek voorbij is.</value>
+    <value>Als je camera of een vergaderapp zoals Teams of Zoom aanstaat. Games en Discord tellen niet mee.</value>
   </data>
   <data name="SettingsShortcut" xml:space="preserve">
     <value>Sneltoets om dit venster te openen</value>
@@ -627,11 +615,11 @@ twaalf</value>
   <data name="SettingsSnooze" xml:space="preserve">
     <value>Laat me snoozen voor</value>
   </data>
-  <data name="SettingsSnoozeHint" xml:space="preserve">
-    <value>min · zet dit uit om de snoozeknop te verbergen als het pauzetijd is</value>
+  <data name="SettingsSnoozeMinutes" xml:space="preserve">
+    <value>min</value>
   </data>
   <data name="SettingsAwayHint" xml:space="preserve">
-    <value>Minstens 5 minuten weg van je computer, of je hele pauze als die langer is? Dan telt dat als je pauze, en begint het aftellen naar de volgende opnieuw als je terug bent.</value>
+    <value>Ben je een tijdje weg geweest van je computer? De gans telt dat als je pauze, en begint opnieuw te tellen als je terug bent.</value>
   </data>
   <data name="SettingsEditMessages" xml:space="preserve">
     <value>Berichten bewerken</value>
@@ -707,12 +695,6 @@ twaalf</value>
   </data>
   <data name="NoticeUpdateAvailable" xml:space="preserve">
     <value>Er is een nieuwe gans in de stad! Versie {0} staat klaar. Werk bij via het menu wanneer het jou uitkomt.</value>
-  </data>
-  <data name="SettingsCheckForUpdates" xml:space="preserve">
-    <value>Zoeken naar nieuwe versies</value>
-  </data>
-  <data name="SettingsCheckForUpdatesHint" xml:space="preserve">
-    <value>Af en toe vraagt de gans aan GitHub of er een nieuwere versie is. Alleen zijn eigen versienummer gaat mee.</value>
   </data>
   <data name="FieldAutoStartInterval" xml:space="preserve">
     <value>De tijd tussen pauzes in de automatische sessie</value>

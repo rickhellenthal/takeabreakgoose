@@ -30,8 +30,6 @@ public partial class SettingsPage : UserControl
         if (OperatingSystem.IsWindows())
         {
             StartAtLoginCheck.Content = Strings.SettingsStartWithWindows;
-            StartAtLoginHint.Text = Strings.SettingsStartWithWindowsHint;
-            AutoStartHint.Text = Strings.SettingsAutoStartHintWindows;
             ToolTip.SetTip(HotkeyBox, Strings.SettingsShortcutToolTipWindows);
         }
     }
@@ -61,9 +59,8 @@ public partial class SettingsPage : UserControl
         SnoozeBox.Text = settings.SnoozeMinutes.ToString();
         StartAtLoginCheck.IsChecked = StartAtLogin.IsEnabled;
         // Older macOS, or the app run from a build folder rather than its .app: nothing to turn on.
-        StartAtLoginCheck.IsVisible = StartAtLoginHint.IsVisible = StartAtLogin.IsAvailable;
+        StartAtLoginCheck.IsVisible = StartAtLogin.IsAvailable;
         CallDoNotDisturbCheck.IsChecked = settings.DoNotDisturbDuringCalls;
-        CheckForUpdatesCheck.IsChecked = settings.CheckForUpdates;
         _hotkeyModifiers = settings.HotkeyModifiers;
         _hotkeyKey = settings.HotkeyKey;
         HotkeyBox.Text = HotkeyText.Format(settings.HotkeyModifiers, settings.HotkeyKey);
@@ -139,7 +136,6 @@ public partial class SettingsPage : UserControl
         settings.AllowSnooze = AllowSnoozeCheck.IsChecked == true;
         settings.SnoozeMinutes = snooze;
         settings.DoNotDisturbDuringCalls = CallDoNotDisturbCheck.IsChecked == true;
-        settings.CheckForUpdates = CheckForUpdatesCheck.IsChecked == true;
         settings.HotkeyModifiers = _hotkeyModifiers;
         settings.HotkeyKey = _hotkeyKey;
         settings.Language = SelectedLanguage;
@@ -172,7 +168,7 @@ public partial class SettingsPage : UserControl
     /// <summary>Everything the form shows, to tell whether anything changed since loading or saving.</summary>
     private string FormState() => string.Join("\u001f",
         AutoStartCheck.IsChecked, AutoStartIntervalBox.Text, AllowSnoozeCheck.IsChecked, SnoozeBox.Text,
-        StartAtLoginCheck.IsChecked, CallDoNotDisturbCheck.IsChecked, CheckForUpdatesCheck.IsChecked, HotkeyBox.Text,
+        StartAtLoginCheck.IsChecked, CallDoNotDisturbCheck.IsChecked, HotkeyBox.Text,
         SelectedLanguage);
 
     public bool HasUnsavedChanges => FormState() != _savedForm;

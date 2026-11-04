@@ -58,7 +58,6 @@ update for itself and finds it at its next check.
 | Velopack's hooks | `Program.Main` | `VelopackApp.Build().Run()` first of all: handles install, update and uninstall events |
 | Updating | `App/Platform/Updater.cs` | Velopack's `UpdateManager` with `GithubSource`; checks, downloads, saves the release notes, restarts |
 | When to check | `UpdateSchedule` (Core) | A minute after starting, every 12 hours, and when the window opens unless it checked within the hour |
-| Turned off | `GooseSettings.CheckForUpdates` | **Look for new versions** in Settings: no checks at all when off |
 | Telling the user | `App`, `StatusIcon`, `SettingsPage` | **Update now** at the bottom of Settings, **Update to version …** in the tray / menu bar menu, and a notice once per version (`GooseSettings.UpdateNoticeShownFor`) |
 | Not now | `UpdateMoment` (Core) | No restart while a goose is on screen, during a break, while a break waits for Do not disturb, or during a call |
 | Downloading | `MainWindow.InstallUpdate` | Unsaved settings first; then a card over the window with the progress and **Cancel** (closing the window cancels too) |

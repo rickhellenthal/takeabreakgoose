@@ -66,7 +66,7 @@ To uninstall, quit the goose from its menu bar icon and drag it from Application
 
 ### Updating
 
-The goose keeps itself up to date. When a new version is out, it tells you once, and you can update whenever it suits you: from its tray or menu bar menu, or at the bottom of the Settings tab. It never updates in the middle of a break, and a focus session that's running carries on afterwards. After a moment it's back, and shows you what's new. Don't want it to look for new versions? Turn that off in Settings.
+The goose keeps itself up to date. When a new version is out, it tells you once, and you can update whenever it suits you: from its tray or menu bar menu, or at the bottom of the Settings tab. It never updates in the middle of a break, and a focus session that's running carries on afterwards. After a moment it's back, and shows you what's new.
 
 ## How it works
 
@@ -104,9 +104,8 @@ The **Wardrobe** tab shows the goose's outfits. It picks one at random for each 
 - **Do not disturb during calls**, on unless you turn it off
 - **Snooze length**, or turn snoozing off altogether
 - **The shortcut** that opens the app, and **the messages** the goose picks from
-- **Look for new versions**: now and then the goose asks GitHub whether there's a newer version. Only its own version number goes along
 
-Your settings are saved in `%APPDATA%\TakeABreakGoose\settings.json`. At the bottom of the Settings tab you can see which version you have, and whether a newer one is available.
+Your settings are saved in `%APPDATA%\TakeABreakGoose\settings.json`. At the bottom of the Settings tab you can see which version you have, and whether a newer one is available. To find out, the goose asks GitHub now and then; only its own version number goes along.
 
 ## Technical documentation
 

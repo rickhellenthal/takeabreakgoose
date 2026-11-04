@@ -57,9 +57,6 @@ public sealed class GooseSettings
     /// </summary>
     public string? LastRunVersion { get; set; }
 
-    /// <summary>Ask GitHub now and then whether there's a newer version (see UpdateSchedule).</summary>
-    public bool CheckForUpdates { get; set; } = true;
-
     /// <summary>The newer version the user was told about with a notice, so that's only once.</summary>
     public string? UpdateNoticeShownFor { get; set; }
 

@@ -596,19 +596,13 @@ twelve</value>
     <value>Language</value>
   </data>
   <data name="SettingsLanguageHint" xml:space="preserve">
-    <value>The goose's own messages switch along. Messages you wrote or changed yourself stay as they are.</value>
+    <value>Messages you wrote or changed yourself stay as they are.</value>
   </data>
   <data name="SettingsStartWithWindows" xml:space="preserve">
     <value>Start Take a Break Goose when my computer starts</value>
   </data>
-  <data name="SettingsStartWithWindowsHint" xml:space="preserve">
-    <value>It starts as soon as you sign in to Windows. It's also listed under Startup apps in Task Manager.</value>
-  </data>
   <data name="SettingsStartAtLogin" xml:space="preserve">
     <value>Start Take a Break Goose when I log in</value>
-  </data>
-  <data name="SettingsStartAtLoginHint" xml:space="preserve">
-    <value>It starts as soon as you log in to your Mac. It's also listed under Login Items in System Settings.</value>
   </data>
   <data name="SettingsAutoStart" xml:space="preserve">
     <value>Start a focus session when the app starts</value>
@@ -619,17 +613,11 @@ twelve</value>
   <data name="SettingsAutoStartUntilStopped" xml:space="preserve">
     <value>minutes, until you stop it</value>
   </data>
-  <data name="SettingsAutoStartHintWindows" xml:space="preserve">
-    <value>Together with the option above, the goose keeps an eye on you from the moment you sign in, without you having to start a session.</value>
-  </data>
-  <data name="SettingsAutoStartHintMac" xml:space="preserve">
-    <value>Together with the option above, the goose keeps an eye on you from the moment you log in, without you having to start a session.</value>
-  </data>
   <data name="SettingsCalls" xml:space="preserve">
     <value>Turn on Do not disturb during calls</value>
   </data>
   <data name="SettingsCallsHint" xml:space="preserve">
-    <value>The goose notices a call when your camera is in use, or when a meeting app like Teams, Zoom or Google Meet uses your microphone. Voice chat in games and Discord doesn't count. Do not disturb turns off again when the call is over.</value>
+    <value>When your camera or a meeting app like Teams or Zoom is on. Games and Discord don't count.</value>
   </data>
   <data name="SettingsShortcut" xml:space="preserve">
     <value>Shortcut to open this window</value>
@@ -652,11 +640,11 @@ twelve</value>
   <data name="SettingsSnooze" xml:space="preserve">
     <value>Let me snooze for</value>
   </data>
-  <data name="SettingsSnoozeHint" xml:space="preserve">
-    <value>min · turn off to hide the Snooze button when it's time for a break</value>
+  <data name="SettingsSnoozeMinutes" xml:space="preserve">
+    <value>min</value>
   </data>
   <data name="SettingsAwayHint" xml:space="preserve">
-    <value>Away from your computer for at least 5 minutes, or your whole break if it's longer? That counts as your break, and the countdown to the next one starts fresh when you're back.</value>
+    <value>Been away from your computer for a while? The goose counts that as your break, and starts counting again when you're back.</value>
   </data>
   <data name="SettingsEditMessages" xml:space="preserve">
     <value>Edit messages</value>
@@ -737,12 +725,6 @@ twelve</value>
   <data name="NoticeUpdateAvailable" xml:space="preserve">
     <value>There's a new goose in town! Version {0} is ready. Update from the menu whenever it suits you.</value>
     <comment>{0} is the new version, like 1.12.0.</comment>
-  </data>
-  <data name="SettingsCheckForUpdates" xml:space="preserve">
-    <value>Look for new versions</value>
-  </data>
-  <data name="SettingsCheckForUpdatesHint" xml:space="preserve">
-    <value>Now and then the goose asks GitHub whether there's a newer version. Only its own version number goes along.</value>
   </data>
   <data name="FieldAutoStartInterval" xml:space="preserve">
     <value>The automatic session interval</value>

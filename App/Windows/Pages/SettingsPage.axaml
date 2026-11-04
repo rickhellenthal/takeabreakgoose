@@ -17,9 +17,6 @@
                                    Text="{x:Static s:Strings.SettingsLanguageHint}" />
 
                         <CheckBox x:Name="StartAtLoginCheck" Content="{x:Static s:Strings.SettingsStartAtLogin}" />
-                        <!-- Indented to line up with the check box's text (Fluent's box is wider than WPF's). -->
-                        <TextBlock x:Name="StartAtLoginHint" Classes="Hint" Margin="28,2,0,0"
-                                   Text="{x:Static s:Strings.SettingsStartAtLoginHint}" />
 
                         <CheckBox x:Name="AutoStartCheck" Content="{x:Static s:Strings.SettingsAutoStart}"
                                   Margin="0,10,0,0" />
@@ -29,18 +26,12 @@
                             <TextBox x:Name="AutoStartIntervalBox" Width="56" />
                             <TextBlock Text="{x:Static s:Strings.SettingsAutoStartUntilStopped}" Classes="Label" Margin="8,0,0,0" />
                         </StackPanel>
-                        <TextBlock x:Name="AutoStartHint" Classes="Hint" Margin="28,6,0,0"
-                                   Text="{x:Static s:Strings.SettingsAutoStartHintMac}" />
 
                         <CheckBox x:Name="CallDoNotDisturbCheck" Content="{x:Static s:Strings.SettingsCalls}"
                                   Margin="0,14,0,0" />
-                        <TextBlock Classes="Hint" Margin="28,6,0,0"
+                        <!-- Indented to line up with the check box's text (Fluent's box is wider than WPF's). -->
+                        <TextBlock Classes="Hint" Margin="28,2,0,0"
                                    Text="{x:Static s:Strings.SettingsCallsHint}" />
-
-                        <CheckBox x:Name="CheckForUpdatesCheck" Content="{x:Static s:Strings.SettingsCheckForUpdates}"
-                                  Margin="0,14,0,0" />
-                        <TextBlock Classes="Hint" Margin="28,6,0,0"
-                                   Text="{x:Static s:Strings.SettingsCheckForUpdatesHint}" />
 
                         <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                             <TextBlock Text="{x:Static s:Strings.SettingsShortcut}" Classes="Label" />
@@ -59,9 +50,9 @@
                                       VerticalAlignment="Center" Margin="0,0,12,0" />
                             <TextBox Grid.Column="1" x:Name="SnoozeBox" Width="56" VerticalAlignment="Center"
                                      IsEnabled="{Binding #AllowSnoozeCheck.IsChecked}" />
-                            <TextBlock Grid.Column="2" Classes="Hint" Margin="8,0,0,0"
+                            <TextBlock Grid.Column="2" Classes="Label" Margin="8,0,0,0"
                                        VerticalAlignment="Center"
-                                       Text="{x:Static s:Strings.SettingsSnoozeHint}" />
+                                       Text="{x:Static s:Strings.SettingsSnoozeMinutes}" />
                         </Grid>
                         <TextBlock Classes="Hint" Margin="0,12,0,0"
                                    Text="{x:Static s:Strings.SettingsAwayHint}" />
