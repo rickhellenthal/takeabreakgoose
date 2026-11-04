@@ -85,12 +85,15 @@ jobs:
           vpk download github --repoUrl $REPO_URL --token $GH_TOKEN --channel win ${{ steps.version.outputs.pre }} -o Releases
           || echo "Nothing to make a delta from."
 
+      # While installing, Setup.exe shows the splash image with an orange progress bar (without
+      # one, Velopack shows a plain box with an OK button that doesn't stop anything).
       - name: Pack with Velopack
         run: >
           vpk pack -u TakeABreakGoose -v ${{ steps.version.outputs.version }} -p publish -e TakeABreakGoose.exe
           --packTitle "Take a Break Goose" --packAuthors "Rick Hellenthal"
           -i Assets/goose.ico --shortcuts StartMenuRoot -r win-x64 --channel win -o Releases
           --releaseNotes notes.md
+          --splashImage Assets/splash.png --splashProgressColor "#F28C28"
 
       - uses: actions/upload-artifact@v4
         with:

@@ -161,7 +161,8 @@ be downloaded from the run's Artifacts.
 ## Other tools
 
 - `tools/make-icon.ps1` draws the app icon from vector paths and writes `Assets/goose.ico`,
-  `App/Assets/goose.icns` and `docs/icon.png`:
+  `App/Assets/goose.icns` and `docs/icon.png`, and the Windows installer's splash image
+  `Assets/splash.png` (the goose's badge and name, shown with a progress bar while installing):
 
   ```bash
   powershell -File tools/make-icon.ps1

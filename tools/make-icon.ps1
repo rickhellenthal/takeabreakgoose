@@ -1,12 +1,16 @@
 # Renders the app icon (goose.ico) from the vector drawing below, in all the sizes Windows uses,
-# and the macOS app's icon (goose.icns) in all the sizes macOS uses.
+# the macOS app's icon (goose.icns) in all the sizes macOS uses, and the Windows installer's splash
+# image (splash.png).
 # Usage: powershell -File tools\make-icon.ps1 [-OutPath Assets\goose.ico] [-PngPath docs\icon.png]
-#        [-IcnsPath App\Assets\goose.icns] [-PreviewPath preview.png]
+#        [-IcnsPath App\Assets\goose.icns] [-SplashPath Assets\splash.png] [-PreviewPath preview.png]
 param(
     [string]$OutPath = (Join-Path $PSScriptRoot '..\Assets\goose.ico'),
     # A 256x256 PNG of the same icon, used by the README.
     [string]$PngPath = (Join-Path $PSScriptRoot '..\docs\icon.png'),
     [string]$IcnsPath = (Join-Path $PSScriptRoot '..\App\Assets\goose.icns'),
+    # What the Windows installer shows while it installs (vpk pack --splashImage); Velopack draws its
+    # progress bar over the bottom edge.
+    [string]$SplashPath = (Join-Path $PSScriptRoot '..\Assets\splash.png'),
     [string]$PreviewPath
 )
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase
@@ -90,6 +94,39 @@ if ($IcnsPath) {
 if ($PngPath) {
     New-Item -ItemType Directory -Force (Split-Path $PngPath) | Out-Null
     [System.IO.File]::WriteAllBytes([System.IO.Path]::GetFullPath($PngPath), $images[-1])
+}
+
+if ($SplashPath) {
+    # A card in the app window's colours: the goose's badge and the app's name.
+    $width = 420; $height = 240
+    $card = New-Object System.Windows.Controls.Border
+    $card.Width = $width; $card.Height = $height
+    $card.Background = [System.Windows.Media.BrushConverter]::new().ConvertFrom('#FAF7F2')
+    $card.BorderBrush = [System.Windows.Media.BrushConverter]::new().ConvertFrom('#E4D9C4')
+    $card.BorderThickness = '1'
+    $content = New-Object System.Windows.Controls.StackPanel
+    $content.VerticalAlignment = 'Center'
+    $content.Margin = '0,0,0,16' # a little above the middle, clear of the progress bar
+    $badge = New-Object System.Windows.Controls.Viewbox
+    $badge.Width = 104; $badge.Height = 104
+    $badge.Child = [System.Windows.Markup.XamlReader]::Parse($xaml)
+    $content.Children.Add($badge) | Out-Null
+    $name = New-Object System.Windows.Controls.TextBlock
+    $name.Text = 'Take a Break Goose'
+    $name.FontFamily = 'Segoe UI'; $name.FontSize = 24; $name.FontWeight = 'SemiBold'
+    $name.Foreground = [System.Windows.Media.BrushConverter]::new().ConvertFrom('#222222')
+    $name.HorizontalAlignment = 'Center'; $name.Margin = '0,14,0,0'
+    $content.Children.Add($name) | Out-Null
+    $card.Child = $content
+    $card.Measure([System.Windows.Size]::new($width, $height))
+    $card.Arrange([System.Windows.Rect]::new(0, 0, $width, $height))
+    $card.UpdateLayout()
+    $bitmap = New-Object System.Windows.Media.Imaging.RenderTargetBitmap $width, $height, 96, 96, ([System.Windows.Media.PixelFormats]::Pbgra32)
+    $bitmap.Render($card)
+    $encoder = New-Object System.Windows.Media.Imaging.PngBitmapEncoder
+    $encoder.Frames.Add([System.Windows.Media.Imaging.BitmapFrame]::Create($bitmap))
+    New-Item -ItemType Directory -Force (Split-Path $SplashPath) | Out-Null
+    $out = [System.IO.File]::Create([System.IO.Path]::GetFullPath($SplashPath)); $encoder.Save($out); $out.Close()
 }
 
 if ($PreviewPath) {
