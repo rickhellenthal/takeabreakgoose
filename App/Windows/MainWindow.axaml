@@ -8,7 +8,8 @@
         WindowStartupLocation="CenterScreen" Icon="/Assets/goose.ico"
         FontSize="13" Background="#FAF7F2" Foreground="#222222">
     <!-- The styles live in Styles.axaml; each tab is its own page in Pages/. -->
-    <Grid Margin="20,18,20,16" RowDefinitions="Auto,Auto,*">
+    <Grid>
+    <Grid x:Name="WindowContent" Margin="20,18,20,16" RowDefinitions="Auto,Auto,*">
         <!-- Header -->
         <DockPanel Grid.Row="0" Margin="0,0,0,14">
             <Image x:Name="HeaderIcon" Width="42" Height="42" DockPanel.Dock="Left" />
@@ -38,5 +39,24 @@
             <local:SettingsPage x:Name="SettingsView" IsVisible="False" />
             <local:MessagesPage x:Name="MessagesView" IsVisible="False" />
         </Grid>
+    </Grid>
+
+    <!-- While an update downloads: over the whole window, so nothing else can be clicked meanwhile. -->
+    <Border x:Name="UpdateOverlay" IsVisible="False" Background="#E6FAF7F2">
+        <Border Classes="Card" Width="320" Margin="0" Padding="24,20"
+                HorizontalAlignment="Center" VerticalAlignment="Center">
+            <StackPanel>
+                <Image x:Name="UpdateIcon" Width="48" Height="48" HorizontalAlignment="Center" />
+                <TextBlock x:Name="UpdateHeading" Classes="CardTitle" HorizontalAlignment="Center"
+                           TextAlignment="Center" TextWrapping="Wrap" Margin="0,10,0,0" />
+                <TextBlock x:Name="UpdateHint" Classes="Hint" TextAlignment="Center" Margin="0,4,0,16" />
+                <ProgressBar x:Name="UpdateProgress" Minimum="0" Maximum="100" Height="8" MinHeight="8"
+                             CornerRadius="4" Foreground="{StaticResource Accent}" Background="#F0E8DC" />
+                <TextBlock x:Name="UpdatePercent" Classes="Hint" HorizontalAlignment="Center" Margin="0,6,0,14" />
+                <Button x:Name="CancelUpdateButton" Content="{x:Static s:Strings.Cancel}" Classes="BaseButton"
+                        HorizontalAlignment="Center" Click="CancelUpdate_Click" />
+            </StackPanel>
+        </Border>
+    </Border>
     </Grid>
 </Window>

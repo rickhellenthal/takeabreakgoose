@@ -1,6 +1,9 @@
-# Builds the installer and a portable zip, and publishes them as a GitHub release; then adds the
-# macOS app to it, one .dmg for Apple Silicon and one for Intel Macs.
-# Runs when a version tag is pushed, e.g.:  git tag v1.0.0 && git push origin v1.0.0
+# Packs the app with Velopack for Windows, and for Apple Silicon and Intel Macs (mac-build.yml), and
+# only once all three are packed, publishes them together as a GitHub release. Installed apps update
+# themselves from these releases (App/Platform/Updater.cs; see docs/in-app-updates.md).
+# Runs when a version tag is pushed, e.g.:  git tag v1.11.0 && git push origin v1.11.0
+# A tag with a dash (v1.11.0-beta.1) becomes a pre-release: only pre-releases update to those, so
+# it's a way to try a release before everyone gets it.
 name: Release
 
 on:
@@ -10,11 +13,17 @@ on:
 permissions:
   contents: write
 
+env:
+  TAG: ${{ github.ref_name }}
+  REPO_URL: https://github.com/${{ github.repository }}
+  VPK_VERSION: 1.2.161
+
 jobs:
   release:
     runs-on: windows-latest
-    env:
-      TAG: ${{ github.ref_name }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
 
@@ -22,10 +31,13 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      # The version (1.11.0) from the tag (v1.11.0); --pre for vpk when it's a pre-release.
       - name: Work out the version from the tag
         id: version
-        shell: pwsh
-        run: echo "version=$($env:TAG.TrimStart('v'))" >> $env:GITHUB_OUTPUT
+        run: |
+          version="${TAG#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$version" == *-* ]]; then echo "pre=--pre" >> "$GITHUB_OUTPUT"; else echo "pre=" >> "$GITHUB_OUTPUT"; fi
 
       - name: Run the tests
         run: dotnet test tests/TakeABreakGoose.Tests -c Release
@@ -33,9 +45,8 @@ jobs:
       - name: Run the Windows tests
         run: dotnet test tests/TakeABreakGoose.Windows.Tests -c Release
 
-      # The same Avalonia app as on macOS. Self-contained, so friends don't need to install .NET first.
+      # Self-contained, so friends don't need to install .NET first.
       - name: Publish the app
-        shell: pwsh
         run: >
           dotnet publish App/TakeABreakGoose.App.csproj -c Release -r win-x64
           --self-contained true
@@ -43,39 +54,101 @@ jobs:
           -p:IncludeNativeLibrariesForSelfExtract=true
           -p:EnableCompressionInSingleFile=true
           -p:Version=${{ steps.version.outputs.version }}
-          -o publish-installer
+          -o publish
 
-      - name: Install Inno Setup
-        run: choco install innosetup --no-progress -y
-
-      - name: Build the installer
-        shell: pwsh
-        run: >
-          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-          /DAppVersion=${{ steps.version.outputs.version }}
-          installer\TakeABreakGoose.iss
-
-      - name: Make the portable zip
-        shell: pwsh
-        run: >
-          Compress-Archive -Path publish-installer\TakeABreakGoose.exe
-          -DestinationPath dist\TakeABreakGoose-${{ steps.version.outputs.version }}-portable.zip
-
-      # Uses release-notes/<tag>.md as the description when it exists,
-      # otherwise GitHub's list of commits since the last release.
-      - name: Create the GitHub release
-        shell: pwsh
+      # release-notes/<tag>.md: packed with the update (for the "what's new" window) and the
+      # release's description on GitHub (which the app reads for versions it skipped).
+      # Without one, GitHub's list of commits since the last release.
+      - name: Get the release notes
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $notes = "release-notes/$env:TAG.md"
-          $notesArgs = if (Test-Path $notes) { @('--notes-file', $notes) } else { @('--generate-notes') }
-          gh release create $env:TAG (Get-ChildItem dist).FullName `
-            --title "Take a Break Goose ${{ steps.version.outputs.version }}" @notesArgs
+          if [[ -f "release-notes/$TAG.md" ]]; then
+            cp "release-notes/$TAG.md" notes.md
+          else
+            gh api "repos/${{ github.repository }}/releases/generate-notes" -f tag_name="$TAG" --jq .body > notes.md
+          fi
 
-  # After the release exists: builds the macOS app and adds its .dmgs to it (see mac-build.yml).
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: notes.md
+
+      - name: Install Velopack
+        run: dotnet tool install -g vpk --version $VPK_VERSION
+
+      # The previous release, to make a small delta update from. Releases before Velopack have none.
+      - name: Download the previous release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          vpk download github --repoUrl $REPO_URL --token $GH_TOKEN --channel win ${{ steps.version.outputs.pre }} -o Releases
+          || echo "Nothing to make a delta from."
+
+      # While installing, Setup.exe shows the splash image with an orange progress bar (without
+      # one, Velopack shows a plain box with an OK button that doesn't stop anything).
+      - name: Pack with Velopack
+        run: >
+          vpk pack -u TakeABreakGoose -v ${{ steps.version.outputs.version }} -p publish -e TakeABreakGoose.exe
+          --packTitle "Take a Break Goose" --packAuthors "Rick Hellenthal"
+          -i Assets/goose.ico --shortcuts StartMenuRoot -r win-x64 --channel win -o Releases
+          --releaseNotes notes.md
+          --splashImage Assets/splash.png --splashProgressColor "#F28C28"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: win
+          path: Releases/*
+
+  # The Mac app, packed for both kinds of Mac (see mac-build.yml).
   mac:
     needs: release
     uses: ./.github/workflows/mac-build.yml
     with:
       release-tag: ${{ github.ref_name }}
+
+  # Everything at once, so the release never goes out without the Mac files, and not at all when a
+  # build failed.
+  publish:
+    needs: [release, mac]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Work out the version from the tag
+        id: version
+        run: |
+          version="${TAG#v}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$version" == *-* ]]; then echo "pre=--pre" >> "$GITHUB_OUTPUT"; else echo "pre=" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "{win,mac-arm64,mac-x64}"
+          merge-multiple: true
+          path: Releases
+
+      - name: Install Velopack
+        run: dotnet tool install -g vpk --version $VPK_VERSION
+
+      # A draft for the tag that's already there, which Velopack fills, then published in one go.
+      # (Velopack creating the release itself, tied to a commit, was refused by GitHub.)
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NAME: Take a Break Goose ${{ steps.version.outputs.version }}
+        run: |
+          prerelease=$([[ -n "${{ steps.version.outputs.pre }}" ]] && echo --prerelease || true)
+          gh release create "$TAG" --repo "${{ github.repository }}" --verify-tag --draft $prerelease \
+            --title "$NAME" --notes-file notes.md
+          for channel in win osx-arm64 osx-x64; do
+            vpk upload github --repoUrl $REPO_URL --token $GH_TOKEN --channel $channel -o Releases \
+              ${{ steps.version.outputs.pre }} --merge --tag "$TAG" --releaseName "$NAME"
+          done
+          gh release edit "$TAG" --repo "${{ github.repository }}" --draft=false --notes-file notes.md

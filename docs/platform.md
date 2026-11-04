@@ -18,6 +18,7 @@ operating system the jobs do nothing: the user counts as always present, and cal
 | Calls | `Calls` | `WindowsCameraActivity`, `WindowsMicrophoneActivity`, `WindowsCalls` | `MacCameraActivity`, `MacMicrophoneActivity`, `MacCalls` |
 | The goose's window | `OverlayWindow` | Extended window styles | `NSWindow` level and collection behaviour |
 | Settings folder | `App.SettingsFolder()` | `%APPDATA%\TakeABreakGoose` | `~/Library/Application Support/TakeABreakGoose` |
+| Installing and updating | `Updater` (Velopack) | Into `%LOCALAPPDATA%\TakeABreakGoose`, per user | The `.pkg` into `/Applications`; Velopack's `UpdateMac` swaps the app |
 
 The tray icon and the shortcut on Windows get their messages through a `HiddenWindow`: a window
 that's never shown, made with `CreateWindowEx`, whose messages arrive through Avalonia's own message
@@ -28,9 +29,10 @@ loop.
 ### Tray icon
 
 The icon's menu has **Open Take a Break Goose** (in bold, with the shortcut), **Take a break now**,
-**Do not disturb** (*"(you're in a call)"* when a call turned it on), **Stop focus session** and
-**Quit**. It's Windows' own menu (`TrackPopupMenuEx`), made each time it opens; Avalonia's tray icon
-draws its menu itself, which looked bigger than other tray menus. A click on the icon opens the
+**Do not disturb** (*"(you're in a call)"* when a call turned it on), **Stop focus session**, when
+a newer version is out **Update to version …**, and **Quit**. It's Windows' own menu
+(`TrackPopupMenuEx`), made each time it opens; Avalonia's tray icon draws its menu itself, which
+looked bigger than other tray menus. A click on the icon opens the
 window. Its tooltip is the scheduler's status line. When Explorer restarts, the icon is added again
 (`TaskbarCreated`).
 
@@ -56,8 +58,8 @@ window, and says so in a balloon.
 ### One copy at a time
 
 A second copy asks the first one, through the named pipe, to open its window, and quits. The app
-also holds the mutex `Local\TakeABreakGoose`, which the installer looks for (`AppMutex`) to ask the
-user to close the running goose before updating.
+also holds the mutex `Local\TakeABreakGoose`, which versions from before the lock file used, so
+those don't run next to it.
 
 A Debug build (`dotnet run`) goes by `TakeABreakGoose.Debug` instead (`AppIdentity`): its own
 settings folder, lock, pipe, mutex and Run entry, so it runs next to the installed goose and never
@@ -114,4 +116,7 @@ The macOS side is described in more detail, with what still needs checking on a 
   the goose. It naps just above the Dock.
 - **Objective-C calls** go through the small `ObjC` helper (`objc_msgSend` imports).
 - **Not signed by Apple**: `App/package.sh` signs the app ad hoc, which Apple Silicon needs to run
-  it at all. Users remove the quarantine flag once (see the main README).
+  it at all, and Velopack signs it again ad hoc after adding its updater, with the hardened runtime
+  and `App/TakeABreakGoose.entitlements` (see [In-app updates](in-app-updates.md)). macOS blocks the
+  downloaded installer the first time (Open Anyway); updates the app downloads itself aren't
+  quarantined, so they open without asking.

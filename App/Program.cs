@@ -1,6 +1,8 @@
 using System;
+using System.Runtime.Versioning;
 using Avalonia;
 using Avalonia.Controls;
+using Velopack;
 
 namespace TakeABreakGoose;
 
@@ -9,6 +11,13 @@ internal static class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        // First of all: when Velopack's installer or updater starts the app to let it know about an
+        // install, update or uninstall, this handles that and quits. Uninstalling on Windows also
+        // removes the entry that starts the goose with Windows, which would point to nothing after.
+        var velopack = VelopackApp.Build();
+        if (OperatingSystem.IsWindows()) velopack.OnBeforeUninstallFastCallback(RemoveAutostart);
+        velopack.Run();
+
         // Before Avalonia starts, which can't quit again before its main loop runs.
         using var singleInstance = new SingleInstance(App.SettingsFolder());
         if (!singleInstance.IsFirst)
@@ -21,6 +30,9 @@ internal static class Program
         // The app lives in the tray or the menu bar: closing the window doesn't quit it, only Quit does.
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args, ShutdownMode.OnExplicitShutdown);
     }
+
+    [SupportedOSPlatform("windows")]
+    private static void RemoveAutostart(SemanticVersion _) => Autostart.SetEnabled(false);
 
     public static AppBuilder BuildAvaloniaApp() =>
         AppBuilder.Configure<App>()

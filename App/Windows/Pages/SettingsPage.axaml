@@ -2,23 +2,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:s="using:TakeABreakGoose"
              x:Class="TakeABreakGoose.SettingsPage">
-    <UserControl.Styles>
-        <!-- A text link, like WPF's Hyperlink (Avalonia's text has no clickable inlines). -->
-        <Style Selector="Button.Link">
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <ControlTemplate TargetType="Button">
-                    <TextBlock Foreground="{TemplateBinding Foreground}" Background="Transparent"
-                               TextDecorations="Underline"
-                               Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}" />
-                </ControlTemplate>
-            </Setter>
-        </Style>
-        <Style Selector="Button.Link:pressed">
-            <Setter Property="RenderTransform" Value="{x:Null}" />
-        </Style>
-    </UserControl.Styles>
-
     <Grid RowDefinitions="*,Auto">
         <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel>
@@ -53,6 +36,11 @@
                                   Margin="0,14,0,0" />
                         <TextBlock Classes="Hint" Margin="28,6,0,0"
                                    Text="{x:Static s:Strings.SettingsCallsHint}" />
+
+                        <CheckBox x:Name="CheckForUpdatesCheck" Content="{x:Static s:Strings.SettingsCheckForUpdates}"
+                                  Margin="0,14,0,0" />
+                        <TextBlock Classes="Hint" Margin="28,6,0,0"
+                                   Text="{x:Static s:Strings.SettingsCheckForUpdatesHint}" />
 
                         <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
                             <TextBlock Text="{x:Static s:Strings.SettingsShortcut}" Classes="Label" />
@@ -104,7 +92,7 @@
                     <StackPanel x:Name="UpdateText" IsVisible="False" Orientation="Horizontal"
                                 HorizontalAlignment="Center" Margin="0,4,0,0">
                         <TextBlock x:Name="UpdateRun" FontSize="12" Foreground="#B85F12" />
-                        <Button Classes="Link" Content="{x:Static s:Strings.SettingsDownload}" FontSize="12" Foreground="#B85F12"
+                        <Button x:Name="DownloadUpdateButton" Classes="Link" Content="{x:Static s:Strings.SettingsDownload}" FontSize="12" Foreground="#B85F12"
                                 Margin="4,0,0,0" Click="DownloadUpdate_Click" />
                     </StackPanel>
                 </StackPanel>

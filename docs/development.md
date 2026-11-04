@@ -3,8 +3,8 @@
 ## What you need
 
 - The [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
-- Any platform for the app, the core and its tests; Windows for the Windows tests and the installer.
-- A Mac only to package the app into a `.dmg` (`App/package.sh` needs `codesign` and `hdiutil`).
+- Any platform for the app, the core and its tests; Windows for the Windows tests.
+- A Mac only to build the `.app` (`App/package.sh` needs `codesign`) and pack it with Velopack.
   GitHub Actions does that for releases.
 
 ## Running it
@@ -99,6 +99,29 @@ Every text the app shows is in `Core/Text/Strings.resx` (English) and `Core/Text
 1. Set the new version in `Directory.Build.props`.
 2. Write `release-notes/vX.Y.Z.md`: what's new for users, followed by the **Install** section
    (copy it from the previous release and change the version numbers).
+   - **Start every bullet with a short bold phrase** that says the point on its own, e.g.
+     `- **A smaller download**: about a third smaller than before.` After an update the app shows
+     what's new in short: the headings, and of each bullet only its bold start (a bullet without
+     one is shown whole, a section without bullets by its first sentence, and the Install section
+     not at all). See [In-app updates](in-app-updates.md).
+   - The Install section, for a release made with Velopack (1.11.0 and later):
+
+     ```markdown
+     ## Install
+
+     Already have the goose? It updates itself: look in its menu or at the bottom of the Settings tab.
+
+     On Windows: **`TakeABreakGoose-win-Setup.exe`**. No admin rights are needed. Or
+     **`TakeABreakGoose-win-Portable.zip`**: unzip it anywhere and run `Take a Break Goose.exe`.
+     The app isn't code-signed, so Windows SmartScreen may warn you the first time: click
+     **More info**, then **Run anyway**.
+
+     On a Mac (macOS 12 or later): **`TakeABreakGoose-osx-arm64-Setup.pkg`** for a Mac with an
+     Apple chip (M1 or later), **`TakeABreakGoose-osx-x64-Setup.pkg`** for an Intel Mac. The
+     installer isn't signed by Apple, so macOS blocks it the first time: **System Settings →
+     Privacy & Security → Open Anyway**.
+     ```
+
 3. Commit, then tag and push:
 
    ```bash
@@ -109,24 +132,37 @@ Pushing a `v*` tag runs `.github/workflows/release.yml`:
 
 1. Runs both test projects.
 2. Publishes the app for Windows as one self-contained `.exe`, so users don't need .NET installed.
-3. Builds the installer with Inno Setup (`installer/TakeABreakGoose.iss`): a per-user install into
-   `%LOCALAPPDATA%\Programs`, with no admin rights needed, and a Start menu shortcut. It optionally
-   adds a desktop shortcut and starts the goose with Windows.
-4. Zips the `.exe` as the portable download.
-5. Creates the GitHub release with `release-notes/vX.Y.Z.md` as its description.
-6. Then calls `.github/workflows/mac-build.yml`, which runs the core tests on macOS, builds a `.dmg`
-   for Apple Silicon and one for Intel Macs with `App/package.sh`, and adds both to the release.
+3. Packs it with [Velopack](https://velopack.io) (`vpk`): an installer (`TakeABreakGoose-win-Setup.exe`)
+   that installs per user into `%LOCALAPPDATA%\TakeABreakGoose` without admin rights, a portable
+   `.zip`, and the update package, with a small delta update from the previous release when there
+   is one.
+4. Calls `.github/workflows/mac-build.yml`, which runs the core tests on macOS, builds the ad hoc
+   signed app for Apple Silicon and for Intel Macs with `App/package.sh`, packs each with Velopack
+   (a `.pkg` and the update), and checks that the packed app is validly signed
+   and keeps running.
+5. Once all of that worked, creates the GitHub release with everything in it, and
+   `release-notes/vX.Y.Z.md` as its description. The app reads the descriptions too, for the
+   versions it skips when updating, so they have to stay the notes. When a build fails, nothing is
+   published.
 
-Running apps notice the new release by themselves (`UpdateChecker`) and show a link to it at the
-bottom of the Settings tab.
+Running apps find the new release by themselves and offer to update (see [In-app updates](in-app-updates.md)).
 
-Pushing to any other branch than `main` also runs the Mac build, so a branch's `.dmg`s can be
-downloaded from the run's Artifacts.
+**To try a release first**, tag it with a dash: `v1.11.0-beta.1` becomes a pre-release. Normal
+releases never update to a pre-release, but a pre-release updates to newer pre-releases and
+releases, so installing one is a way to test the whole update on a real computer.
+Pre-releases of the same version are ordered by the word after the dash, alphabetically, then by
+number: `1.11.0-alpha.2` < `1.11.0-beta.1` < `1.11.0-rc.1` < `1.11.0`. So keep to one word per
+version, or pick a later one: a `beta` after a `spike` counts as older, and Velopack refuses to
+pack it.
+
+Pushing to any other branch than `main` also runs the Mac build, so a branch's Mac installers can
+be downloaded from the run's Artifacts.
 
 ## Other tools
 
 - `tools/make-icon.ps1` draws the app icon from vector paths and writes `Assets/goose.ico`,
-  `App/Assets/goose.icns` and `docs/icon.png`:
+  `App/Assets/goose.icns` and `docs/icon.png`, and the Windows installer's splash image
+  `Assets/splash.png` (the goose's badge and name, shown with a progress bar while installing):
 
   ```bash
   powershell -File tools/make-icon.ps1

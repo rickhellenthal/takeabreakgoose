@@ -16,6 +16,7 @@ public sealed class StatusIcon : IDisposable
     public event Action? StopSessionRequested;
     public event Action? DoNotDisturbToggled;
     public event Action? QuitRequested;
+    public event Action? UpdateRequested;
 
     public StatusIcon()
     {
@@ -27,6 +28,7 @@ public sealed class StatusIcon : IDisposable
             tray.StopSessionRequested += () => StopSessionRequested?.Invoke();
             tray.DoNotDisturbToggled += () => DoNotDisturbToggled?.Invoke();
             tray.QuitRequested += () => QuitRequested?.Invoke();
+            tray.UpdateRequested += () => UpdateRequested?.Invoke();
         }
         else
         {
@@ -36,16 +38,19 @@ public sealed class StatusIcon : IDisposable
             menuBar.StopSessionRequested += () => StopSessionRequested?.Invoke();
             menuBar.DoNotDisturbToggled += () => DoNotDisturbToggled?.Invoke();
             menuBar.QuitRequested += () => QuitRequested?.Invoke();
+            menuBar.UpdateRequested += () => UpdateRequested?.Invoke();
         }
     }
 
     /// <param name="inCall">Do not disturb is on because the user is in a call.</param>
     /// <param name="hotkeyKey">The global shortcut, shown next to Open.</param>
+    /// <param name="updateText">"Update to version 1.12.0" when there's a newer version, otherwise null.</param>
     public void Update(string status, bool doNotDisturb, bool inCall, bool sessionRunning,
-        HotkeyModifiers hotkeyModifiers, string hotkeyKey)
+        HotkeyModifiers hotkeyModifiers, string hotkeyKey, string? updateText)
     {
-        if (OperatingSystem.IsWindows()) _tray?.Update(status, doNotDisturb, inCall, sessionRunning, HotkeyText.Format(hotkeyModifiers, hotkeyKey));
-        _menuBar?.Update(status, doNotDisturb, inCall, sessionRunning, hotkeyModifiers, hotkeyKey);
+        if (OperatingSystem.IsWindows())
+            _tray?.Update(status, doNotDisturb, inCall, sessionRunning, HotkeyText.Format(hotkeyModifiers, hotkeyKey), updateText);
+        _menuBar?.Update(status, doNotDisturb, inCall, sessionRunning, hotkeyModifiers, hotkeyKey, updateText);
     }
 
     /// <summary>A short message: a balloon from the tray icon on Windows, a small card under the menu bar on macOS.</summary>

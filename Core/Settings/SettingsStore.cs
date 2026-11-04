@@ -24,6 +24,9 @@ public sealed class SettingsStore
 
     public string FilePath { get; }
 
+    /// <summary>Whether the settings file is there: not yet on a new install, until the first save.</summary>
+    public bool Exists => File.Exists(FilePath);
+
     public GooseSettings Load()
     {
         GooseSettings settings;

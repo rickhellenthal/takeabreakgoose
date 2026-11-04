@@ -14,6 +14,7 @@ internal sealed class MenuBarIcon : IDisposable
     private readonly NativeMenuItem _breakNowItem;
     private readonly NativeMenuItem _doNotDisturbItem;
     private readonly NativeMenuItem _stopSessionItem;
+    private readonly NativeMenuItem _updateItem;
     private readonly NativeMenuItem _quitItem;
 
     public event Action? OpenRequested;
@@ -21,6 +22,7 @@ internal sealed class MenuBarIcon : IDisposable
     public event Action? StopSessionRequested;
     public event Action? DoNotDisturbToggled;
     public event Action? QuitRequested;
+    public event Action? UpdateRequested;
 
     public MenuBarIcon()
     {
@@ -33,6 +35,8 @@ internal sealed class MenuBarIcon : IDisposable
         _doNotDisturbItem.Click += (_, _) => DoNotDisturbToggled?.Invoke();
         _stopSessionItem = new NativeMenuItem();
         _stopSessionItem.Click += (_, _) => StopSessionRequested?.Invoke();
+        _updateItem = new NativeMenuItem { IsVisible = false };
+        _updateItem.Click += (_, _) => UpdateRequested?.Invoke();
         _quitItem = new NativeMenuItem();
         _quitItem.Click += (_, _) => QuitRequested?.Invoke();
 
@@ -43,7 +47,7 @@ internal sealed class MenuBarIcon : IDisposable
             ToolTipText = "Take a Break Goose",
             Menu = new NativeMenu
             {
-                openItem, _breakNowItem, _doNotDisturbItem, _stopSessionItem, new NativeMenuItemSeparator(), _quitItem,
+                openItem, _breakNowItem, _doNotDisturbItem, _stopSessionItem, new NativeMenuItemSeparator(), _updateItem, _quitItem,
             },
             IsVisible = true,
         };
@@ -54,8 +58,9 @@ internal sealed class MenuBarIcon : IDisposable
 
     /// <param name="inCall">Do not disturb is on because the user is in a call.</param>
     /// <param name="hotkeyKey">The global shortcut, shown next to Open.</param>
+    /// <param name="updateText">The menu item for a newer version, or null when there's none.</param>
     public void Update(string status, bool doNotDisturb, bool inCall, bool sessionRunning,
-        HotkeyModifiers hotkeyModifiers, string hotkeyKey)
+        HotkeyModifiers hotkeyModifiers, string hotkeyKey, string? updateText)
     {
         _icon.ToolTipText = $"Take a Break Goose\n{status}";
         _doNotDisturbItem.IsChecked = doNotDisturb;
@@ -64,6 +69,8 @@ internal sealed class MenuBarIcon : IDisposable
         _doNotDisturbItem.Header = inCall ? Strings.MenuDoNotDisturbInCall : Strings.MenuDoNotDisturb;
         _stopSessionItem.Header = Strings.MenuStopSession;
         _quitItem.Header = Strings.MenuQuit;
+        _updateItem.Header = updateText ?? "";
+        _updateItem.IsVisible = updateText != null;
         // Breaks, Do not disturb and stopping only mean something during a focus session.
         // Do not disturb can outlast its session (the goose's goodbye waits for it), so it stays while on.
         _breakNowItem.IsVisible = _stopSessionItem.IsVisible = sessionRunning;

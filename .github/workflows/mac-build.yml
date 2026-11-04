@@ -1,6 +1,8 @@
-# Builds the macOS app: one .dmg for Apple Silicon and one for Intel Macs.
-# - The release workflow calls it with the release's tag, and the .dmgs are added to that release.
-# - On every push to a branch other than main it builds them to try out, under the run's Artifacts.
+# Builds the macOS app and packs it with Velopack, for Apple Silicon and for Intel Macs: an installer
+# (.pkg) and the update package, under the run's Artifacts (mac-arm64, mac-x64).
+# - The release workflow calls it with the release's tag; it then publishes them with the rest.
+# - On every push to a branch other than main it builds them to try out, unless the push only
+#   changes text that isn't part of the app (the README, docs/, release-notes/).
 #   (GitHub only offers "Run workflow" by hand for workflows that are on main; once it is, that
 #   works too: Actions → Mac build → Run workflow.)
 name: Mac build
@@ -8,16 +10,22 @@ name: Mac build
 on:
   push:
     branches-ignore: [main]
+    paths-ignore: ["README.md", "docs/**", "release-notes/**"]
   workflow_dispatch:
   workflow_call:
     inputs:
       release-tag:
-        description: The release (e.g. v1.8.0) to add the .dmgs to; its version is the app's.
+        description: The release (e.g. v1.11.0) to add the Mac files to; its version is the app's.
         type: string
         required: true
 
 permissions:
   contents: write
+
+env:
+  TAG: ${{ inputs.release-tag }}
+  REPO_URL: https://github.com/${{ github.repository }}
+  VPK_VERSION: 1.2.161
 
 jobs:
   mac:
@@ -25,8 +33,6 @@ jobs:
     strategy:
       matrix:
         arch: [arm64, x64]
-    env:
-      TAG: ${{ inputs.release-tag }}
     steps:
       - uses: actions/checkout@v4
 
@@ -39,17 +45,67 @@ jobs:
         if: matrix.arch == 'arm64'
         run: dotnet test tests/TakeABreakGoose.Tests -c Release
 
-      # A release's version comes from its tag; otherwise from Directory.Build.props.
-      - name: Build the .dmg
-        run: App/package.sh ${{ matrix.arch }} ${TAG:+"${TAG#v}"}
+      # A release's version comes from its tag; otherwise from Directory.Build.props. A tag with a
+      # dash (v1.11.0-beta.1) is a pre-release.
+      - name: Work out the version
+        id: version
+        run: |
+          version="${TAG#v}"
+          [[ -n "$version" ]] || version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$version" == *-* ]]; then echo "pre=--pre" >> "$GITHUB_OUTPUT"; else echo "pre=" >> "$GITHUB_OUTPUT"; fi
+
+      # The ad hoc signed "Take a Break Goose.app".
+      - name: Build the app
+        run: App/package.sh ${{ matrix.arch }} "${{ steps.version.outputs.version }}"
+
+      # The release's notes, which the release workflow put together; none for a branch build.
+      - uses: actions/download-artifact@v4
+        if: inputs.release-tag != ''
+        with:
+          name: release-notes
+
+      - name: Install Velopack
+        run: dotnet tool install -g vpk --version $VPK_VERSION
+
+      # The previous release, to make a small delta update from. Releases before Velopack have none.
+      - name: Download the previous release
+        if: inputs.release-tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          vpk download github --repoUrl $REPO_URL --token $GH_TOKEN --channel osx-${{ matrix.arch }}
+          ${{ steps.version.outputs.pre }} -o Releases
+          || echo "Nothing to make a delta from."
+
+      # Velopack adds its updater (UpdateMac) to the bundle, so it has to sign it again: ad hoc ("-"),
+      # only what it added plus the bundle, since package.sh already signed every file. Velopack
+      # always signs with the hardened runtime, which needs the entitlements for .NET.
+      # No portable .zip: on a Mac the .pkg is the better download (a downloaded .zip is quarantined).
+      - name: Pack with Velopack
+        run: >
+          vpk pack -u TakeABreakGoose -v "${{ steps.version.outputs.version }}"
+          -p "dist/mac-${{ matrix.arch }}/Take a Break Goose.app"
+          -e TakeABreakGoose --packTitle "Take a Break Goose" --packAuthors "Rick Hellenthal"
+          -r osx-${{ matrix.arch }} --channel osx-${{ matrix.arch }} -o Releases --noPortable
+          $( [[ -f notes.md ]] && echo --releaseNotes notes.md )
+          --signAppIdentity "-" --signDisableDeep --signEntitlements App/TakeABreakGoose.entitlements
+
+      # Stops a broken build before anyone installs it: the app in the installer must be validly
+      # signed and keep running once started.
+      - name: Check the packed app
+        run: |
+          pkgutil --expand-full Releases/*-Setup.pkg check
+          app="$(find check -name '*.app' -type d -prune | head -n 1)"
+          echo "Checking $app"
+          codesign --verify --strict --deep "$app"
+          open "$app"
+          sleep 20
+          pgrep -x TakeABreakGoose > /dev/null || { echo "::error::The app didn't keep running."; exit 1; }
+          pkill -x TakeABreakGoose
 
       - uses: actions/upload-artifact@v4
         with:
           name: mac-${{ matrix.arch }}
-          path: dist/*.dmg
+          path: Releases/*
 
-      - name: Add it to the GitHub release
-        if: inputs.release-tag != ''
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$TAG" dist/*.dmg

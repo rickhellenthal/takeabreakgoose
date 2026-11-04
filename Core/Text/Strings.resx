@@ -685,6 +685,65 @@ twelve</value>
   <data name="SettingsUpdateAvailable" xml:space="preserve">
     <value>Version {0} is available.</value>
   </data>
+  <data name="SettingsUpdateNow" xml:space="preserve">
+    <value>Update now</value>
+  </data>
+  <data name="SettingsUpdateNotNow" xml:space="preserve">
+    <value>Not right now, the goose is busy. Try again after your break.</value>
+  </data>
+  <data name="SettingsUpdateFailed" xml:space="preserve">
+    <value>The update didn't work: {0}</value>
+    <comment>{0} is what went wrong, in the words of the computer.</comment>
+  </data>
+  <data name="SettingsUpdateCancelled" xml:space="preserve">
+    <value>Update cancelled. You can try again any time.</value>
+  </data>
+  <data name="UpdateDownloadingHeading" xml:space="preserve">
+    <value>Fetching the new goose…</value>
+  </data>
+  <data name="UpdateDownloadingHint" xml:space="preserve">
+    <value>The goose restarts by itself when it's done.</value>
+  </data>
+  <data name="UpdateRestartingHeading" xml:space="preserve">
+    <value>Here it comes!</value>
+  </data>
+  <data name="UpdateRestartingHint" xml:space="preserve">
+    <value>The goose restarts in a moment.</value>
+  </data>
+  <data name="WhatsNewHeading" xml:space="preserve">
+    <value>Honk! You now have version {0}</value>
+    <comment>{0} is the version, like 1.11.0.</comment>
+  </data>
+  <data name="WhatsNewIntro" xml:space="preserve">
+    <value>What's new:</value>
+  </data>
+  <data name="WhatsNewVersion" xml:space="preserve">
+    <value>Version {0}</value>
+    <comment>{0} is a version, like 1.11.0.</comment>
+  </data>
+  <data name="WhatsNewOlder" xml:space="preserve">
+    <value>Older changes are on the release page.</value>
+  </data>
+  <data name="WhatsNewAllNotes" xml:space="preserve">
+    <value>Read everything that's new</value>
+  </data>
+  <data name="WhatsNewOk" xml:space="preserve">
+    <value>Nice!</value>
+  </data>
+  <data name="MenuUpdate" xml:space="preserve">
+    <value>Update to version {0}</value>
+    <comment>{0} is the new version, like 1.12.0.</comment>
+  </data>
+  <data name="NoticeUpdateAvailable" xml:space="preserve">
+    <value>There's a new goose in town! Version {0} is ready. Update from the menu whenever it suits you.</value>
+    <comment>{0} is the new version, like 1.12.0.</comment>
+  </data>
+  <data name="SettingsCheckForUpdates" xml:space="preserve">
+    <value>Look for new versions</value>
+  </data>
+  <data name="SettingsCheckForUpdatesHint" xml:space="preserve">
+    <value>Now and then the goose asks GitHub whether there's a newer version. Only its own version number goes along.</value>
+  </data>
   <data name="FieldAutoStartInterval" xml:space="preserve">
     <value>The automatic session interval</value>
     <comment>Fills in {0} of "{0} must be a whole number between …".</comment>

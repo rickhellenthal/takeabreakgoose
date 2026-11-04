@@ -27,7 +27,9 @@ Core/
 ├── Text/        every text the app shows, in English and Dutch (Strings.resx, Strings.nl.resx),
 │                Languages (which one the app speaks), and TimeText: durations in words
 │                ("5 min", "1 min 30 sec", "about 20 minutes")
-└── Updates/     UpdateChecker: asks GitHub whether a newer release is out
+└── Updates/     what's needed to update: when to check (UpdateSchedule), when not to restart
+                 (UpdateMoment), the release notes in short (ReleaseNotes, ReleaseHistory, WhatsNew),
+                 and UpdateChecker for a copy that can't update itself
 ```
 
 The core has no timers and no threads of its own. The app calls `BreakScheduler.Tick()` every
@@ -144,7 +146,13 @@ The app speaks English (the default) or Dutch, picked under **Language** in Sett
 
 ## Updates
 
-`UpdateChecker` asks the GitHub API for the latest release once per run, and compares its tag with
-the app's own version. When a newer one is out, the Settings tab shows a quiet link to it. Offline
-or anything unexpected simply means no news. There's no automatic updating: the user downloads the
-new installer.
+The app updates itself with [Velopack](https://velopack.io), from the GitHub releases
+(`App/Platform/Updater.cs`). The app (`App`) checks a minute after starting, every 12 hours, and when
+the window opens unless it just did (`UpdateSchedule`). What it finds shows up in the Settings tab, in
+the tray or menu bar menu, and once in a notice. Updating downloads the new version with a progress
+card over the window, then restarts; it waits while the goose is busy (`UpdateMoment`). The new
+version then shows what's new once, from the release notes of every version since the old one.
+
+A copy that Velopack didn't install (a Debug build, or one from before 1.11) can't update itself;
+`UpdateChecker` only finds the newer release and links to it. See [In-app updates](in-app-updates.md)
+for the whole story, from the release workflow to the restart.

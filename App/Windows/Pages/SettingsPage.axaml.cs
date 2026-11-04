@@ -17,6 +17,9 @@ public partial class SettingsPage : UserControl
     private string _savedForm = "";
     private AvailableUpdate? _update;
 
+    /// <summary>Update now (or Download, for an app that can't update itself) was clicked.</summary>
+    public event Action? UpdateRequested;
+
 
     public SettingsPage()
     {
@@ -43,7 +46,7 @@ public partial class SettingsPage : UserControl
             LanguageChoices.Children.Add(choice);
         }
         LoadForm(host.Settings);
-        VersionText.Text = $"Take a Break Goose {UpdateChecker.Display(UpdateChecker.CurrentVersion)}";
+        VersionText.Text = $"Take a Break Goose {Updater.CurrentVersionName ?? UpdateChecker.Display(UpdateChecker.CurrentVersion)}";
     }
 
     public void ScrollToTop() => Scroller.ScrollToHome();
@@ -60,6 +63,7 @@ public partial class SettingsPage : UserControl
         // Older macOS, or the app run from a build folder rather than its .app: nothing to turn on.
         StartAtLoginCheck.IsVisible = StartAtLoginHint.IsVisible = StartAtLogin.IsAvailable;
         CallDoNotDisturbCheck.IsChecked = settings.DoNotDisturbDuringCalls;
+        CheckForUpdatesCheck.IsChecked = settings.CheckForUpdates;
         _hotkeyModifiers = settings.HotkeyModifiers;
         _hotkeyKey = settings.HotkeyKey;
         HotkeyBox.Text = HotkeyText.Format(settings.HotkeyModifiers, settings.HotkeyKey);
@@ -135,6 +139,7 @@ public partial class SettingsPage : UserControl
         settings.AllowSnooze = AllowSnoozeCheck.IsChecked == true;
         settings.SnoozeMinutes = snooze;
         settings.DoNotDisturbDuringCalls = CallDoNotDisturbCheck.IsChecked == true;
+        settings.CheckForUpdates = CheckForUpdatesCheck.IsChecked == true;
         settings.HotkeyModifiers = _hotkeyModifiers;
         settings.HotkeyKey = _hotkeyKey;
         settings.Language = SelectedLanguage;
@@ -167,7 +172,8 @@ public partial class SettingsPage : UserControl
     /// <summary>Everything the form shows, to tell whether anything changed since loading or saving.</summary>
     private string FormState() => string.Join("\u001f",
         AutoStartCheck.IsChecked, AutoStartIntervalBox.Text, AllowSnoozeCheck.IsChecked, SnoozeBox.Text,
-        StartAtLoginCheck.IsChecked, CallDoNotDisturbCheck.IsChecked, HotkeyBox.Text, SelectedLanguage);
+        StartAtLoginCheck.IsChecked, CallDoNotDisturbCheck.IsChecked, CheckForUpdatesCheck.IsChecked, HotkeyBox.Text,
+        SelectedLanguage);
 
     public bool HasUnsavedChanges => FormState() != _savedForm;
 
@@ -196,14 +202,17 @@ public partial class SettingsPage : UserControl
     public void ShowUpdate(AvailableUpdate update)
     {
         _update = update;
-        UpdateRun.Text = string.Format(Strings.SettingsUpdateAvailable, UpdateChecker.Display(update.Version));
+        UpdateRun.Text = string.Format(Strings.SettingsUpdateAvailable, update.DisplayName);
+        // Installed with Velopack: it updates itself. Otherwise: a link to the release page.
+        DownloadUpdateButton.Content = Updater.CanUpdate ? Strings.SettingsUpdateNow : Strings.SettingsDownload;
         UpdateText.IsVisible = true;
     }
 
-    private void DownloadUpdate_Click(object? sender, RoutedEventArgs e)
-    {
-        if (_update != null) UpdateChecker.OpenInBrowser(_update.Url);
-    }
+    // The app window takes it from here.
+    private void DownloadUpdate_Click(object? sender, RoutedEventArgs e) => UpdateRequested?.Invoke();
+
+    /// <summary>Next to the Save button, where the page says how saving went.</summary>
+    public void ShowUpdateStatus(string message, bool error) => ShowStatus(message, error);
 
     private const string KoFiUrl = "https://ko-fi.com/rickhellenthal";
 

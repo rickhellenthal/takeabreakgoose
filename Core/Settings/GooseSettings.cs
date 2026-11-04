@@ -51,6 +51,25 @@ public sealed class GooseSettings
     /// <summary>The user has been told, once, that the goose stays away during calls.</summary>
     public bool CallNoticeShown { get; set; }
 
+    /// <summary>
+    /// The version of the app that ran last ("1.11.0"), to show what's new the first time a newer
+    /// one runs. Null in settings from versions before it was remembered.
+    /// </summary>
+    public string? LastRunVersion { get; set; }
+
+    /// <summary>Ask GitHub now and then whether there's a newer version (see UpdateSchedule).</summary>
+    public bool CheckForUpdates { get; set; } = true;
+
+    /// <summary>The newer version the user was told about with a notice, so that's only once.</summary>
+    public string? UpdateNoticeShownFor { get; set; }
+
+    /// <summary>
+    /// Start at login was on just before updating. On a Mac, the new version turns it on again if
+    /// macOS lost it: an ad hoc signed app looks like another app to macOS after an update.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool RestoreStartAtLogin { get; set; }
+
     // The last session the user started, used to pre-fill the start form.
     public int LastSessionIntervalMinutes { get; set; } = 45;
 
