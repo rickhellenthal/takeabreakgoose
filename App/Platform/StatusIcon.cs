@@ -4,7 +4,8 @@ namespace TakeABreakGoose;
 
 /// <summary>
 /// The goose's icon and menu: in the notification area on Windows (WindowsTrayIcon), in the menu bar
-/// on macOS (MenuBarIcon). Also tells the user short things while the window is closed.
+/// on macOS and the system tray on Linux (MenuBarIcon, Avalonia's own tray icon). Also tells the
+/// user short things while the window is closed.
 /// </summary>
 public sealed class StatusIcon : IDisposable
 {

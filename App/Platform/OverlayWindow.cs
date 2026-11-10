@@ -3,13 +3,15 @@ using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform;
+using Avalonia.Threading;
 
 namespace TakeABreakGoose;
 
 /// <summary>
 /// What Avalonia can't do itself for the goose's window: never take the focus from what the user is
 /// doing, stay out of Alt+Tab and Cmd+`, float over everything (on macOS: full-screen apps too, on
-/// every Space), and let clicks through where there's no goose.
+/// every Space), and let clicks through where there's no goose. On Linux, Avalonia's Topmost,
+/// ShowInTaskbar and ShowActivated do the first part; X11 does the clicks.
 /// </summary>
 internal static partial class OverlayWindow
 {
@@ -42,6 +44,9 @@ internal static partial class OverlayWindow
     /// </summary>
     public static void Prepare(Window window)
     {
+        // On Linux the window manager would keep the window inside the screen, so the goose would
+        // appear on screen and walk in place until it caught up: it leaves an override-redirect window alone.
+        if (OperatingSystem.IsLinux() && XWindow(window) is { } xWindow) X11.SetOverrideRedirect(xWindow);
         if (!OperatingSystem.IsWindows()) return;
         const uint overlay = NoActivate | ToolWindow | Layered;
         Win32Properties.AddWindowStylesCallback(window, (style, exStyle) =>
@@ -70,6 +75,18 @@ internal static partial class OverlayWindow
             SetWindowLong(hwnd, ExStyle, (int)((uint)GetWindowLong(hwnd, ExStyle) | NoActivate | ToolWindow | Layered));
             return;
         }
+        if (OperatingSystem.IsLinux() && XWindow(window) is { } xWindow)
+        {
+            // Topmost means nothing to an override-redirect window: raise it now and then instead.
+            X11.Raise(xWindow);
+            var raise = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) =>
+            {
+                if (OperatingSystem.IsLinux()) X11.Raise(xWindow);
+            });
+            raise.Start();
+            window.Closed += (_, _) => raise.Stop();
+            return;
+        }
         if (NativeWindow(window) is not { } nsWindow) return;
         ObjC.Send(nsWindow, ObjC.Selector("setLevel:"), StatusWindowLevel);
         ObjC.Send(nsWindow, ObjC.Selector("setCollectionBehavior:"), CanJoinAllSpaces | Stationary | IgnoresCycle | FullScreenAuxiliary);
@@ -89,6 +106,11 @@ internal static partial class OverlayWindow
             SetWindowLong(hwnd, ExStyle, (int)(clickThrough ? (uint)style | Transparent : (uint)style & ~Transparent));
             return;
         }
+        if (OperatingSystem.IsLinux() && XWindow(window) is { } xWindow)
+        {
+            X11.SetClickThrough(xWindow, clickThrough);
+            return;
+        }
         if (NativeWindow(window) is not { } nsWindow) return;
         ObjC.Send(nsWindow, ObjC.Selector("setIgnoresMouseEvents:"), clickThrough);
     }
@@ -101,6 +123,8 @@ internal static partial class OverlayWindow
     {
         if (Hwnd(window) is not null)
             return GetCursorPos(out var cursor) ? window.PointToClient(new PixelPoint(cursor.X, cursor.Y)) : null;
+        if (OperatingSystem.IsLinux() && XWindow(window) is not null)
+            return X11.CursorPosition() is var (x, y) ? window.PointToClient(new PixelPoint(x, y)) : null;
         if (NativeWindow(window) is not { } nsWindow) return null;
         // Both in points, from the bottom left of the main screen.
         var mouse = ObjC.SendPoint(ObjC.Class("NSEvent"), ObjC.Selector("mouseLocation"));
@@ -116,6 +140,12 @@ internal static partial class OverlayWindow
 
     private static IntPtr? Hwnd(Window window) =>
         OperatingSystem.IsWindows() && window.TryGetPlatformHandle() is { HandleDescriptor: "HWND" } handle
+            && handle.Handle != IntPtr.Zero
+            ? handle.Handle
+            : null;
+
+    private static IntPtr? XWindow(Window window) =>
+        OperatingSystem.IsLinux() && window.TryGetPlatformHandle() is { HandleDescriptor: "XID" } handle
             && handle.Handle != IntPtr.Zero
             ? handle.Handle
             : null;

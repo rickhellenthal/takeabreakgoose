@@ -4,7 +4,7 @@ namespace TakeABreakGoose;
 
 /// <summary>
 /// Tells whether the user is in a call: an app is using the camera, or a meeting app is using the
-/// microphone. How depends on the operating system (WindowsCalls, MacCalls); elsewhere never.
+/// microphone. How depends on the operating system (WindowsCalls, MacCalls, LinuxCalls); elsewhere never.
 /// </summary>
 public static class Calls
 {
@@ -23,6 +23,7 @@ public static class Calls
     {
         if (OperatingSystem.IsWindows()) return WindowsCalls.InProgress();
         if (OperatingSystem.IsMacOS()) return MacCalls.InProgress();
+        if (OperatingSystem.IsLinux()) return LinuxCalls.InProgress();
         return false;
     }
 }

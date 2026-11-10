@@ -121,7 +121,7 @@ public partial class App : Application, IGooseHost
         // from being opened by hand, so there the window always opens.) Closing the window leaves the
         // goose in the tray or menu bar.
         string[] args = desktop.Args ?? Array.Empty<string>();
-        bool atLogin = OperatingSystem.IsWindows() && Array.IndexOf(args, Autostart.Argument) >= 0;
+        bool atLogin = (OperatingSystem.IsWindows() || OperatingSystem.IsLinux()) && Array.IndexOf(args, "--autostart") >= 0;
         if (!atLogin) ShowMainWindow();
         if (!hotkeyOk)
             statusIcon.ShowNotice(string.Format(
@@ -136,7 +136,7 @@ public partial class App : Application, IGooseHost
 
     /// <summary>
     /// Where the settings are: %APPDATA%\TakeABreakGoose on Windows (TakeABreakGoose.Debug for a Debug
-    /// build), ~/Library/Application Support/TakeABreakGoose on a Mac.
+    /// build), ~/Library/Application Support/TakeABreakGoose on a Mac, ~/.config/TakeABreakGoose on Linux.
     /// </summary>
     public static string SettingsFolder()
     {

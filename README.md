@@ -5,7 +5,7 @@
 <h1 align="center">Take a Break Goose</h1>
 
 <p align="center">
-  A friendly goose for Windows and macOS that waddles onto your screen to remind you to take a break,<br>
+  A friendly goose for Windows, macOS and Linux that waddles onto your screen to remind you to take a break,<br>
   so hyperfocus doesn't burn you out.
 </p>
 
@@ -15,6 +15,9 @@
   </a>
   <a href="https://github.com/rickhellenthal/takeabreakgoose/releases/latest/download/TakeABreakGoose-osx-arm64-Setup.pkg">
     <img src="https://img.shields.io/badge/Download_for_macOS-F28C28?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS">
+  </a>
+  <a href="https://github.com/rickhellenthal/takeabreakgoose/releases/latest/download/TakeABreakGoose.AppImage">
+    <img src="https://img.shields.io/badge/Download_for_Linux-F28C28?style=for-the-badge&logo=linux&logoColor=white" alt="Download for Linux">
   </a>
   <a href="https://ko-fi.com/rickhellenthal">
     <img src="https://img.shields.io/badge/Support_on_Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Support on Ko-fi">
@@ -67,6 +70,22 @@ xattr -dr com.apple.quarantine "/Applications/Take a Break Goose.app" && open "/
 ```
 
 To uninstall, quit the goose from its menu bar icon and drag it from Applications to the Trash.
+
+### On Linux
+
+> [!NOTE]
+> Like the Mac version, the Linux version is an extra, so bugs are more likely than on Windows. Found one? Please [open an issue](https://github.com/rickhellenthal/takeabreakgoose/issues).
+
+1. Download **`TakeABreakGoose.AppImage`** from the [latest release](https://github.com/rickhellenthal/takeabreakgoose/releases/latest).
+2. Make it executable and run it (or right-click it → **Properties** → allow running it as a program, then double-click it):
+
+   ```bash
+   chmod +x TakeABreakGoose.AppImage && ./TakeABreakGoose.AppImage
+   ```
+
+The goose lives in the system tray. It works best on an X11 session: on Wayland the global shortcut only works while one of the goose's own windows has the focus, and the goose can't tell when you've stepped away. Turn on **Start at login** in its Settings tab to have it start with your desktop. Older Ubuntu-based systems may need `libfuse2` to run AppImages.
+
+To uninstall, turn off **Start at login**, quit the goose from its tray icon and delete the AppImage. Its settings are in `~/.config/TakeABreakGoose`.
 
 ### Updating
 
@@ -139,6 +158,6 @@ dotnet test tests/TakeABreakGoose.Tests
 dotnet test tests/TakeABreakGoose.Windows.Tests
 ```
 
-The app is built with [Avalonia](https://avaloniaui.net/) and is the same on Windows and macOS (`App/`). What the goose does without any windows lives in `Core/`, a plain .NET library. The [technical documentation](docs/README.md) explains how it all fits together, how the goose decides when to come by, and how a release is made.
+The app is built with [Avalonia](https://avaloniaui.net/) and is the same on Windows, macOS and Linux (`App/`). What the goose does without any windows lives in `Core/`, a plain .NET library. The [technical documentation](docs/README.md) explains how it all fits together, how the goose decides when to come by, and how a release is made.
 
 </details>

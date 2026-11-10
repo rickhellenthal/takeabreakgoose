@@ -3,9 +3,10 @@
 What the app asks of its operating system. The shared core only needs the time (`IClock`) and
 the time since the last mouse or keyboard input (`IUserActivity`); everything else lives in
 `App/Platform/`. Each job has one class there that picks the operating system with
-`OperatingSystem.IsWindows()` or `IsMacOS()`, and the code for each is in `Platform/Windows/` and
-`Platform/MacOS/` (marked `[SupportedOSPlatform("windows")]` on the Windows side). On another
-operating system the jobs do nothing: the user counts as always present, and calls are never detected.
+`OperatingSystem.IsWindows()`, `IsMacOS()` or `IsLinux()`, and the code for each is in `Platform/Windows/`,
+`Platform/MacOS/` and `Platform/Linux/` (marked `[SupportedOSPlatform]` on the Windows and Linux sides).
+On another operating system the jobs do nothing: the user counts as always present, and calls are
+never detected. Linux is described [at the end](#linux).
 
 | Job | | Windows (`Platform/Windows/`) | macOS (`Platform/MacOS/`) |
 |---|---|---|---|
@@ -131,3 +132,24 @@ The macOS side is described in more detail, with what still needs checking on a 
   and `App/TakeABreakGoose.entitlements` (see [In-app updates](in-app-updates.md)). macOS blocks the
   downloaded installer the first time (Open Anyway); updates the app downloads itself aren't
   quarantined, so they open without asking.
+
+## Linux
+
+Avalonia draws through X11 on Linux, also in a Wayland session (through XWayland), so the Linux side
+talks to X11 too (`Platform/Linux/X11.cs`, over a connection of its own). It's an AppImage, packed by
+Velopack, which also updates it.
+
+| Job | Linux (`Platform/Linux/`) |
+|---|---|
+| Icon and menu | `MenuBarIcon`, as on macOS: Avalonia's `TrayIcon`, a StatusNotifierItem over D-Bus (KDE, and GNOME with the AppIndicator extension) |
+| Short messages | The `Notice` window, as on macOS |
+| Global shortcut | `LinuxHotkey`: `XGrabKey` on the root window, with and without NumLock and CapsLock, read by a background thread. A shortcut that's taken shows up as `BadAccess`, caught by an error handler set only while grabbing |
+| Idle time | `X11.IdleTime`: the XScreenSaver extension |
+| Start at sign-in | `XdgAutostart`: `~/.config/autostart/TakeABreakGoose.desktop`, running the AppImage (`$APPIMAGE`) with `--autostart` |
+| One copy at a time | The lock file and named pipe (a Unix socket), as on macOS |
+| Calls | `LinuxCalls`: a `/dev/video*` open in one of the user's processes (`/proc/*/fd`), or a meeting app in `pactl list source-outputs` (PulseAudio or PipeWire) |
+| The goose's window | Avalonia's `Topmost`, `ShowInTaskbar` and `ShowActivated`; clicks go through with an empty input shape (the Shape extension), the cursor from `XQueryPointer` |
+| Settings folder | `~/.config/TakeABreakGoose` |
+
+On Wayland, apps can't see keys meant for others or input in other apps' windows: the shortcut only
+works while an XWayland window has the focus, and the idle time only counts input to XWayland windows.

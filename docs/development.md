@@ -140,7 +140,9 @@ Pushing a `v*` tag runs `.github/workflows/release.yml`:
    signed app for Apple Silicon and for Intel Macs with `App/package.sh`, packs each with Velopack
    (a `.pkg` and the update), and checks that the packed app is validly signed
    and keeps running.
-5. Once all of that worked, creates the GitHub release with everything in it, and
+5. Calls `.github/workflows/linux-build.yml`, which runs the core tests on Linux, publishes the app
+   for `linux-x64` and packs it with Velopack as an AppImage (`TakeABreakGoose.AppImage`) and the update.
+6. Once all of that worked, creates the GitHub release with everything in it, and
    `release-notes/vX.Y.Z.md` as its description. The app reads the descriptions too, for the
    versions it skips when updating, so they have to stay the notes. When a build fails, nothing is
    published.
@@ -149,13 +151,13 @@ Running apps find the new release by themselves and offer to update (see [In-app
 
 **After every release, check the README download buttons.** They link straight to the installers
 of the latest release (`releases/latest/download/TakeABreakGoose-win-Setup.exe` and
-`…/TakeABreakGoose-osx-arm64-Setup.pkg`), so they follow each new release by themselves as long as
+`…/TakeABreakGoose-osx-arm64-Setup.pkg`, `…/TakeABreakGoose.AppImage`), so they follow each new release by themselves as long as
 the file names stay the same. Once the release is out, make sure both still download, and if an
 installer got a new name, update the button links in `README.md` (and the file names in its
 Download section) in the same go:
 
 ```bash
-for f in TakeABreakGoose-win-Setup.exe TakeABreakGoose-osx-arm64-Setup.pkg; do
+for f in TakeABreakGoose-win-Setup.exe TakeABreakGoose-osx-arm64-Setup.pkg TakeABreakGoose.AppImage; do
   curl -sIL -o /dev/null -w "%{http_code} $f\n" https://github.com/rickhellenthal/takeabreakgoose/releases/latest/download/$f
 done
 ```

@@ -1,5 +1,5 @@
-# Packs the app with Velopack for Windows, and for Apple Silicon and Intel Macs (mac-build.yml), and
-# only once all three are packed, publishes them together as a GitHub release. Installed apps update
+# Packs the app with Velopack for Windows, for Apple Silicon and Intel Macs (mac-build.yml) and for
+# Linux (linux-build.yml), and only once all four are packed, publishes them together as a GitHub release. Installed apps update
 # themselves from these releases (App/Platform/Updater.cs; see docs/in-app-updates.md).
 # Runs when a version tag is pushed, e.g.:  git tag v1.11.0 && git push origin v1.11.0
 # A tag with a dash (v1.11.0-beta.1) becomes a pre-release: only pre-releases update to those, so
@@ -107,10 +107,17 @@ jobs:
     with:
       release-tag: ${{ github.ref_name }}
 
-  # Everything at once, so the release never goes out without the Mac files, and not at all when a
-  # build failed.
+  # The Linux AppImage (see linux-build.yml).
+  linux:
+    needs: release
+    uses: ./.github/workflows/linux-build.yml
+    with:
+      release-tag: ${{ github.ref_name }}
+
+  # Everything at once, so the release never goes out without the Mac or Linux files, and not at all
+  # when a build failed.
   publish:
-    needs: [release, mac]
+    needs: [release, mac, linux]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-dotnet@v4
@@ -130,7 +137,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          pattern: "{win,mac-arm64,mac-x64}"
+          pattern: "{win,mac-arm64,mac-x64,linux}"
           merge-multiple: true
           path: Releases
 
@@ -147,7 +154,7 @@ jobs:
           prerelease=$([[ -n "${{ steps.version.outputs.pre }}" ]] && echo --prerelease || true)
           gh release create "$TAG" --repo "${{ github.repository }}" --verify-tag --draft $prerelease \
             --title "$NAME" --notes-file notes.md
-          for channel in win osx-arm64 osx-x64; do
+          for channel in win osx-arm64 osx-x64 linux; do
             vpk upload github --repoUrl $REPO_URL --token $GH_TOKEN --channel $channel -o Releases \
               ${{ steps.version.outputs.pre }} --merge --tag "$TAG" --releaseName "$NAME"
           done

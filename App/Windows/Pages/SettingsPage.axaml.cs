@@ -26,8 +26,8 @@ public partial class SettingsPage : UserControl
         InitializeComponent();
         // Before the text box gets the key, like WPF's PreviewKeyDown.
         HotkeyBox.AddHandler(KeyDownEvent, HotkeyBox_PreviewKeyDown, RoutingStrategies.Tunnel);
-        // The XAML has the Mac's words for these.
-        if (OperatingSystem.IsWindows())
+        // The XAML has the Mac's words for these; Linux has a tray and Ctrl like Windows.
+        if (!OperatingSystem.IsMacOS())
         {
             StartAtLoginCheck.Content = Strings.SettingsStartWithWindows;
             ToolTip.SetTip(HotkeyBox, Strings.SettingsShortcutToolTipWindows);

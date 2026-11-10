@@ -1,0 +1,92 @@
+# Builds the Linux app and packs it with Velopack: an AppImage (TakeABreakGoose.AppImage) and the
+# update package, under the run's Artifacts (linux).
+# - The release workflow calls it with the release's tag; it then publishes them with the rest.
+# - On every push to a branch other than main it builds them to try out, unless the push only
+#   changes text that isn't part of the app (the README, docs/, release-notes/).
+name: Linux build
+
+on:
+  push:
+    branches-ignore: [main]
+    paths-ignore: ["README.md", "docs/**", "release-notes/**"]
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      release-tag:
+        description: The release (e.g. v1.12.0) to add the Linux files to; its version is the app's.
+        type: string
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  TAG: ${{ inputs.release-tag }}
+  REPO_URL: https://github.com/${{ github.repository }}
+  VPK_VERSION: 1.2.161
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      # The shared core, on Linux this time.
+      - name: Run the tests
+        run: dotnet test tests/TakeABreakGoose.Tests -c Release
+
+      # A release's version comes from its tag; otherwise from Directory.Build.props. A tag with a
+      # dash (v1.12.0-beta.1) is a pre-release.
+      - name: Work out the version
+        id: version
+        run: |
+          version="${TAG#v}"
+          [[ -n "$version" ]] || version="$(sed -n 's:.*<Version>\(.*\)</Version>.*:\1:p' Directory.Build.props)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$version" == *-* ]]; then echo "pre=--pre" >> "$GITHUB_OUTPUT"; else echo "pre=" >> "$GITHUB_OUTPUT"; fi
+
+      # Self-contained, so users don't need to install .NET first.
+      - name: Publish the app
+        run: >
+          dotnet publish App/TakeABreakGoose.App.csproj -c Release -r linux-x64
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -p:Version=${{ steps.version.outputs.version }}
+          -o publish
+
+      # The release's notes, which the release workflow put together; none for a branch build.
+      - uses: actions/download-artifact@v4
+        if: inputs.release-tag != ''
+        with:
+          name: release-notes
+
+      - name: Install Velopack
+        run: dotnet tool install -g vpk --version $VPK_VERSION
+
+      # The previous release, to make a small delta update from. The first Linux release has none.
+      - name: Download the previous release
+        if: inputs.release-tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          vpk download github --repoUrl $REPO_URL --token $GH_TOKEN --channel linux
+          ${{ steps.version.outputs.pre }} -o Releases
+          || echo "Nothing to make a delta from."
+
+      - name: Pack with Velopack
+        run: >
+          vpk pack -u TakeABreakGoose -v "${{ steps.version.outputs.version }}" -p publish
+          -e TakeABreakGoose --packTitle "Take a Break Goose" --packAuthors "Rick Hellenthal"
+          -i docs/icon.png -r linux-x64 --channel linux -o Releases
+          $( [[ -f notes.md ]] && echo --releaseNotes notes.md )
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: Releases/*

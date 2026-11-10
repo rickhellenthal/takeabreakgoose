@@ -22,7 +22,8 @@ public sealed partial class UserActivity : IUserActivity
             if (!GetLastInputInfo(ref info)) return TimeSpan.Zero;
             return TimeSpan.FromMilliseconds(unchecked((uint)Environment.TickCount - info.Time));
         }
-        // Elsewhere the user counts as always there.
+        // On Linux from X11; when it can't tell (e.g. a Wayland session), the user counts as always there.
+        if (OperatingSystem.IsLinux()) return X11.IdleTime() ?? TimeSpan.Zero;
         return TimeSpan.Zero;
     }
 

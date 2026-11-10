@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    The app for Windows and macOS, built with Avalonia on the shared core. Avalonia brings its own
-    backend for each, so this is plain net8.0; what each operating system needs is in
-    Platform/Windows and Platform/MacOS, behind OperatingSystem checks.
+    The app for Windows, macOS and Linux, built with Avalonia on the shared core. Avalonia brings its
+    own backend for each, so this is plain net8.0; what each operating system needs is in
+    Platform/Windows, Platform/MacOS and Platform/Linux, behind OperatingSystem checks.
   -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
