@@ -147,6 +147,19 @@ Pushing a `v*` tag runs `.github/workflows/release.yml`:
 
 Running apps find the new release by themselves and offer to update (see [In-app updates](in-app-updates.md)).
 
+**After every release, check the README download buttons.** They link straight to the installers
+of the latest release (`releases/latest/download/TakeABreakGoose-win-Setup.exe` and
+`…/TakeABreakGoose-osx-arm64-Setup.pkg`), so they follow each new release by themselves as long as
+the file names stay the same. Once the release is out, make sure both still download, and if an
+installer got a new name, update the button links in `README.md` (and the file names in its
+Download section) in the same go:
+
+```bash
+for f in TakeABreakGoose-win-Setup.exe TakeABreakGoose-osx-arm64-Setup.pkg; do
+  curl -sIL -o /dev/null -w "%{http_code} $f\n" https://github.com/rickhellenthal/takeabreakgoose/releases/latest/download/$f
+done
+```
+
 **To try a release first**, tag it with a dash: `v1.11.0-beta.1` becomes a pre-release. Normal
 releases never update to a pre-release, but a pre-release updates to newer pre-releases and
 releases, so installing one is a way to test the whole update on a real computer.

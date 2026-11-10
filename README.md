@@ -10,15 +10,19 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/rickhellenthal/takeabreakgoose/releases/latest">
+  <a href="https://github.com/rickhellenthal/takeabreakgoose/releases/latest/download/TakeABreakGoose-win-Setup.exe">
     <img src="https://img.shields.io/badge/Download_for_Windows-F28C28?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows">
   </a>
-  <a href="#on-a-mac">
+  <a href="https://github.com/rickhellenthal/takeabreakgoose/releases/latest/download/TakeABreakGoose-osx-arm64-Setup.pkg">
     <img src="https://img.shields.io/badge/Download_for_macOS-F28C28?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS">
   </a>
   <a href="https://ko-fi.com/rickhellenthal">
     <img src="https://img.shields.io/badge/Support_on_Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Support on Ko-fi">
   </a>
+</p>
+
+<p align="center">
+  <sub>The macOS button is for a Mac with an Apple chip (M1 or later). Need another version, like the Intel Mac one or the portable Windows zip? Check all versions on the <a href="https://github.com/rickhellenthal/takeabreakgoose/releases/latest">releases page</a>, under <b>Assets</b>.</sub>
 </p>
 
 <p align="center">
