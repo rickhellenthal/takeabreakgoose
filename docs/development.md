@@ -120,6 +120,9 @@ Every text the app shows is in `Core/Text/Strings.resx` (English) and `Core/Text
      Apple chip (M1 or later), **`TakeABreakGoose-osx-x64-Setup.pkg`** for an Intel Mac. The
      installer isn't signed by Apple, so macOS blocks it the first time: **System Settings →
      Privacy & Security → Open Anyway**.
+
+     On Linux: **`TakeABreakGoose.AppImage`**. Make it executable (`chmod +x TakeABreakGoose.AppImage`)
+     and run it. It lives in the system tray, and works best in an X11 session.
      ```
 
 3. Commit, then tag and push:
@@ -148,6 +151,13 @@ Pushing a `v*` tag runs `.github/workflows/release.yml`:
    published.
 
 Running apps find the new release by themselves and offer to update (see [In-app updates](in-app-updates.md)).
+
+**Linux files for a release that's already out** (e.g. when only Linux changed, so Windows and Mac
+users don't get an update that changes nothing for them): run **Actions → Linux build → Run
+workflow** on `main` with the release's tag (`v1.11.1`). It builds the app from `main` as that
+version, adds the Linux files to the release and updates its description from
+`release-notes/<tag>.md` (add the Linux part to its Install section first). The Windows and Mac
+files, and so their updates, stay as they are.
 
 **After every release, check the README download buttons.** They link straight to the installers
 of the latest release (`releases/latest/download/TakeABreakGoose-win-Setup.exe` and

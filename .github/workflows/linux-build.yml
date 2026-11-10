@@ -3,6 +3,9 @@
 # - The release workflow calls it with the release's tag; it then publishes them with the rest.
 # - On every push to a branch other than main it builds them to try out, unless the push only
 #   changes text that isn't part of the app (the README, docs/, release-notes/).
+# - By hand (Actions → Linux build → Run workflow) with an existing release's tag, e.g. v1.11.1, it
+#   adds the Linux files to that release, built from the chosen branch as that version. That way
+#   Linux can join a release without a new version for Windows and Mac users.
 name: Linux build
 
 on:
@@ -10,6 +13,11 @@ on:
     branches-ignore: [main]
     paths-ignore: ["README.md", "docs/**", "release-notes/**"]
   workflow_dispatch:
+    inputs:
+      add-to-release:
+        description: An existing release (e.g. v1.11.1) to add the Linux files to. Empty to only build them.
+        type: string
+        required: false
   workflow_call:
     inputs:
       release-tag:
@@ -21,7 +29,9 @@ permissions:
   contents: write
 
 env:
-  TAG: ${{ inputs.release-tag }}
+  # A release's tag: from the release workflow, or an existing release to add the Linux files to.
+  TAG: ${{ inputs.release-tag || inputs.add-to-release }}
+  ADD_TO_RELEASE: ${{ inputs.add-to-release }}
   REPO_URL: https://github.com/${{ github.repository }}
   VPK_VERSION: 1.2.161
 
@@ -66,10 +76,18 @@ jobs:
         with:
           name: release-notes
 
+      # Added to an existing release: its notes from release-notes/, if there are any.
+      - name: Get the release notes
+        if: env.ADD_TO_RELEASE != ''
+        run: |
+          [[ "$ADD_TO_RELEASE" == v* ]] || { echo "::error::Give the release's tag, e.g. v1.11.1."; exit 1; }
+          if [[ -f "release-notes/$TAG.md" ]]; then cp "release-notes/$TAG.md" notes.md; fi
+
       - name: Install Velopack
         run: dotnet tool install -g vpk --version $VPK_VERSION
 
-      # The previous release, to make a small delta update from. The first Linux release has none.
+      # The previous release, to make a small delta update from. The first Linux release has none,
+      # and neither does one added to an existing release (that would find the release itself).
       - name: Download the previous release
         if: inputs.release-tag != ''
         env:
@@ -90,3 +108,15 @@ jobs:
         with:
           name: linux
           path: Releases/*
+
+      # Only the Linux files: the Windows and Mac ones, and so their updates, stay as they are. The
+      # description comes from release-notes/ again, for the Linux part of its Install section.
+      - name: Add the Linux files to the release
+        if: env.ADD_TO_RELEASE != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$TAG" --repo "${{ github.repository }}" --clobber \
+            Releases/TakeABreakGoose.AppImage Releases/releases.linux.json Releases/RELEASES-linux \
+            Releases/TakeABreakGoose-*-linux-full.nupkg
+          if [[ -f notes.md ]]; then gh release edit "$TAG" --repo "${{ github.repository }}" --notes-file notes.md; fi
